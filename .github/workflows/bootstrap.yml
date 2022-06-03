@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: "14"
 
-      - run: yarn install
+      - run: yarn --cwd products/bootstrap install
 
       - name: Synth stack
         run: yarn --cwd products/bootstrap cdk synth
