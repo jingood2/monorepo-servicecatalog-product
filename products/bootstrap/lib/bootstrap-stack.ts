@@ -1,7 +1,10 @@
 import { Duration, Stack, StackProps } from "aws-cdk-lib";
 import { Effect, OpenIdConnectPrincipal, OpenIdConnectProvider, PolicyDocument, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from "constructs";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
+
+
 
 export class BootstrapStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -13,10 +16,24 @@ export class BootstrapStack extends Stack {
     // const queue = new sqs.Queue(this, 'BootstrapQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
-    const provider = new OpenIdConnectProvider(this, "MyProvider", {
+    /* const provider = new OpenIdConnectProvider(this, "MyProvider", {
       url: "https://token.actions.githubusercontent.com",
       clientIds: ["sts.amazonaws.com"],
-    });
+    }); */
+
+    const oidcProviderArn = `${process.env.GITHUB_OIDC_PROVIDER_ARN}`;
+
+    let provider: iam.IOpenIdConnectProvider;
+
+    if (oidcProviderArn !== '') {
+      provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(this, "GithubOIDCProvider", oidcProviderArn);
+    } else {
+      provider = new OpenIdConnectProvider(this, "MyProvider", {
+        url: "https://token.actions.githubusercontent.com",
+        clientIds: ["sts.amazonaws.com"],
+      });
+    }
+
 
     const githubOrganisation = `${process.env.GITHUB_OWNER}`;
     // Change this to the repo you want to push code from

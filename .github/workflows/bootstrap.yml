@@ -11,12 +11,16 @@ on:
       AWS_REGION:
         description: "Region to deploy to."
         required: true
+      AWS_OIDC_PROVIDER_ARN:
+        description: "GITHUB OIDC PROVIDER ARN"
+        required: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
       GITHUB_REPOSITORY: ${{github.repository}}
+      GITHUB_OIDC_PROVIDER_ARN: ${{ github.event.inputs.AWS_OIDC_PROVIDER_ARN }}
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v1
@@ -32,9 +36,12 @@ jobs:
         with:
           node-version: "14"
 
-      - run: |-
-          cd products/bootstrap
-          npm install
+      #- run: |-
+      #    cd products/bootstrap
+      #    npm install
+
+      - name: package install
+        run: yarn --cwd products/bootstrap install
 
       - name: Synth stack
         run: yarn --cwd products/bootstrap cdk synth
