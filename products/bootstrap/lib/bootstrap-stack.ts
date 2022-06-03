@@ -36,7 +36,7 @@ export class BootstrapStack extends Stack {
     const GitHubPrincipal = new OpenIdConnectPrincipal(provider).withConditions({
       StringLike: {
         //"token.actions.githubusercontent.com:sub": `repo:${githubOrganisation}/${repoName}:*`,
-        "token.actions.githubusercontent.com:sub": `repo:${githubRepository}:**`,
+        "token.actions.githubusercontent.com:sub": `repo:${githubRepository}:ref:/refs/head/main`,
       },
     });
 
