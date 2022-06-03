@@ -10,17 +10,6 @@ export class BootstrapStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'BootstrapQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-    /* const provider = new OpenIdConnectProvider(this, "MyProvider", {
-      url: "https://token.actions.githubusercontent.com",
-      clientIds: ["sts.amazonaws.com"],
-    }); */
-
     const oidcProviderArn = `${process.env.GITHUB_OIDC_PROVIDER_ARN}`;
 
     let provider: iam.IOpenIdConnectProvider;
