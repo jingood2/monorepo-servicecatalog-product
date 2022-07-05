@@ -61,6 +61,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'github-oidc-provider', { env: devEnv });
+new MyStack(app, 'github-oidc-provider-sc-product', { env: devEnv });
 
 app.synth();
