@@ -127,7 +127,7 @@
       {
        "Action": "sts:AssumeRoleWithWebIdentity",
        "Condition": {
-        "ForAnyValue:StringLike": {
+        "StringLike": {
          "token.actions.githubusercontent.com:sub": {
             "Fn::Join": [ 
               "", 
