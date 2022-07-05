@@ -26,7 +26,7 @@ export class GithubOidcProviderConstruct extends servicecatalog.ProductStack {
       repo: props.repo, // your repository name (without the owner name)
       roleName: props.role,
       description: "This role deploys stuff to AWS ",
-      maxSessionDuration: cdk.Duration.hours(2),
+      maxSessionDuration: cdk.Duration.hours(1),
     });
 
     deployRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess"));
