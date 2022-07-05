@@ -9,7 +9,7 @@ on:
       - 'develop'
       - 'feat**'
     paths:
-      - "projects/{{PROJECT}}/**"
+      - "products/{{PROJECT}}/**"
       - "./github/workflows/{{PROJECT}}.yaml"
 
 env:

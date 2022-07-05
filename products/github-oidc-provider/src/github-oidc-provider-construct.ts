@@ -23,7 +23,7 @@ export class GithubOidcProviderConstruct extends servicecatalog.ProductStack {
 
     const deployRole = new GithubActionsRole(this, "GithubDeployRole", {
       provider: provider, // reference into the OIDC provider
-      owner: props.owner, // your repository owner (organization or user) name
+      owner: props.owner, // your repository owner (organization or user)
       repo: props.repo, // your repository name (without the owner name)
       roleName: props.role,
       description: "This role deploys stuff to AWS ",
