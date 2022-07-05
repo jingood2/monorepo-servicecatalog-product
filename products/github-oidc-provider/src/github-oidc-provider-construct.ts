@@ -26,7 +26,7 @@ export class GithubOidcProviderConstruct extends servicecatalog.ProductStack {
       owner: props.owner, // your repository owner (organization or user) name
       repo: props.repo, // your repository name (without the owner name)
       roleName: props.role,
-      description: "This role deploys stuff to AWS v2",
+      description: "This role deploys stuff to AWS ",
       maxSessionDuration: cdk.Duration.hours(2),
     });
 

@@ -9,7 +9,7 @@ on:
       - 'develop'
       - 'feat**'
     paths:
-      - "projects/github-oidc-provider/**"
+      - "products/github-oidc-provider/**"
       - "./github/workflows/github-oidc-provider.yaml"
 
 env:
