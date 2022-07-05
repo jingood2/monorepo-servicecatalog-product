@@ -1,14 +1,13 @@
-import * as cdk from 'aws-cdk-lib';
+import * as cdk from "aws-cdk-lib";
 import { GithubActionsIdentityProvider, GithubActionsRole } from "aws-cdk-github-oidc";
-import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { Construct } from 'constructs';
+import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { Construct } from "constructs";
 
 export interface GithubOidcProviderConstructProps {
   owner: string;
   repo: string;
   role: string;
-
 }
 
 export class GithubOidcProviderConstruct extends servicecatalog.ProductStack {
@@ -27,7 +26,7 @@ export class GithubOidcProviderConstruct extends servicecatalog.ProductStack {
       repo: props.repo, // your repository name (without the owner name)
       roleName: props.role,
       description: "This role deploys stuff to AWS ",
-      maxSessionDuration: cdk.Duration.hours(1),
+      maxSessionDuration: cdk.Duration.hours(2),
     });
 
     deployRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess"));
