@@ -1,7 +1,7 @@
-import { CfnParameter } from "aws-cdk-lib";
+import { CfnParameter, Lazy, SecretValue } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
-import { Construct } from "constructs";
+import { Construct } from 'constructs';
 
 export interface IAMUserPrductProps {
 }
@@ -10,32 +10,32 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
-    new CfnParameter(this, "UserName", {
-      type: "String",
-      default: "johnDoe@exmaple.com",
-      description: "IAM User Name should be email address",
-      allowedPattern: "/^[a-zA-Z0-9.! #$%&'*+/=? ^_`{|}~-]+@[a-zA-Z0-9-]+(?:. [a-zA-Z0-9-]+)*$/",
+    const userName = new CfnParameter(this, 'UserName', {
+      type: 'String',
+      default: 'johnDoe@exmaple.com',
+      description: 'IAM User Name should be email address',
     });
 
-    new CfnParameter(this, "Password", {
-      type: "String",
+    const password = new CfnParameter(this, 'Password', {
+      type: 'String',
       default: Math.random().toString(20).substring(2, 9),
-      description: "IAM User Password",
+      description: 'IAM User Password',
     });
 
-    new CfnParameter(this, "AWSAccountId", {
-      type: "String",
-      description: "AWS IAM AccountId",
+    const account = new CfnParameter(this, 'AWSAccountId', {
+      type: 'String',
+      description: 'AWS IAM AccountId',
+      default: '037729278610',
     });
 
-    new iam.User(this, "User", {
-      //path: "/user",
-      //groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::037729278610:group/admin/UserCredentialsManagement`)],
-      //userName: Lazy.string({ produce: () => userName.valueAsString }),
-      //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
-      userName: 'test@gmail.com',
+    new iam.User(this, 'User', {
+      path: "/user",
+      groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::${account.valueAsString}:group/admin/UserCredentialsManagement`)],
+      userName: Lazy.string({ produce: () => userName.valueAsString }),
+      password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
+      //userName: 'test@gmail.com',
+      passwordResetRequired: true,
     });
-
 
 
   }
