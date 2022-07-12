@@ -28,7 +28,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
        description: "AWS IAM AccountId",
      });
 
-    const user = new iam.User(this, "User", {
+    new iam.User(this, "User", {
       path: "/user",
       groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::${account.valueAsString}:group/admin/UserCredentialsManagement`)],
       userName: userName.valueAsString,
