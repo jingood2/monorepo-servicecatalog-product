@@ -1,4 +1,4 @@
-import { CfnParameter, SecretValue } from "aws-cdk-lib";
+import { CfnParameter, Lazy, SecretValue } from "aws-cdk-lib";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from "constructs";
@@ -26,16 +26,16 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       description: "IAM User Password",
     });
 
-    const account = new CfnParameter(this, "AWSAccountId", {
+    new CfnParameter(this, "AWSAccountId", {
       type: "String",
       description: "AWS IAM AccountId",
     });
 
     new iam.User(this, "User", {
       path: "/user",
-      groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::${account.valueAsString}:group/admin/UserCredentialsManagement`)],
-      userName: userName.valueAsString,
-      password: SecretValue.unsafePlainText(password.valueAsString),
+      groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::037729278610:group/admin/UserCredentialsManagement`)],
+      userName: Lazy.string({ produce: () => userName.valueAsString }),
+      password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
       passwordResetRequired: true,
     });
 
