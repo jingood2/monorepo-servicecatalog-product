@@ -29,7 +29,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
     });
 
     new iam.User(this, 'User', {
-      path: "/user",
+      path: "/user/",
       groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::${account.valueAsString}:group/admin/UserCredentialsManagement`)],
       userName: Lazy.string({ produce: () => userName.valueAsString }),
       password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
