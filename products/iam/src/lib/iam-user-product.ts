@@ -4,9 +4,6 @@ import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from "constructs";
 
 export interface IAMUserPrductProps {
-  userName: string;
-  password: string;
-  account: string;
 }
 
 export class IAMUserPrduct extends servicecatalog.ProductStack {

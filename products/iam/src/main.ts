@@ -55,7 +55,7 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, "IamUserProduct", {})),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, "IamUserProduct")),
         },
       ],
     });
