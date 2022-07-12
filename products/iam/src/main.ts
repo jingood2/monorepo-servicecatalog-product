@@ -1,5 +1,5 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { envVars } from "./env-vars";
@@ -18,7 +18,7 @@ export class MyStack extends Stack {
       this.portfolio = new servicecatalog.Portfolio(this, envVars.SC_PORTFOLIO_NAME, {
         displayName: envVars.SC_PORTFOLIO_NAME ?? "DemoPortfolio",
         providerName: "AWSTF",
-        description: 'AWS IAM 포트폴리오',
+        description: "AWS IAM 포트폴리오",
         messageLanguage: servicecatalog.MessageLanguage.EN,
       });
       if (envVars.SC_ACCESS_GROUP_NAME != "") {
@@ -42,18 +42,28 @@ export class MyStack extends Stack {
  */
     }
 
-    const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
+    /* const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
       productName: "sc-iamuser-product",
       owner: "AWSTF",
       description: "IAM User SC Product",
       productVersions: [
         {
           productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
-            new IAMUserPrduct(this, "IamUserProduct", {}),
-          ),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, "IamUserProduct", {})),
         },
       ],
+    }); */
+
+    const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
+      productStack: new IAMUserPrduct(this, "IAMUserProduct", {}),
+      currentVersionName: "v1",
+      currentVersionLocked: true,
+    });
+
+    const product = new servicecatalog.CloudFormationProduct(this, "MyFirstProduct", {
+      productName: "create-iamuser-product",
+      owner: "SKCnC AWSTF",
+      productVersions: [productStackHistory.currentVersion()],
     });
 
     this.portfolio.addProduct(product);
