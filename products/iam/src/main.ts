@@ -1,8 +1,6 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
-import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
-import { envVars } from "./env-vars";
 import { IAMUserPrduct } from "./lib/iam-user-product";
 
 interface IStackProps extends StackProps {
@@ -10,12 +8,12 @@ interface IStackProps extends StackProps {
 }
 
 export class MyStack extends Stack {
-  readonly portfolio: servicecatalog.IPortfolio;
+  //readonly portfolio: servicecatalog.IPortfolio;
 
   constructor(scope: Construct, id: string, props: IStackProps) {
     super(scope, id, props);
 
-    // Not exsiting portfolio
+   /*  // Not exsiting portfolio
     if (envVars.SC_PORTFOLIO_ARN != "") {
       this.portfolio = servicecatalog.Portfolio.fromPortfolioArn(this, "MyImportedPortfolio", envVars.SC_PORTFOLIO_ARN);
     } else {
@@ -35,7 +33,7 @@ export class MyStack extends Stack {
         this.portfolio.giveAccessToRole(
           iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}AdminRole`, `arn:aws:iam::${process.env.CDK_DEFAULT_ACCOUNT}:role/AssumableAdminRole`),
         );
-      }
+      } */
 
       /* const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
         allowedValuesForTags: {
@@ -72,7 +70,7 @@ export class MyStack extends Stack {
       productVersions: [productStackHistory.currentVersion()],
     }); */
 
-    this.portfolio.addProduct(product);
+    //this.portfolio.addProduct(product);
   }
 }
 
@@ -84,7 +82,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "iam-portfolio", { env: devEnv });
+new MyStack(app, "iam-product", { env: devEnv });
 // new MyStack(app, 'iam-prod', { env: prodEnv });
 
 app.synth();
