@@ -33,12 +33,13 @@ export class MyStack extends Stack {
         );
       }
 
-      const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
+      /* const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
         allowedValuesForTags: {
           stage: ["dev", "qa", "staging", "production"],
         },
       });
       this.portfolio.associateTagOptions(tagOptionsForPortfolio);
+ */
     }
 
     const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
