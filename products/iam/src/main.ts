@@ -63,7 +63,7 @@ export class MyStack extends Stack {
       const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
         productStack: new IAMUserPrduct(this, "IAMUserProduct", {}),
         currentVersionName: "v1",
-        currentVersionLocked: true,
+        currentVersionLocked: false,
       });
   
       const product = new servicecatalog.CloudFormationProduct(this, "MyFirstProduct", {
