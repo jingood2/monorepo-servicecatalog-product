@@ -22,15 +22,9 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       description: 'IAM User Password',
     });
 
-    const account = new CfnParameter(this, 'AWSAccountId', {
-      type: 'String',
-      description: 'AWS IAM AccountId',
-      default: '037729278610',
-    });
-
     new iam.User(this, 'User', {
       path: "/user/",
-      groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::${account.valueAsString}:group/admin/UserCredentialsManagement`)],
+      groups: [iam.Group.fromGroupName(this, 'GroupName', 'UserCredentialsManagementGroup')],
       userName: Lazy.string({ produce: () => userName.valueAsString }),
       password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
       //userName: 'test@gmail.com',
