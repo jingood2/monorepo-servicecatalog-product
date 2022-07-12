@@ -10,14 +10,14 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
-    const userName = new CfnParameter(this, "UserName", {
+    new CfnParameter(this, "UserName", {
       type: "String",
       default: "johnDoe@exmaple.com",
       description: "IAM User Name should be email address",
       allowedPattern: "/^[a-zA-Z0-9.! #$%&'*+/=? ^_`{|}~-]+@[a-zA-Z0-9-]+(?:. [a-zA-Z0-9-]+)*$/",
     });
 
-    const password = new CfnParameter(this, "Password", {
+    new CfnParameter(this, "Password", {
       type: "String",
       default: Math.random().toString(20).substring(2, 9),
       description: "IAM User Password",
@@ -31,8 +31,10 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
     new iam.User(this, "User", {
       path: "/user",
       groups: [iam.Group.fromGroupArn(this, "UserCred", `arn:aws:iam::037729278610:group/admin/UserCredentialsManagement`)],
-      userName: Lazy.string({ produce: () => userName.valueAsString }),
-      password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
+      //userName: Lazy.string({ produce: () => userName.valueAsString }),
+      //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
+      userName: 'test123@gmail.com',
+      password: SecretValue.unsafePlainText('Woalsfldk!0212'),
       passwordResetRequired: true,
     });
 
