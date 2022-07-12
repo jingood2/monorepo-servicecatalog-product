@@ -41,12 +41,12 @@ export class MyStack extends Stack {
         },
       });
       this.portfolio.associateTagOptions(tagOptionsForPortfolio);
- */
     }
+ */
 
     
 
-    const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
+    new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
       productName: "sc-iamuser-product",
       owner: "AWSTF",
       description: "IAM User SC Product",
