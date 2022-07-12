@@ -1,32 +1,35 @@
-import * as cdk from "aws-cdk-lib";
-import { SecretValue } from "aws-cdk-lib";
+import { CfnParameter, SecretValue } from "aws-cdk-lib";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from "constructs";
 
-export interface IAMUserPrductProps {}
+export interface IAMUserPrductProps {
+  userName: string;
+  password: string;
+  account: string;
+}
 
 export class IAMUserPrduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
-    const userName = new cdk.CfnParameter(this, 'UserName', {
+    const userName = new CfnParameter(this, "UserName", {
       type: "String",
       default: "johnDoe@exmaple.com",
       description: "IAM User Name should be email address",
-      allowedPattern: "/^[a-zA-Z0-9.! #$%&'*+/=? ^_`{|}~-]+@[a-zA-Z0-9-]+(?:\. [a-zA-Z0-9-]+)*$/",
+      allowedPattern: "/^[a-zA-Z0-9.! #$%&'*+/=? ^_`{|}~-]+@[a-zA-Z0-9-]+(?:. [a-zA-Z0-9-]+)*$/",
     });
-    
-    const password = new cdk.CfnParameter(this, 'Password', {
+
+    const password = new CfnParameter(this, "Password", {
       type: "String",
-      default: Math.random().toString(20).substring(2,9),
+      default: Math.random().toString(20).substring(2, 9),
       description: "IAM User Password",
     });
 
-     const account = new cdk.CfnParameter(this, "AWSAccountId", {
-       type: "String",
-       description: "AWS IAM AccountId",
-     });
+    const account = new CfnParameter(this, "AWSAccountId", {
+      type: "String",
+      description: "AWS IAM AccountId",
+    });
 
     new iam.User(this, "User", {
       path: "/user",

@@ -5,10 +5,14 @@ import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { envVars } from "./env-vars";
 import { IAMUserPrduct } from "./lib/iam-user-product";
 
+interface IStackProps extends StackProps {
+
+}
+
 export class MyStack extends Stack {
   readonly portfolio: servicecatalog.IPortfolio;
 
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
+  constructor(scope: Construct, id: string, props: IStackProps) {
     super(scope, id, props);
 
     // Not exsiting portfolio
@@ -18,7 +22,7 @@ export class MyStack extends Stack {
       this.portfolio = new servicecatalog.Portfolio(this, envVars.SC_PORTFOLIO_NAME, {
         displayName: envVars.SC_PORTFOLIO_NAME ?? "DemoPortfolio",
         providerName: "AWSTF",
-        description: "AWS IAM 포트폴리오",
+        description: "AWS IAM Portfolio",
         messageLanguage: servicecatalog.MessageLanguage.EN,
       });
       if (envVars.SC_ACCESS_GROUP_NAME != "") {
@@ -41,6 +45,8 @@ export class MyStack extends Stack {
       this.portfolio.associateTagOptions(tagOptionsForPortfolio);
  */
     }
+
+    
 
     const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
       productName: "sc-iamuser-product",
