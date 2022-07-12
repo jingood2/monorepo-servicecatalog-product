@@ -42,7 +42,7 @@ export class MyStack extends Stack {
  */
     }
 
-    /* const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
+    const product = new servicecatalog.CloudFormationProduct(this, "sc-iamuser-product", {
       productName: "sc-iamuser-product",
       owner: "AWSTF",
       description: "IAM User SC Product",
@@ -52,9 +52,9 @@ export class MyStack extends Stack {
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, "IamUserProduct", {})),
         },
       ],
-    }); */
+    });
 
-    const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
+    /* const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
       productStack: new IAMUserPrduct(this, "IAMUserProduct", {}),
       currentVersionName: "v1",
       currentVersionLocked: true,
@@ -64,7 +64,7 @@ export class MyStack extends Stack {
       productName: "create-iamuser-product",
       owner: "SKCnC AWSTF",
       productVersions: [productStackHistory.currentVersion()],
-    });
+    }); */
 
     this.portfolio.addProduct(product);
   }
