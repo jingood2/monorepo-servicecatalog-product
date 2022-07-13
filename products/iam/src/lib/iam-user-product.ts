@@ -35,13 +35,12 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       description: "Please enter at least 14 characters including uppercase and lowercase letters and special characters",
     }); */
 
-    const userArray = Lazy.list({ produce: () => userNames.valueAsList });
-
-    userArray.forEach((userName ) => {
+    userNames.valueAsList.forEach((userName) => {
+      console.log(userName);
       new iam.User(this, "User", {
         path: "/user/",
         groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
-        userName: Lazy.string({ produce: () => userName}),
+        userName: Lazy.string({ produce: () => userName }),
         //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
         //userName: userName,
         //passwordResetRequired: true,
