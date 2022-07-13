@@ -22,26 +22,31 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
        },
      };
 
-    const userName = new CfnParameter(this, "UserName", {
-      type: "String",
-      default: "johnDoe@exmaple.com",
+    const userNames = new CfnParameter(this, "UserName", {
+      type: "CommaDelimitedList",
+      default: "johnDoe@exmaple.com, james@example.com",
       //description: 'IAM User Name should be email address',
       description: "Please enter your company email address as your IAM username",
       allowedPattern: "[^@]+@[^@]+.[^@]+",
     });
 
-    const password = new CfnParameter(this, "Password", {
+    /* const password = new CfnParameter(this, "Password", {
       type: "String",
       description: "Please enter at least 14 characters including uppercase and lowercase letters and special characters",
+    }); */
+
+    userNames.valueAsList.forEach((userName) => {
+      new iam.User(this, "User", {
+        path: "/user/",
+        groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
+        userName: Lazy.string({ produce: () => userName}),
+        //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
+        //userName: 'test@gmail.com',
+        passwordResetRequired: true,
+      });
     });
 
-    new iam.User(this, "User", {
-      path: "/user/",
-      groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
-      userName: Lazy.string({ produce: () => userName.valueAsString }),
-      password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
-      //userName: 'test@gmail.com',
-      passwordResetRequired: true,
-    });
+
+    
   }
 }
