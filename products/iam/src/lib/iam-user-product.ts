@@ -1,4 +1,4 @@
-import { CfnParameter } from "aws-cdk-lib";
+import { CfnParameter, Fn } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { Construct } from "constructs";
@@ -35,13 +35,13 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       description: "Please enter at least 14 characters including uppercase and lowercase letters and special characters",
     }); */
 
-    userNames.valueAsList.forEach((userName) => {
+    userNames.valueAsList.forEach((userName, idx) => {
       new iam.User(this, "User", {
         path: "/user/",
         groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
         //userName: Lazy.string({ produce: () => userName}),
         //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
-        userName: userName,
+        userName: Fn.select(idx, userNames.valueAsList),
         //passwordResetRequired: true,
       });
 
