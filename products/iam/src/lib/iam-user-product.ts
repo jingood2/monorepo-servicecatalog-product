@@ -9,18 +9,18 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
-     this.templateOptions.metadata = {
-       "AWS::CloudFormation::Interface": {
-         ParameterGroups: [
-           {
-             Label: {
-               default: "Information for IAM User",
-             },
-             Parameters: ["UserName"],
-           },
-         ],
-       },
-     };
+    this.templateOptions.metadata = {
+      "AWS::CloudFormation::Interface": {
+        ParameterGroups: [
+          {
+            Label: {
+              default: "Information for IAM User",
+            },
+            Parameters: ["UserName"],
+          },
+        ],
+      },
+    };
 
     const userNames = new CfnParameter(this, "UserName", {
       type: "CommaDelimitedList",
@@ -41,13 +41,11 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
         groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
         //userName: Lazy.string({ produce: () => userName}),
         //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
-        //userName: 'test@gmail.com',
+        userName: userName,
         //passwordResetRequired: true,
       });
 
       console.log(userName);
-
     });
-
   }
 }
