@@ -1,4 +1,4 @@
-import { CfnParameter, Lazy, SecretValue } from "aws-cdk-lib";
+import { CfnParameter, Lazy } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { Construct } from "constructs";
