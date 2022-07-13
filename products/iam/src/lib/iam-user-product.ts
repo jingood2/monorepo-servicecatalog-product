@@ -1,4 +1,4 @@
-import { CfnParameter, Lazy } from "aws-cdk-lib";
+import { CfnParameter } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { Construct } from "constructs";
@@ -46,9 +46,8 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       });
 
       console.log(userName);
+
     });
 
-
-    
   }
 }
