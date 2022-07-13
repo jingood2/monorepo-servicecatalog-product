@@ -16,7 +16,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
              Label: {
                default: "Information for IAM User",
              },
-             Parameters: ["UserName", "Password"],
+             Parameters: ["UserName"],
            },
          ],
        },
