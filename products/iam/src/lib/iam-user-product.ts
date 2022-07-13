@@ -15,7 +15,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       default: 'johnDoe@exmaple.com',
       //description: 'IAM User Name should be email address',
       description: '이메일 주소로 IAM 유저 이름을 입력해주세요',
-      allowedPattern: '/[^\s@]+@[^\s@]+\.[^\s@]+/',
+      //allowedPattern: '/[^\s@]+@[^\s@]+\.[^\s@]+/',
     });
 
     const password = new CfnParameter(this, 'Password', {
