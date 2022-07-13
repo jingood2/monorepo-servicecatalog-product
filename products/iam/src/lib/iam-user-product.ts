@@ -8,7 +8,7 @@ export interface IAMUserPrductProps {
 }
 
 export class IAMUserPrduct extends servicecatalog.ProductStack {
-  constructor(scope: Construct, id: string, props: IAMUserPrductProps) {
+  constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
     this.templateOptions.metadata = {
