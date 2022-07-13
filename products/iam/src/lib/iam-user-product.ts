@@ -42,7 +42,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
         userName: Lazy.string({ produce: () => userName}),
         //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
         //userName: 'test@gmail.com',
-        passwordResetRequired: true,
+        //passwordResetRequired: true,
       });
     });
 
