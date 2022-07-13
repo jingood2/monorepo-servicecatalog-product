@@ -1,4 +1,4 @@
-import { App, CfnParameter, Lazy, Stack, StackProps } from 'aws-cdk-lib';
+import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
@@ -61,17 +61,8 @@ export class MyStack extends Stack {
       });
  */
 
-      const userNames = new CfnParameter(this, "UserName", {
-        type: "CommaDelimitedList",
-        default: "johnDoe@exmaple.com, james@example.com",
-        //description: 'IAM User Name should be email address',
-        description: "Please enter your company email address as your IAM username",
-        allowedPattern: "[^@]+@[^@]+.[^@]+",
-      });
-
-
       const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
-        productStack: new IAMUserPrduct(this, "IAMUserProduct", { userNames: Lazy.list({ produce: () => userNames.valueAsList } )}),
+        productStack: new IAMUserPrduct(this, "IAMUserProduct", {}),
         currentVersionName: "v1",
         currentVersionLocked: false,
       });
@@ -94,7 +85,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'iam-product', { env: devEnv });
+new MyStack(app, 'sc-iam-portfolio', { env: devEnv });
 // new MyStack(app, 'iam-prod', { env: prodEnv });
 
 app.synth();
