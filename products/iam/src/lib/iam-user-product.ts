@@ -1,4 +1,4 @@
-import { CfnParameter, Fn, Lazy } from "aws-cdk-lib";
+import { CfnParameter, Lazy } from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { Construct } from "constructs";
@@ -37,7 +37,7 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
 
     const userArray = Lazy.list({ produce: () => userNames.valueAsList });
 
-    userArray.forEach((userName, idx) => {
+    userArray.forEach((userName ) => {
       new iam.User(this, "User", {
         path: "/user/",
         groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
