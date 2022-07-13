@@ -41,9 +41,9 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
       new iam.User(this, "User", {
         path: "/user/",
         groups: [iam.Group.fromGroupName(this, "GroupName", "UserCredentialsManagementGroup")],
-        //userName: Lazy.string({ produce: () => userName}),
+        userName: Lazy.string({ produce: () => userName}),
         //password: SecretValue.unsafePlainText(Lazy.string({ produce: () => password.valueAsString })),
-        userName: userName,
+        //userName: userName,
         //passwordResetRequired: true,
       });
     });
