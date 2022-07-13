@@ -10,16 +10,17 @@ export class IAMUserPrduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: IAMUserPrductProps) {
     super(scope, id);
 
-    const userName = new CfnParameter(this, 'UserName', {
+    const userName = new CfnParameter(this, "UserName", {
       type: 'String',
       default: 'johnDoe@exmaple.com',
-      description: 'IAM User Name should be email address',
+      //description: 'IAM User Name should be email address',
+      description: '이메일 주소로 IAM 유저 이름을 입력해주세요',
+      allowedPattern: '/[^\s@]+@[^\s@]+\.[^\s@]+/',
     });
 
     const password = new CfnParameter(this, 'Password', {
       type: 'String',
-      default: Math.random().toString(20).substring(2, 9),
-      description: 'IAM User Password',
+      description: '대소문자 및 특수문자 포함하여 14글자 이상 입력해주세요',
     });
 
     new iam.User(this, 'User', {
