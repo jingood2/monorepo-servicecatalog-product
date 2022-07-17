@@ -1,6 +1,6 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib';
-import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 import { envVars } from './env-vars';
 import { IAMUserPrduct } from './lib/iam-user-product';
@@ -16,20 +16,20 @@ export class MyStack extends Stack {
     super(scope, id, props);
 
     // Not exsiting portfolio
-    if (envVars.SC_PORTFOLIO_ARN != "") {
-      this.portfolio = servicecatalog.Portfolio.fromPortfolioArn(this, "MyImportedPortfolio", envVars.SC_PORTFOLIO_ARN);
+    if (envVars.SC_PORTFOLIO_ARN != '') {
+      this.portfolio = servicecatalog.Portfolio.fromPortfolioArn(this, 'MyImportedPortfolio', envVars.SC_PORTFOLIO_ARN);
     } else {
       this.portfolio = new servicecatalog.Portfolio(this, envVars.SC_PORTFOLIO_NAME, {
-        displayName: envVars.SC_PORTFOLIO_NAME ?? "DemoPortfolio",
-        providerName: "AWSTF",
-        description: "AWS IAM Portfolio",
+        displayName: envVars.SC_PORTFOLIO_NAME ?? 'DemoPortfolio',
+        providerName: 'AWSTF',
+        description: 'AWS IAM Portfolio',
         messageLanguage: servicecatalog.MessageLanguage.EN,
       });
-      if (envVars.SC_ACCESS_GROUP_NAME != "") {
-        const group = iam.Group.fromGroupName(this, "SCGroup", "AdminMasterAccountGroup");
+      if (envVars.SC_ACCESS_GROUP_NAME != '') {
+        const group = iam.Group.fromGroupName(this, 'SCGroup', 'AdminMasterAccountGroup');
         this.portfolio.giveAccessToGroup(group);
       }
-      if (envVars.SC_ACCESS_ROLE_ARN != "") {
+      if (envVars.SC_ACCESS_ROLE_ARN != '') {
         this.portfolio.giveAccessToRole(iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}-Role`, envVars.SC_ACCESS_ROLE_ARN));
       } else {
         this.portfolio.giveAccessToRole(
@@ -38,7 +38,7 @@ export class MyStack extends Stack {
       }
     }
 
-      /* const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
+    /* const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
           allowedValuesForTags: {
             stage: ["dev", "qa", "staging", "production"],
           },
@@ -48,7 +48,7 @@ export class MyStack extends Stack {
       */
 
 
-      /* new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
+    /* new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
         productName: 'sc-iamuser-product',
         owner: 'AWSTF',
         description: 'IAM User SC Product',
@@ -61,21 +61,21 @@ export class MyStack extends Stack {
       });
  */
 
-      const productStackHistory = new servicecatalog.ProductStackHistory(this, "ProductStackHistory", {
-        productStack: new IAMUserPrduct(this, "IAMUserProduct", {}),
-        currentVersionName: "v1",
-        currentVersionLocked: false,
-      });
-  
-      const product = new servicecatalog.CloudFormationProduct(this, "MyFirstProduct", {
-        productName: "create-iamuser-product",
-        owner: "SKCnC AWSTF",
-        productVersions: [productStackHistory.currentVersion()],
-      });
+    const productStackHistory = new servicecatalog.ProductStackHistory(this, 'ProductStackHistory', {
+      productStack: new IAMUserPrduct(this, 'IAMUserProduct', {}),
+      currentVersionName: 'v1',
+      currentVersionLocked: false,
+    });
 
-      this.portfolio.addProduct(product);
-    }
+    const product = new servicecatalog.CloudFormationProduct(this, 'MyFirstProduct', {
+      productName: 'create-iamuser-product',
+      owner: 'SKCnC AWSTF',
+      productVersions: [productStackHistory.currentVersion()],
+    });
+
+    this.portfolio.addProduct(product);
   }
+}
 
 // for development, use account/region from cdk cli
 const devEnv = {
