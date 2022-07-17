@@ -1,6 +1,7 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
 import * as servicecatalog from "aws-cdk-lib/aws-servicecatalog";
 import { Construct } from "constructs";
+import path from "path";
 import { VPCProduct } from "./lib/vpc-product";
 //import { VPCV3Product } from './lib/vpc-v3-product';
 //import { VpcV2Product } from './lib/vpc-v2-product';
@@ -34,6 +35,30 @@ export class MyStack extends Stack {
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCV3Product(this, 'VpcV4', { template: './3-tier.yml' })),
         },
         */
+      ],
+    });
+
+    new servicecatalog.CloudFormationProduct(this, 'VpcPeeringConnectionRequester', {
+      description: "VPC Peering Connection Requester",
+      productName: "vpc-peering-connection-requester-product",
+      owner: "SK Cloud Transformation Group",
+      productVersions: [
+        {
+          productVersionName: "v1",
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './cfn-template/vpc-peering-connection.template.yaml')),
+        },
+      ],
+    });
+
+    new servicecatalog.CloudFormationProduct(this, 'VpcPeeringConnectionAccepter', {
+      description: "VPC Peering Connection Accepter",
+      productName: "vpc-peering-connection-accepter-product",
+      owner: "SK Cloud Transformation Group",
+      productVersions: [
+        {
+          productVersionName: "v1",
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './cfn-template/vpc-peering-connection-accepter.template.yaml')),
+        },
       ],
     });
   }
