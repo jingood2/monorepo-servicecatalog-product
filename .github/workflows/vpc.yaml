@@ -1,4 +1,4 @@
-name: github-oidc-provider
+name: vpc
 
 on:
   pull_request:
@@ -9,14 +9,14 @@ on:
       - 'develop'
       - 'feat**'
     paths:
-      - "products/github-oidc-provider/**"
-      - "./github/workflows/github-oidc-provider.yaml"
+      - "products/vpc/**"
+      - "./github/workflows/vpc.yaml"
 
 env:
   CI: "true"
   CDK_DEFAULT_ACCOUNT: '037729278610'
   CDK_DEFAULT_REGION: ap-northeast-2
-  PROJECT_NAME: github-oidc-provider
+  PROJECT_NAME: vpc
   EXECUTE_ROLE: github-deploy-role
 
 jobs:

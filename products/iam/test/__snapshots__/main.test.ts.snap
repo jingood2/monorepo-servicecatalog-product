@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot 1`] = `
+Object {
+  "Parameters": Object {
+    "BootstrapVersion": Object {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "MyFirstProduct95C5EA99": Object {
+      "Properties": Object {
+        "Name": "create-iamuser-product",
+        "Owner": "SKCnC AWSTF",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/6fd39f8a65b7aee96e86b6dac3162831712f8e662f1b72477eedb19885c9119e.json",
+              },
+            },
+            "Name": "v1",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "awstfiamportfolioA0759FC9": Object {
+      "Properties": Object {
+        "AcceptLanguage": "en",
+        "Description": "AWS IAM Portfolio",
+        "DisplayName": "awstf-iam-portfolio",
+        "ProviderName": "AWSTF",
+      },
+      "Type": "AWS::ServiceCatalog::Portfolio",
+    },
+    "awstfiamportfolioPortfolioProductAssociation46c7cefe4200D4E6708B": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "awstfiamportfolioA0759FC9",
+        },
+        "ProductId": Object {
+          "Ref": "MyFirstProduct95C5EA99",
+        },
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
+    },
+    "awstfiamportfolioPortolioPrincipalAssociation0d1b9634b4285BA96E05": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "awstfiamportfolioA0759FC9",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              ":group/AdminMasterAccountGroup",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "awstfiamportfolioPortolioPrincipalAssociation4e1f7820189c8B20C1A1": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "awstfiamportfolioA0759FC9",
+        },
+        "PrincipalARN": "arn:aws:iam::undefined:role/AssumableAdminRole",
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+  },
+  "Rules": Object {
+    "CheckBootstrapVersion": Object {
+      "Assertions": Array [
+        Object {
+          "Assert": Object {
+            "Fn::Not": Array [
+              Object {
+                "Fn::Contains": Array [
+                  Array [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  Object {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
