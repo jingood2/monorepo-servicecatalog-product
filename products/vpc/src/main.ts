@@ -21,20 +21,6 @@ export class MyStack extends Stack {
           productVersionName: "v1.0",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCProduct(this, "Vpc", {})),
         },
-        /*
-        {
-          productVersionName: "v2.0",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VpcV2Product(this, "VpcV2", {})),
-        },
-        {
-          productVersionName: 'v3.0',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCV3Product(this, 'VpcV3', { template: './vpc-dev.template-v2.json' })),
-        },
-        {
-          productVersionName: 'v4.0',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCV3Product(this, 'VpcV4', { template: './3-tier.yml' })),
-        },
-        */
       ],
     });
 
