@@ -76,51 +76,8 @@ jobs:
         run: yarn cdk deploy --all --require-approval never 
         working-directory: products/${{env.PROJECT_NAME}}
 
-  deploy_to_stage:
-    #if: github.event_name == 'pull_request' && ${{ inputs.stage == 'prod'}}
-    #if: github.event_name != 'push'
-    if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-     # These permissions are needed to interact with GitHub's OIDC Token endpoint
-    permissions:
-      id-token: write
-      contents: read
-    env:
-      STAGE: stage
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "14"
-
-      - name: Install dependencies
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: products/${{env.PROJECT_NAME}}
-
-      - name: assume role
-        uses: aws-actions/configure-aws-credentials@master
-        with:
-          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
-          role-session-name: github-session
-          aws-region: ap-northeast-2
-
-      - name: cdk build 
-        run: npm run synth
-        working-directory: products/${{env.PROJECT_NAME}}
-      
-      - name: deploy cdk on stage
-        run: yarn cdk deploy --all --require-approval never 
-        working-directory: products/${{env.PROJECT_NAME}}
-
   deploy_to_prod:
-    #if: github.event_name == 'pull_request' && ${{ inputs.stage == 'prod'}}
-    #if: github.event_name != 'push'
-    if: ${{ inputs.perform_deploy }}
-    needs: deploy_to_stage
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
     permissions:
