@@ -45,7 +45,7 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './cfn-template/vpc-peering-connection.template.yaml')),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection.template.yaml')),
         },
       ],
     });
@@ -57,7 +57,7 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './cfn-template/vpc-peering-connection-accepter.template.yaml')),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection-accepter.template.yaml')),
         },
       ],
     });
