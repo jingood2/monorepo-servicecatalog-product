@@ -22,7 +22,6 @@ Parameters:
 Resources:
   vpcPeeringConnection:
     Type: AWS::EC2::VPCPeeringConnection
-    Description: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpcpeeringconnection.html
     Properties:
       PeerOwnerId: !Ref 'PeerOwnerId'
       PeerRegion: !Ref 'PeerRegion'
