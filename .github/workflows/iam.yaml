@@ -6,7 +6,7 @@ on:
       - labeled
   push:
     branches:
-      - 'main'
+      - 'feat**'
     paths:
       - "products/iam/**"
       - "./github/workflows/iam.yaml"

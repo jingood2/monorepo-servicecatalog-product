@@ -6,7 +6,7 @@ on:
       - labeled
   push:
     branches:
-      - 'main'
+      - 'feat**'
     paths:
       - "products/github-oidc-provider/**"
       - "./github/workflows/github-oidc-provider.yaml"
