@@ -18,7 +18,7 @@ export class MyStack extends Stack {
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1.0",
+          productVersionName: "v1",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCProduct(this, "Vpc", {})),
         },
       ],
@@ -30,7 +30,7 @@ export class MyStack extends Stack {
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1.0",
+          productVersionName: "v1",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection.template.yaml')),
         },
       ],
@@ -42,7 +42,7 @@ export class MyStack extends Stack {
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1.0",
+          productVersionName: "v1",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection-accepter.template.yaml')),
         },
       ],
