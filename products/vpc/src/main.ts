@@ -18,32 +18,36 @@ export class MyStack extends Stack {
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1",
+          productVersionName: "v1.0",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VPCProduct(this, "Vpc", {})),
         },
       ],
     });
 
-    new servicecatalog.CloudFormationProduct(this, 'VpcPeeringConnectionRequester', {
+    new servicecatalog.CloudFormationProduct(this, "VpcPeeringConnectionRequester", {
       description: "VPC Peering Connection Requester",
       productName: "vpc-peering-connection-requester-product",
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection.template.yaml')),
+          productVersionName: "v1.0",
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
+            path.join(__dirname, "./lib/cfn-template/vpc-peering-connection.template.yaml"),
+          ),
         },
       ],
     });
 
-    new servicecatalog.CloudFormationProduct(this, 'VpcPeeringConnectionAccepter', {
+    new servicecatalog.CloudFormationProduct(this, "VpcPeeringConnectionAccepter", {
       description: "VPC Peering Connection Accepter",
       productName: "vpc-peering-connection-accepter-product",
       owner: "SK Cloud Transformation Group",
       productVersions: [
         {
-          productVersionName: "v1",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, './lib/cfn-template/vpc-peering-connection-accepter.template.yaml')),
+          productVersionName: "v1.0",
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
+            path.join(__dirname, "./lib/cfn-template/vpc-peering-connection-accepter.template.yaml"),
+          ),
         },
       ],
     });
