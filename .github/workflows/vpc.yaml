@@ -20,7 +20,6 @@ env:
 
 jobs:
   build_and_deploy:
-    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
     permissions:
@@ -69,7 +68,7 @@ jobs:
   deploy_to_prod:
     #if: github.event_name == 'pull_request' && ${{ inputs.stage == 'prod'}}
     #if: github.event_name != 'push'
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'pull_request' }}
     #needs: deploy_to_stage
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
