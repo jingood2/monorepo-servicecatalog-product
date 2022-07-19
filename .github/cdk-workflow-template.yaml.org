@@ -1,21 +1,15 @@
 name: {{PROJECT}}
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "products/{{PROJECT}}/**"
-      - "./github/workflows/{{PROJECT}}.yaml"
   pull_request:
     types:
       - labeled
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Enable Only when it is PROD'
-        required: false
-        type: boolean
+  push:
+    branches:
+      - 'feat**'
+    paths:
+      - "products/{{PROJECT}}/**"
+      - "./github/workflows/{{PROJECT}}.yaml"
 
 env:
   CI: "true"
@@ -25,7 +19,7 @@ env:
   EXECUTE_ROLE: github-deploy-role
 
 jobs:
-  deploy_to_dev:
+  build_and_deploy:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
@@ -64,10 +58,6 @@ jobs:
           role-session-name: github-session
           aws-region: ap-northeast-2
 
-      #- name: cdk diff
-      #  run: npm run diff
-      #  working-directory: products/${{inputs.app_name}}
-
       - name: cdk build 
         run: npm run synth
         working-directory: products/${{env.PROJECT_NAME}}
@@ -77,14 +67,17 @@ jobs:
         working-directory: products/${{env.PROJECT_NAME}}
 
   deploy_to_prod:
+    #if: github.event_name == 'pull_request' && ${{ inputs.stage == 'prod'}}
+    #if: github.event_name != 'push'
     if: ${{ github.ref == 'refs/heads/main' }}
+    #needs: deploy_to_stage
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
     permissions:
       id-token: write
       contents: read
     env:
-      STAGE: prod
+      STAGE: prod 
     steps:
       #- name: approval
       #  uses: trstringer/manual-approval@v1
