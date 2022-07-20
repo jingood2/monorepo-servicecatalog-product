@@ -1,15 +1,21 @@
 name: {{PROJECT}}
 
 on:
-  pull_request:
-    types:
-      - labeled
   push:
     branches:
-      - 'feat**'
+      - main
     paths:
       - "products/{{PROJECT}}/**"
       - "./github/workflows/{{PROJECT}}.yaml"
+  pull_request:
+    types:
+      - labeled
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Enable Only when it is PROD'
+        required: false
+        type: boolean
 
 env:
   CI: "true"
@@ -19,7 +25,7 @@ env:
   EXECUTE_ROLE: github-deploy-role
 
 jobs:
-  build_and_deploy:
+  deploy_to_dev:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
@@ -58,6 +64,10 @@ jobs:
           role-session-name: github-session
           aws-region: ap-northeast-2
 
+      #- name: cdk diff
+      #  run: npm run diff
+      #  working-directory: products/${{inputs.app_name}}
+
       - name: cdk build 
         run: npm run synth
         working-directory: products/${{env.PROJECT_NAME}}
@@ -67,17 +77,14 @@ jobs:
         working-directory: products/${{env.PROJECT_NAME}}
 
   deploy_to_prod:
-    #if: github.event_name == 'pull_request' && ${{ inputs.stage == 'prod'}}
-    #if: github.event_name != 'push'
-    if: ${{ github.ref == 'refs/heads/main' }}
-    #needs: deploy_to_stage
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
     permissions:
       id-token: write
       contents: read
     env:
-      STAGE: prod 
+      STAGE: prod
     steps:
       #- name: approval
       #  uses: trstringer/manual-approval@v1
@@ -86,6 +93,7 @@ jobs:
       #    approvers: jingood2
       #    minimum-approvals: 1
       #    issue-title: "Deploying v1.3.5 to prod from staging"
+
 
       - uses: actions/checkout@v3
         with:
@@ -114,3 +122,24 @@ jobs:
       - name: deploy cdk on prod
         run: yarn cdk deploy --all --require-approval never 
         working-directory: products/${{env.PROJECT_NAME}}
+  
+  delete-feature:
+    if: github.event.pull_request.merged == true
+    needs: deploy_to_prod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: aws-actions/setup-sam@v1
+
+      - name: Assume the testing pipeline user role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
+          role-session-name: github-session
+          aws-region: ap-northeast-2
+
+      - name: Delete feature branch stack
+        run: |
+          cd products/${{env.PROJECT_NAME}}
+          cdk deploy --force sc-${{env.PROJECT_NAME}}-${{env.STAGE}}-stack
