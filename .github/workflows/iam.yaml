@@ -75,7 +75,7 @@ jobs:
       
       - uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ secrets.GITHUB_TOKEN}}
+          secret: ${{ github.TOKEN}}
           approvers: jingood2 
       
       - name: Destroy to AWS cdk dev App
