@@ -68,8 +68,17 @@ jobs:
             products/${{env.PROJECT_NAME}}
             !products/${{env.PROJECT_NAME}}/node_modules
       
-      - name: Deploy to AWS CDK App
+      - name: Deploy to AWS cdk dev App
         run: yarn cdk deploy --all --require-approval never 
+        working-directory: products/${{env.PROJECT_NAME}}
+      
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: jingood2 
+      
+      - name: Destroy to AWS cdk dev App
+        run: yarn cdk destroy --all --require-approval never 
         working-directory: products/${{env.PROJECT_NAME}}
 
   deploy-prod:
