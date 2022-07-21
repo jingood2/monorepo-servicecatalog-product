@@ -62,5 +62,7 @@ const devEnv = {
 
 const app = new App();
 
+// new
+
 new MyStack(app, "sc-network-portfolio", { env: devEnv, stackName: `${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 app.synth();
