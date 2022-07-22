@@ -1,8 +1,8 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
+//import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { envVars } from './env-vars';
+//import { envVars } from './env-vars';
 import { IAMUserPrduct } from './lib/iam-user-product';
 
 interface IStackProps extends StackProps {
@@ -10,13 +10,13 @@ interface IStackProps extends StackProps {
 }
 
 export class MyStack extends Stack {
-  readonly portfolio: servicecatalog.IPortfolio;
+  //readonly portfolio: servicecatalog.IPortfolio;
 
   constructor(scope: Construct, id: string, props: IStackProps) {
     super(scope, id, props);
 
     // Not exsiting portfolio
-    if (envVars.SC_PORTFOLIO_ARN != '') {
+    /* if (envVars.SC_PORTFOLIO_ARN != '') {
       this.portfolio = servicecatalog.Portfolio.fromPortfolioArn(this, 'MyImportedPortfolio', envVars.SC_PORTFOLIO_ARN);
     } else {
       this.portfolio = new servicecatalog.Portfolio(this, envVars.SC_PORTFOLIO_NAME, {
@@ -36,7 +36,7 @@ export class MyStack extends Stack {
           iam.Role.fromRoleArn(this, `${envVars.SC_PORTFOLIO_NAME}AdminRole`, `arn:aws:iam::${process.env.CDK_DEFAULT_ACCOUNT}:role/AssumableAdminRole`),
         );
       }
-    }
+    } */
 
     /* const tagOptionsForPortfolio = new servicecatalog.TagOptions(this, "OrgTagOptions", {
           allowedValuesForTags: {
@@ -48,20 +48,19 @@ export class MyStack extends Stack {
       */
 
 
-    /* new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
-        productName: 'sc-iamuser-product',
-        owner: 'AWSTF',
+    new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
+        productName: 'create-iamuser-product',
+        owner: 'SKCnC AWSTF',
         description: 'IAM User SC Product',
         productVersions: [
           {
-            productVersionName: 'v1',
+            productVersionName: 'v1.0',
             cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, 'IamUserProduct', {})),
           },
         ],
-      });
- */
+    });
 
-    const productStackHistory = new servicecatalog.ProductStackHistory(this, 'ProductStackHistory', {
+    /* const productStackHistory = new servicecatalog.ProductStackHistory(this, 'ProductStackHistory', {
       productStack: new IAMUserPrduct(this, 'IAMUserProduct', {}),
       currentVersionName: 'v1',
       currentVersionLocked: false,
@@ -73,7 +72,7 @@ export class MyStack extends Stack {
       productVersions: [productStackHistory.currentVersion()],
     });
 
-    this.portfolio.addProduct(product);
+    this.portfolio.addProduct(product); */
   }
 }
 
