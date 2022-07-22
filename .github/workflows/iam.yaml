@@ -80,7 +80,7 @@ jobs:
       #- name: Destroy to AWS cdk dev App
       #  run: yarn cdk destroy --all --require-approval never 
       #  working-directory: products/${{env.PROJECT_NAME}}
-  approve-deploy-prod:
+  approval:
     runs-on: ubuntu-latest
     environment: 'prod'
     needs: [deploy-dev]
@@ -119,15 +119,15 @@ jobs:
           role-session-name: github-session
           aws-region: ap-northeast-2
       
-      - name: Destroy to AWS cdk dev App
+      - name: Destroy dev branch cdk app
         run: yarn cdk destroy --all --require-approval never 
         working-directory: products/${{env.PROJECT_NAME}}
 
   deploy-prod:
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
-    environment: 'prod'
-    needs: [approve-deploy-prod]
+    #environment: 'prod'
+    needs: [approval]
     permissions:
       id-token: write
       contents: read

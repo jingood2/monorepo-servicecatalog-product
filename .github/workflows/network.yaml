@@ -1,17 +1,17 @@
-name: Deploy vpc Service Catalog Product 
+name: Deploy network Service Catalog Product 
 
 on:
   push:
     branches:
       - "main"
     paths:
-      - "products/vpc/**"
-      - "./github/workflows/vpc.yaml"
+      - "products/network/**"
+      - "./github/workflows/network.yaml"
 env:
   CI: "true"
   CDK_DEFAULT_ACCOUNT: '037729278610'
   CDK_DEFAULT_REGION: ap-northeast-2
-  PROJECT_NAME: 'vpc'
+  PROJECT_NAME: 'network'
   EXECUTE_ROLE: github-deploy-role
 
 
@@ -80,7 +80,7 @@ jobs:
       #- name: Destroy to AWS cdk dev App
       #  run: yarn cdk destroy --all --require-approval never 
       #  working-directory: products/${{env.PROJECT_NAME}}
-  approve-deploy-prod:
+  approval:
     runs-on: ubuntu-latest
     environment: 'prod'
     needs: [deploy-dev]
@@ -119,15 +119,15 @@ jobs:
           role-session-name: github-session
           aws-region: ap-northeast-2
       
-      - name: Destroy to AWS cdk dev App
+      - name: Destroy dev branch cdk app
         run: yarn cdk destroy --all --require-approval never 
         working-directory: products/${{env.PROJECT_NAME}}
 
   deploy-prod:
     runs-on: ubuntu-latest
      # These permissions are needed to interact with GitHub's OIDC Token endpoint
-    environment: 'prod'
-    needs: [approve-deploy-prod]
+    #environment: 'prod'
+    needs: [approval]
     permissions:
       id-token: write
       contents: read

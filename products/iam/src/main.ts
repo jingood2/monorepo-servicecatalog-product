@@ -85,7 +85,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'sc-iam-portfolio', { env: devEnv });
+new MyStack(app, "sc-iam-portfolio", { env: devEnv, stackName: `${process.env.PROJECT_NAME}-${process.env.STAGE}-Portfolio` });
 // new MyStack(app, 'iam-prod', { env: prodEnv });
 
 app.synth();
