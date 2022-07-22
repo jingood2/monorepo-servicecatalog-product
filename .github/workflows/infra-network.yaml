@@ -90,13 +90,20 @@ jobs:
     env:
       STAGE: dev
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
+      #- uses: actions/checkout@v3
+      #  with:
+      #    fetch-depth: 1
 
       - uses: actions/setup-node@v2
         with:
           node-version: "14"
+
+      # Download published artifact
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: published-app
+          path: projects/infra/network
       
       - name: Cache node modules
         uses: actions/cache@v2
@@ -118,6 +125,10 @@ jobs:
           role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
           role-session-name: github-session
           aws-region: ap-northeast-2
+      
+      - name: cdk build 
+        run: npm run synth
+        working-directory: projects/infra/network
       
       - name: Destroy dev branch cdk app
         run: yarn cdk destroy --all --require-approval never 
