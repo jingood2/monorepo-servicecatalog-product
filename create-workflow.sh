@@ -12,7 +12,7 @@ for CATEGORY in $(ls ${ROOT_DIR}); do
     for PROJECT in $(ls ${ROOT_DIR}/${CATEGORY}); do
         for ACCOUNT in ${TARGET_DEPLOY_ACCOUNTS[@]}; do
             JOB_WORKFLOW=$(echo "${JOB_WORKFLOW_TEMPLATE}" | sed "s/{{ROOT_DIR}}/${ROOT_DIR}/g" | sed "s/{{TARGET_ACCOUNT}}/${ACCOUNT}/g" | sed "s/{{PROJECT}}/${PROJECT}/g" | sed "s/{{CATEGORY}}/${CATEGORY}/g" )
-            echo "${JOB_WORKFLOW}" > .github/workflows/${CATEGORY}/${PROJECT}.yaml
+            echo "${JOB_WORKFLOW}" > .github/workflows/${CATEGORY}-${PROJECT}.yaml
         done
     done
 
