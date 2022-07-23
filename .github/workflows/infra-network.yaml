@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/infra/network
       
       - name: Destroy dev branch cdk app
-        run: npm run destroy sc-infra-network-${{env.STAGE}} --force
+        run: cdk destroy sc-infra-network-${{env.STAGE}} --force
         working-directory: projects/infra/network
 
   deploy-prod:
