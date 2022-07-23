@@ -131,7 +131,7 @@ jobs:
         working-directory: {{ROOT_DIR}}/{{CATEGORY}}/{{PROJECT}}
       
       - name: Destroy dev branch cdk app
-        run: yarn cdk destroy {{CATEGORY}}-{{PROJECT}}-${{env.STAGE}} --all --force
+        run: yarn cdk destroy sc-{{CATEGORY}}-{{PROJECT}}-${{env.STAGE}} --force
         working-directory: {{ROOT_DIR}}/{{CATEGORY}}/{{PROJECT}}
 
   deploy-prod:
