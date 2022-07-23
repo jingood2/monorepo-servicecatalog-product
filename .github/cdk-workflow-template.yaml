@@ -131,7 +131,7 @@ jobs:
         working-directory: {{ROOT_DIR}}/{{CATEGORY}}/{{PROJECT}}
       
       - name: Destroy dev branch cdk app
-        run: npm run destroy sc-{{CATEGORY}}-{{PROJECT}}-${{env.STAGE}} --force
+        run: cdk destroy sc-{{CATEGORY}}-{{PROJECT}}-${{env.STAGE}} --force
         working-directory: {{ROOT_DIR}}/{{CATEGORY}}/{{PROJECT}}
 
   deploy-prod:
@@ -180,7 +180,7 @@ jobs:
       
       # Deploy to web app
       - name: Deploy to AWS CDK App
-        run: npm run deploy --all --require-approval never 
+        run: yarn cdk deploy --all --require-approval never 
         working-directory: {{ROOT_DIR}}/{{CATEGORY}}/{{PROJECT}}
   
   #destroy-dev:
