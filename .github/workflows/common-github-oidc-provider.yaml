@@ -180,7 +180,7 @@ jobs:
       
       # Deploy to web app
       - name: Deploy to AWS CDK App
-        run: yarn cdk deploy --all --require-approval never 
+        run: npm run deploy --all --require-approval never 
         working-directory: projects/common/github-oidc-provider
   
   #destroy-dev:
