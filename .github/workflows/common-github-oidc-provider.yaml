@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/common/github-oidc-provider
       
       - name: Destroy dev branch cdk app
-        run: yarn cdk destroy --all --require-approval never 
+        run: yarn cdk destroy common-github-oidc-provider-${{env.STAGE}} --all --force
         working-directory: projects/common/github-oidc-provider
 
   deploy-prod:

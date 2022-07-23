@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/governance/iam
       
       - name: Destroy dev branch cdk app
-        run: yarn cdk destroy --all --require-approval never 
+        run: yarn cdk destroy governance-iam-${{env.STAGE}} --all --force
         working-directory: projects/governance/iam
 
   deploy-prod:

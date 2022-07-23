@@ -61,6 +61,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "github-oidc-provider-product", { env: devEnv, stackName: `${process.env.PROJECT_NAME}-${process.env.STAGE}-Product` });
+new MyStack(app, "my-stack", { env: devEnv, stackName: `${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();

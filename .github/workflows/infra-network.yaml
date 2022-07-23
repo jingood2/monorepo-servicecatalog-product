@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/infra/network
       
       - name: Destroy dev branch cdk app
-        run: yarn cdk destroy --all --require-approval never 
+        run: yarn cdk destroy infra-network-${{env.STAGE}} --all --force
         working-directory: projects/infra/network
 
   deploy-prod:
