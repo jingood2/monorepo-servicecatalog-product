@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/common/portfolio
       
       - name: Destroy dev branch cdk app
-        run: yarn cdk destroy sc-common-portfolio-${{env.STAGE}} --force
+        run: yarn cdk destroy --all --force
         working-directory: projects/common/portfolio
 
   deploy-prod:
@@ -180,7 +180,7 @@ jobs:
       
       # Deploy to web app
       - name: Deploy to AWS CDK App
-        run: npm run deploy --all --require-approval never 
+        run: yarn cdk deploy --all --require-approval never 
         working-directory: projects/common/portfolio
   
   #destroy-dev:
