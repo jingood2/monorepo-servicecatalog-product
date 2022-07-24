@@ -131,7 +131,7 @@ jobs:
         working-directory: projects/common/portfolio
       
       - name: Destroy dev branch cdk app
-        run: cdk destroy sc-common-portfolio-${{env.STAGE}} --force
+        run: yarn cdk destroy sc-common-portfolio-${{env.STAGE}} --force
         working-directory: projects/common/portfolio
 
   deploy-prod:
