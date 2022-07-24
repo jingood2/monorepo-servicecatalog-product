@@ -61,6 +61,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "mystack", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, "my-stack", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();
