@@ -69,10 +69,10 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         description: 'Static IP for SSH access',
       });
 
-      const amiId = new CfnParameter(this, 'AMIId', {
+      /* const amiId = new CfnParameter(this, 'AMIId', {
         type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
         default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
-      });
+      }); */
 
       const instanceType = new CfnParameter(this, 'InstacneType', {
         type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
@@ -208,7 +208,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
         launchTemplateName: launchTemplateName.valueAsString,
         instanceType: new InstanceType(instanceType.valueAsString),
-        machineImage: MachineImage.fromSsmParameter(amiId.valueAsString),
+        machineImage: MachineImage.latestAmazonLinux(),
         role: ec2Role,
         keyName: ec2InstanceKeyName.valueAsString,
         securityGroup: ec2SecurityGroup,
