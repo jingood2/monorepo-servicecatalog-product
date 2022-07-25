@@ -28,7 +28,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         },
       };
 
-      const projectName = new CfnParameter(this, 'ProjectName', {
+      /* const projectName = new CfnParameter(this, 'ProjectName', {
         type: 'String',
         default: 'projectName',
         description: 'Project Name',
@@ -39,7 +39,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         default: 'dev',
         allowedValues: ['shared', 'dev','stage','prod'],
         description: 'Environment Name',
-      });
+      }); */
 
       const launchTemplateName = new CfnParameter(this, 'LaunchTemplateName', {
         type: 'String',
@@ -130,8 +130,8 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       });
 
       const addEbsVolume = new CfnParameter(this, 'AddEbsVolume', {
-        type: 'String',
-        default: '',
+        type: 'Number',
+        default: 10,
         description: 'attach EBS Volume Size. Under 0 is not attached on ebs',
       });
 
@@ -214,7 +214,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         securityGroup: ec2SecurityGroup,
         userData: userData,
         blockDevices: [ 
-            { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(10,{ volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3}) }
+            { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(addEbsVolume.valueAsNumber,{ volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3}) }
         ],
       });
 
