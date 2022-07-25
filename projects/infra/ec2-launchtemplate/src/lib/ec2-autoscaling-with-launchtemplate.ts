@@ -226,8 +226,8 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         desiredCapacity: ec2AutoscaleDesiredCapacity.valueAsNumber,
         vpcSubnets: { 
             subnets: [ 
-                Subnet.fromSubnetId(this, 'Subnet1', ec2Subnet1.valueAsString),
-                Subnet.fromSubnetId(this, 'Subnet2', ec2Subnet2.valueAsString),
+                Subnet.fromSubnetId(this, 'ASGSubnet1', ec2Subnet1.valueAsString),
+                Subnet.fromSubnetId(this, 'ASGSubnet2', ec2Subnet2.valueAsString),
             ]
         },
         launchTemplate: launchTemplate,
