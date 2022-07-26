@@ -256,7 +256,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       },
       launchTemplate: launchTemplate,
     });
-
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
 
