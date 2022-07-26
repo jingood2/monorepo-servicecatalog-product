@@ -8,14 +8,14 @@ export class MyStack extends Stack {
     super(scope, id, props);
 
     // define resources here...
-     // Create a product from a stack
-     new servicecatalog.CloudFormationProduct(this, "EC2LaunchTEmplateProduct", {
-      productName: "EC2 LaunchTemplate Product",
-      owner: "SK Cloud Transformation Group",
+    // Create a product from a stack
+    new servicecatalog.CloudFormationProduct(this, 'EC2LaunchTEmplateProduct', {
+      productName: 'EC2 LaunchTemplate Product',
+      owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: "v1.0",
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EC2ASGWithLaunchTemplate(this, "Ec2LaunchTemplateWithAutoscaling", {})),
+          productVersionName: 'v1.0',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EC2ASGWithLaunchTemplate(this, 'Ec2LaunchTemplateWithAutoscaling', {})),
         },
       ],
     });
@@ -30,5 +30,5 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "my-new-stack", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'my-new-stack', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 app.synth();
