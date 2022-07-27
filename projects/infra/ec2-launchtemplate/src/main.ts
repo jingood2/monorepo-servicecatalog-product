@@ -1,7 +1,8 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { EC2ASGWithLaunchTemplate } from './lib/ec2-autoscaling-with-launchtemplate';
+import { EFSWithAutomountToEC2 } from './lib/efs-with-automount-to-ec2';
+import { EC2ASGWithLaunchTemplate } from './lib/linux-launchtemplate-with-asg';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -16,6 +17,17 @@ export class MyStack extends Stack {
         {
           productVersionName: 'v1.0',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EC2ASGWithLaunchTemplate(this, 'Ec2LaunchTemplateWithAutoscaling', {})),
+        },
+      ],
+    });
+
+    new servicecatalog.CloudFormationProduct(this, 'EFSWithAutomountToEC2LaunchTemplateProduct', {
+      productName: 'EFS mount on EC2 LaunchTemplate Product',
+      owner: 'SK Cloud Transformation Group',
+      productVersions: [
+        {
+          productVersionName: 'v1.0',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EFSWithAutomountToEC2(this, 'EFSWithAutomountToEC2LaunchTemplate', {})),
         },
       ],
     });

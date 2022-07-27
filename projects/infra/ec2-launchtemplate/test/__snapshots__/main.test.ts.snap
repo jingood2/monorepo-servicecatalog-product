@@ -19,7 +19,25 @@ Object {
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/a991765d04939270f37bf2cb60f678242c478ea133042679714f308fc589fdc1.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4b0c4c581df2236679ddc247c7cc69316f9d47bade46088d683fed0fae9400c2.json",
+              },
+            },
+            "Name": "v1.0",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "EFSWithAutomountToEC2LaunchTemplateProductB269BC1A": Object {
+      "Properties": Object {
+        "Name": "EFS mount on EC2 LaunchTemplate Product",
+        "Owner": "SK Cloud Transformation Group",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/45cb6b69ce1cd05dbb2196bf8c4117f5fa4ebb7177053d2a56df2e09a3298eeb.json",
               },
             },
             "Name": "v1.0",

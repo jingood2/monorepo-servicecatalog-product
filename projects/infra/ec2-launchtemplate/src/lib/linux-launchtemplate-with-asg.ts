@@ -3,7 +3,6 @@ import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 import { BlockDeviceVolume, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, Peer, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { ProductStack } from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs/lib/construct';
 
@@ -20,31 +19,52 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
         ParameterGroups: [
           {
             Label: {
-              default: 'Information for IAM User',
+              default: 'Information of Environment',
             },
-            Parameters: ['VpcId', 'Password'],
+            Parameters: ['ProjectName', 'Environment', 'ServerName'],
           },
+          {
+            Label: {
+              default: 'Information of Network',
+            },
+            Parameters: ['VpcId', 'Subnet1', 'Subnet2', 'AllowIPForSSH'],
+          },
+          {
+            Label: {
+              default: 'Information of Infrastructure',
+            },
+            Parameters: [
+              'InstacneType',
+              'EC2InstanceKeyName',
+              'CreateASG',
+              'Ec2AutoscaleMinSize',
+              'Ec2AutoscaleMaxSize',
+              'Ec2AutoscaleDesiredCapacity',
+              'EBSVolumeA',
+              'EBSMountPoint',
+            ],
+          },
+
         ],
       },
     };
 
-    /* const projectName = new CfnParameter(this, 'ProjectName', {
-        type: 'String',
-        default: 'projectName',
-        description: 'Project Name',
-      });
-
-      const environment= new CfnParameter(this, 'Environment', {
-        type: 'String',
-        default: 'dev',
-        allowedValues: ['shared', 'dev','stage','prod'],
-        description: 'Environment Name',
-      }); */
-
-    const launchTemplateName = new CfnParameter(this, 'LaunchTemplateName', {
+    const projectName = new CfnParameter(this, 'ProjectName', {
       type: 'String',
-      default: 'linux-launchtemplate-with-autoscaling',
-      description: 'Amazon Linux LaunchTemplate with AutoScaling',
+      default: 'projectName',
+      description: 'Project Name',
+    });
+
+    const environment= new CfnParameter(this, 'Environment', {
+      type: 'String',
+      default: 'dev',
+      allowedValues: ['shared', 'dev', 'stage', 'prod'],
+      description: 'Environment Name',
+    });
+
+    const serverName = new CfnParameter(this, 'ServerName', {
+      type: 'String',
+      description: 'EC2 Server Name',
     });
 
     const vpcId = new CfnParameter(this, 'VpcId', {
@@ -68,11 +88,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       default: '106.73.25.32/32',
       description: 'Static IP for SSH access',
     });
-
-    /* const amiId = new CfnParameter(this, 'AMIId', {
-        type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
-        default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
-      }); */
 
     const instanceType = new CfnParameter(this, 'InstacneType', {
       type: 'String',
@@ -98,31 +113,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       ],
     });
 
-    /* const instanceType = new CfnParameter(this, 'InstacneType', {
-      type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
-      default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
-      description: 'EC2 instance type',
-      allowedValues: [
-        't2.nano',
-        't2.micro',
-        't2.small',
-        't2.medium',
-        't2.large',
-        't2.xlarge',
-        't2.2xlarge',
-        't3.nano',
-        't3.micro',
-        't3.small',
-        't3.medium',
-        't3.large',
-        't3.xlarge',
-        't3.2xlarge',
-        'm5.large', 'm5.xlarge', 'm5.2xlarge', 'm5.4xlarge',
-        'c5.large', 'c5.xlarge', 'c5.2xlarge', 'c5.4xlarge',
-        'r5.large', 'r5.xlarge', 'r5.2xlarge', 'r5.4xlarge', 'r3.12xlarge',
-      ],
-    });
- */
     const ec2InstanceKeyName = new CfnParameter(this, 'EC2InstanceKeyName', {
       type: 'AWS::EC2::KeyPair::KeyName',
       default: 'SSHKeyName',
@@ -137,7 +127,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
 
     const ec2AutoscaleMinSize = new CfnParameter(this, 'Ec2AutoscaleMinSize', {
       type: 'Number',
-      default: 0,
+      default: 1,
       description: 'AutoScalingGroup MinSize',
     });
 
@@ -149,16 +139,9 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
 
     const ec2AutoscaleDesiredCapacity = new CfnParameter(this, 'Ec2AutoscaleDesiredCapacity', {
       type: 'Number',
-      default: 0,
+      default: 1,
       description: 'AutoScalingGroup DesiredCapacity',
     });
-
-    const addEbsVolume = new CfnParameter(this, 'AddEbsVolume', {
-      type: 'Number',
-      default: 10,
-      description: 'attach EBS Volume Size. Under 0 is not attached on ebs',
-    });
-
 
     const createASG = new CfnParameter(this, 'CreateASG', {
       type: 'String',
@@ -167,13 +150,21 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       description: 'Should create Autoscaling Group',
     });
 
+    const ebsMountPoint = new CfnParameter(this, 'EBSMountPoint', {
+      type: 'String',
+      description: 'extention EBS Mount Point',
+      default: '/data'
+    });
+
+    const ebsVolumeA = new CfnParameter(this, 'EBSVolumeA', {
+      type: 'Number',
+      default: 10,
+      description: 'Size of EBS Volume /dev/xvdf.',
+    });
+
     const createASGCondition = new CfnCondition(this, 'CreateASGCondition', {
       expression: Fn.conditionEquals(createASG, 'true'),
     });
-
-    // mandatory security group
-    // custom security group
-
 
     const vpc = Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: vpcId.valueAsString,
@@ -181,22 +172,21 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     });
 
     const ec2SecurityGroup = new SecurityGroup(this, 'EC2SecurityGroup', {
+      securityGroupName: `${projectName.valueAsString}-${environment.valueAsString}-${serverName.valueAsString}-sg`,
       vpc,
       allowAllOutbound: true,
     });
 
     ec2SecurityGroup.addIngressRule(Peer.ipv4(staticIpForSSH.valueAsString), Port.tcp(22));
 
-    // mandatory iam role
-    // custom iam role
     const ec2Role = new Role(this, 'EC2Role', {
-      //roleName: `${projectName.valueAsString}-ec2-${environment.valueAsString}-${appName.valueAsString}-sg`,
+      roleName: `${projectName.valueAsString}-ec2-${environment.valueAsString}-${serverName.valueAsString}-role`,
       assumedBy: new ServicePrincipal('ec2.amazonaws.com'),
       description: 'IAM Role for EC2',
     });
 
     ec2Role.addManagedPolicy(
-      ManagedPolicy.fromManagedPolicyArn(this, 'Ec2RoleForSSM', 'arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'));
+      ManagedPolicy.fromManagedPolicyArn(this, 'AmazonSSMManagedInstanceCore', 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'));
 
     ec2Role.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
@@ -218,32 +208,35 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
 
     const userData = UserData.forLinux();
 
-    const localPath = userData.addS3DownloadCommand({
-      bucket: Bucket.fromBucketName(this, 'S3Bucket', 'jingood2-servicecatalog-assets'),
-      bucketKey: 'launchtemplate/configure.sh',
-      region: 'ap-northeast-2', // Optional
-    });
-
-    userData.addExecuteFileCommand({
-      filePath: localPath,
-      arguments: '--verbose -y',
-    });
+    userData.addCommands(
+      'ebs_mount_point_1=' + ebsMountPoint.valueAsString,
+      'if [ -e /dev/xvdf ]; then',
+        'if [ ! -e ${ebs_mount_point_1} ]; then',
+          'mkfs.ext4 /dev/xvdf',
+          'mkdir -p ${ebs_mount_point_1}',
+          'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
+          'mount -a',
+        'fi',
+      'fi'
+    );
 
     const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
-      launchTemplateName: launchTemplateName.valueAsString,
+      launchTemplateName: `${projectName.valueAsString}-${serverName.valueAsString}-launchtemplate`,
       instanceType: new InstanceType(instanceType.valueAsString),
+      //machineImage: MachineImage.fromSsmParameter(Lazy.string({ produce:() => amiId.valueAsString })),
       machineImage: MachineImage.latestAmazonLinux(),
       role: ec2Role,
       keyName: ec2InstanceKeyName.valueAsString,
       securityGroup: ec2SecurityGroup,
       userData: userData,
       blockDevices: [
-        { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(addEbsVolume.valueAsNumber, { volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3 }) },
+        { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(ebsVolumeA.valueAsNumber, { volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3 }) },
       ],
     });
 
     // Autoscaling Group
     const autoscale = new AutoScalingGroup(this, 'ASG', {
+      autoScalingGroupName: `${projectName.valueAsString}-${environment.valueAsString}-${serverName.valueAsString}-asg`,
       vpc,
       minCapacity: ec2AutoscaleMinSize.valueAsNumber,
       maxCapacity: ec2AutoscaleMaxSize.valueAsNumber,
@@ -256,8 +249,11 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       },
       launchTemplate: launchTemplate,
     });
+
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
+
+   
 
   }
 }
