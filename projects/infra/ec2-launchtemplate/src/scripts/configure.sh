@@ -1,9 +1,14 @@
 #!/bin/bash -xe
+
 date > /tmp/run.log
 # OS update
 yum update -y
+
+sudo su 
+
 # install
-yum install jq awslogs -y
+yum install jq xfsprogs awslogs -y
+
 # AWS_DEFAULT_REGION
 REGION=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/.$//g'`
 export AWS_DEFAULT_REGION=${REGION}
