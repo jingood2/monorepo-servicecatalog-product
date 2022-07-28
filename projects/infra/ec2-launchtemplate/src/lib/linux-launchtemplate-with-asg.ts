@@ -169,7 +169,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     const noCreateASGCondition = new CfnCondition(this, 'NoCreateASGCondition', {
       expression: Fn.conditionEquals(createASG, 'false'),
     });
-
     const vpc = Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: vpcId.valueAsString,
       availabilityZones: ['ap-northeast-2a', 'ap-northeast-2c'],
@@ -256,7 +255,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
 
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
-
 
     const instance = new CfnInstance(this, 'Ec2Instance', {
       launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: launchTemplate.latestVersionNumber},
