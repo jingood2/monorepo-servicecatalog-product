@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-import { BlockDeviceVolume, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, Peer, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, Peer, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { ProductStack } from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs/lib/construct';
@@ -166,6 +166,10 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       expression: Fn.conditionEquals(createASG, 'true'),
     });
 
+    const noCreateASGCondition = new CfnCondition(this, 'NoCreateASGCondition', {
+      expression: Fn.conditionEquals(createASG, 'false'),
+    });
+
     const vpc = Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: vpcId.valueAsString,
       availabilityZones: ['ap-northeast-2a', 'ap-northeast-2c'],
@@ -253,7 +257,13 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
 
-   
+
+    const instance = new CfnInstance(this, 'Ec2Instance', {
+      launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: launchTemplate.latestVersionNumber},
+      subnetId: ec2Subnet1.valueAsString,
+    });
+
+    instance.cfnOptions.condition = noCreateASGCondition;
 
   }
 }
