@@ -106,7 +106,8 @@ export class EC2LauchTemplate extends ProductStack {
     });
 
     const amiId = new CfnParameter(this, 'AmiId', {
-        type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
+        //type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
+        type: 'String',
         default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
         allowedValues: [
             '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
@@ -149,7 +150,6 @@ export class EC2LauchTemplate extends ProductStack {
       description: 'EC2 SSH KEY',
     });
  */
-
     /* const ec22InstanceTagName = new CfnParameter(this, 'EC2InstanceTagName', {
         type: 'String',
         default: 'project-component-stage-appname',
