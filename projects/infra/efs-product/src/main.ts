@@ -14,7 +14,7 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: 'v1.0',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new AttachEFSMount(this, 'EC2LaunchTemplate', {})),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new AttachEFSMount(this, 'EC2LaunchTemplate')),
         },
       ],
     });
