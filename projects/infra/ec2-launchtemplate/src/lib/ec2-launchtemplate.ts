@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, LaunchTemplateSpecialVersions, MachineImage, MultipartBody, MultipartUserData, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, MultipartBody, MultipartUserData, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import * as efs from 'aws-cdk-lib/aws-efs';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -361,7 +361,7 @@ export class EC2LauchTemplate extends ProductStack {
     });
 
     const cfnEC2 = new CfnInstance(this, 'EC2Instance', {
-        launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: LaunchTemplateSpecialVersions.DEFAULT_VERSION},
+        launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: '1'},
         subnetId: ec2Subnet1.valueAsString,
     });
 
