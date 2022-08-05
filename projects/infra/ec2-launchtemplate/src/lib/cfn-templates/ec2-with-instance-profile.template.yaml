@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create LaunchTemplate & EC2 Instance
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: 'VPC ID to deploy EC2'
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: 'Subnet Id to deply EC2'
+  Project:
+    Type: String
+    Default: acme
+  Environment:
+    Type : String
+    Default: dev
+    AllowedValues: [dev,stage,prod,dmz]
+  LinuxLatestAmi:
+    Type : AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    AllowedValues
+  Ec2InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+      t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge,
+      c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge]
+    ConstraintDescription: must be a valid EC2 instance type.
+  KeyPairName:
+    Description: "EC2 Keypair name."
+    Type: AWS::EC2::KeyPair::KeyName
+Resources:
+  # Security Group
+  EC2SecurityGroup1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "launch-template-sg"
+      GroupDescription: "launch-template-sg"
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        -
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags: 
+        - Key: "Name"
+          Value: launch-template-sg
+  # IAM Role (SSM)
+  SSMIAMRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Retain
+    Properties:
+      RoleName:
+        Fn::Sub: "launch-template-ssm-role"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: 
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  SSMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    DeletionPolicy: Retain
+    Properties:
+      InstanceProfileName:
+        Fn::Sub: "launch-template-ssm-role"
+      Path: "/"
+      Roles:
+        - Ref: SSMIAMRole
+  MyLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: MyLaunchTemplate
+      LaunchTemplateData:
+        IamInstanceProfile: 
+          Arn: !Ref SSMInstanceProfile
+        BlockDeviceMappings: 
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: 20
+            DeleteOnTermination: true
+            Encrypted: true
+        DisableApiTermination: true
+        NetworkInterfaces: 
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          Groups:
+            - !Ref EC2SecurityGroup1
+          SubnetId: !Ref SubnetId
+        ImageId: !Ref LinuxLatestAmi
+        InstanceType: !Ref Ec2InstanceType
+        KeyName: !Ref KeyPairName
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref MyLaunchTemplate
+        Version: !GetAtt MyLaunchTemplate.LatestVersionNumber
+      DisableApiTermination: true

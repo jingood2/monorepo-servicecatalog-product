@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  
+Parameters:
+  
+Metadata:
+  
+Mappings:
+  
+Conditions:
+  
+Resources:
+  LogicalID:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: "String"
+      BlockDeviceMappings:
+        BlockDeviceMappings
+      DisableApiTermination: false
+      EbsOptimized: false
+      IamInstanceProfile: "String"
+      ImageId: "String"
+      InstanceInitiatedShutdownBehavior: "String"
+      InstanceType: "String"
+      KeyName: "String"
+      LaunchTemplate:
+        LaunchTemplateId: "String"
+        LaunchTemplateName: "String"
+        Version: "String"
+      Monitoring: String
+      PrivateDnsNameOptions:
+        EnableResourceNameDnsAAAARecord: false
+        EnableResourceNameDnsARecord: false
+        HostnameType: "String"
+      PrivateIpAddress: "false"
+      PropagateTagsToVolumeOnCreation: String
+      SecurityGroupIds:
+        SecurityGroupIds
+      SecurityGroups:
+        SecurityGroups
+      SourceDestCheck: false
+      SsmAssociations:
+        SsmAssociations
+      SubnetId: "String"
+      Tags:
+        Tags
+      UserData: "String"
+      Volumes:
+        Volumes
+  
+Transform:
+  
+Outputs:
