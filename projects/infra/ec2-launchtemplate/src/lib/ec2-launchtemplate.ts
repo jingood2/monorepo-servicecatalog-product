@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, LaunchTemplateSpecialVersions, MachineImage, MultipartBody, MultipartUserData, Peer, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, LaunchTemplateSpecialVersions, MachineImage, MultipartBody, MultipartUserData, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import * as efs from 'aws-cdk-lib/aws-efs';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -143,12 +143,12 @@ export class EC2LauchTemplate extends ProductStack {
       ],
     });
 
-    const ec2InstanceKeyName = new CfnParameter(this, 'EC2InstanceKeyName', {
+    /* const ec2InstanceKeyName = new CfnParameter(this, 'EC2InstanceKeyName', {
       type: 'AWS::EC2::KeyPair::KeyName',
       default: 'SSHKeyName',
       description: 'EC2 SSH KEY',
     });
-
+ */
     /* const ec22InstanceTagName = new CfnParameter(this, 'EC2InstanceTagName', {
         type: 'String',
         default: 'project-component-stage-appname',
@@ -384,7 +384,6 @@ export class EC2LauchTemplate extends ProductStack {
       launchTemplate: launchTemplate,
     });
 
-    autoscale.
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
 
