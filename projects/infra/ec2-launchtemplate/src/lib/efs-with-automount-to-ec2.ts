@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-import { BlockDeviceVolume, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, MultipartBody, MultipartUserData, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { BlockDeviceVolume, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, MultipartBody, MultipartUserData, Peer, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import * as efs from 'aws-cdk-lib/aws-efs';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
