@@ -361,7 +361,7 @@ export class EC2LauchTemplate extends ProductStack {
     });
 
     const cfnEC2 = new CfnInstance(this, 'EC2Instance', {
-        launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: LaunchTemplateSpecialVersions.LATEST_VERSION },
+        launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: LaunchTemplateSpecialVersions.DEFAULT_VERSION},
         subnetId: ec2Subnet1.valueAsString,
     });
 
