@@ -149,6 +149,7 @@ export class EC2LauchTemplate extends ProductStack {
       description: 'EC2 SSH KEY',
     });
  */
+
     /* const ec22InstanceTagName = new CfnParameter(this, 'EC2InstanceTagName', {
         type: 'String',
         default: 'project-component-stage-appname',
