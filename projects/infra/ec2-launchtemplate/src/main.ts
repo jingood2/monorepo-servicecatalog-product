@@ -34,11 +34,11 @@ export class MyStack extends Stack {
     });
 
     new servicecatalog.CloudFormationProduct(this, 'EC2LaunchTemplateProduct', {
-      productName: 'EC2 LaunchTemplate Product',
+      productName: 'EC2 LaunchTemplate Product V2',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: 'v1.0',
+          productVersionName: 'v2.0',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EC2LauchTemplate(this, 'EC2LaunchTemplate', {})),
         },
       ],
