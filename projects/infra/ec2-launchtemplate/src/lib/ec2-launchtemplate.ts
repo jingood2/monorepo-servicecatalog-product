@@ -350,7 +350,7 @@ export class EC2LauchTemplate extends ProductStack {
     const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
       launchTemplateName: `${projectName.valueAsString}-${instanceName.valueAsString}-launchtemplate`,
       instanceType: new InstanceType(instanceType.valueAsString),
-      machineImage: MachineImage.fromSsmParameter(amiId.valueAsString),
+      machineImage: MachineImage.fromSsmParameter('/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2' || amiId.valueAsString),
       role: ec2Role,
       //keyName: ec2InstanceKeyName.valueAsString,
       securityGroup: ec2SecurityGroup,
