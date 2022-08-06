@@ -76,11 +76,11 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
     description: 'EC2 subnet 2',
     });
 
-    const AclPosixUserGids = new CfnParameter(this, 'PosixUserGIds', {
+    /* const AclPosixUserGids = new CfnParameter(this, 'PosixUserGIds', {
         type: 'List<String>',
         description: 'ACL PosixUser Gids',
         default: ['501']
-    });
+    }); */
 
     // Import existing vpc
     const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
@@ -126,7 +126,7 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
       posixUser: {
         uid: '500',
         gid: '500',
-        secondaryGids: AclPosixUserGids.valueAsList,
+        //secondaryGids: AclPosixUserGids.valueAsList,
       },
     });
 
