@@ -96,13 +96,13 @@ export class EFSWithAutomountToEC2 extends ProductStack {
     const accessPointPath = new CfnParameter(this, 'EFSAccessPointPath', {
       type: 'String',
       description: 'EFS Access Point Path',
-      default: '/mnt/accesspoint'
+      default: '/mnt/accesspoint',
     });
 
     const ebsMountPoint = new CfnParameter(this, 'EBSMountPoint', {
       type: 'String',
       description: 'extention EBS Mount Point',
-      default: '/data'
+      default: '/data',
     });
     /* const amiId = new CfnParameter(this, 'AMIId', {
         type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
@@ -238,7 +238,6 @@ export class EFSWithAutomountToEC2 extends ProductStack {
       resources: ['arn:aws:logs:*:*:*'],
     }));
 
-    
 
     // Security Group for EFS Filesystem
     const efsSecurityGroup = new SecurityGroup(this, 'EFSSecurityGroup', {
@@ -315,12 +314,12 @@ export class EFSWithAutomountToEC2 extends ProductStack {
     userData.addCommands(
       'ebs_mount_point_1=' + ebsMountPoint.valueAsString,
       'if [ -e /dev/xvdf ]; then',
-        'if [ ! -e ${ebs_mount_point_1} ]; then',
-          'mkfs.ext4 /dev/xvdf',
-          'mkdir -p ${ebs_mount_point_1}',
-          'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
-        'fi',
-      'fi'
+      'if [ ! -e ${ebs_mount_point_1} ]; then',
+      'mkfs.ext4 /dev/xvdf',
+      'mkdir -p ${ebs_mount_point_1}',
+      'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
+      'fi',
+      'fi',
     );
 
     const efsUserData = UserData.forLinux();

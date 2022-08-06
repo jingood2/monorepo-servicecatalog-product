@@ -96,18 +96,18 @@ export class EC2LauchTemplate extends ProductStack {
     const accessPointPath = new CfnParameter(this, 'EFSAccessPointPath', {
       type: 'String',
       description: 'EFS Access Point Path',
-      default: '/mnt/accesspoint'
+      default: '/mnt/accesspoint',
     });
 
     const ebsMountPoint = new CfnParameter(this, 'EBSMountPoint', {
       type: 'String',
       description: 'extention EBS Mount Point',
-      default: '/data'
+      default: '/data',
     });
 
-    const amiId = new CfnParameter(this, 'AmiId', {
-        //type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
-        type: 'String',
+    /* const machineImage = new CfnParameter(this, 'MachineImage', {
+        type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>',
+        //type: 'String',
         default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
         allowedValues: [
             '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2',
@@ -118,6 +118,11 @@ export class EC2LauchTemplate extends ProductStack {
             '/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-SQL_2019_Standard',
             '/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base'
         ]
+    }); */
+
+    const launchTemplateId = new CfnParameter(this, 'AmiId', {
+        type: 'String',
+        default: 'lt-0ba1a4d4e4cb6f800'
     });
 
     const instanceType = new CfnParameter(this, 'InstacneType', {
@@ -195,12 +200,38 @@ export class EC2LauchTemplate extends ProductStack {
     }); */
 
 
-
     /* const createEFS = new CfnParameter(this, 'CreateAttachEFS', {
       type: 'String',
       default: 'true',
       allowedValues: ['true', 'false'],
       description: 'Should attach EFS',
+    }); */
+
+
+    /* const amiTable = new CfnMapping(this, 'AmiTable', {
+      mapping: {
+        'amzn2-ami-hvm-x86_64-gp2': {
+          amiId: 'ami-01711d925a1e4cc3a',
+        },
+        'amzn2-ami-hvm-2.0.20220719.0-arm64-gp2': {
+          amiId: 'ami-07071aa2caa3d64c8',
+        },
+        'RHEL-8.6.0_HVM-20220503-x86_64-2-Hourly2-GP2': {
+          amiId: 'ami-0186e3fec9b0283ee',
+        },
+        'ubuntu-jammy-22.04-amd64-server-20220609': {
+          amiId: 'ami-085284d24fe829cd0',
+        },
+        'Ubuntu Server 18.04 LTS (HVM), SSD Volume Type': {
+          amiId: 'ami-067f8db0a5c2309c0',
+        },
+        'Windows_Server-2019-English-Full-Base-2022.07.13': {
+          amiId: 'ami-0c2286fc70b4c7941',
+        },
+        'Microsoft Windows Server 2019 with SQL Server 2019 Standard': {
+          amiId: 'ami-0f329773315904481 ',
+        },
+      },
     }); */
 
     const createASGCondition = new CfnCondition(this, 'CreateASGCondition', {
@@ -266,7 +297,6 @@ export class EC2LauchTemplate extends ProductStack {
       resources: ['arn:aws:logs:*:*:*'],
     }));
 
-    
 
     // Security Group for EFS Filesystem
     const efsSecurityGroup = new SecurityGroup(this, 'EFSSecurityGroup', {
@@ -331,15 +361,14 @@ export class EC2LauchTemplate extends ProductStack {
     userData.addCommands(
       'ebs_mount_point_1=' + ebsMountPoint.valueAsString,
       'if [ -e /dev/xvdf ]; then',
-        'if [ ! -e ${ebs_mount_point_1} ]; then',
-          'mkfs.ext4 /dev/xvdf',
-          'mkdir -p ${ebs_mount_point_1}',
-          'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
-        'fi',
-      'fi'
+      'if [ ! -e ${ebs_mount_point_1} ]; then',
+      'mkfs.ext4 /dev/xvdf',
+      'mkdir -p ${ebs_mount_point_1}',
+      'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
+      'fi',
+      'fi',
     );
 
-    
 
     const multipartUserData = new MultipartUserData();
 
@@ -347,10 +376,12 @@ export class EC2LauchTemplate extends ProductStack {
     multipartUserData.addPart(MultipartBody.fromUserData(efsUserData));
 
     // Create LaunchTemplate
-    const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
+    //const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
+    new LaunchTemplate(this, 'EC2LaunchTemplate', {
       launchTemplateName: `${projectName.valueAsString}-${instanceName.valueAsString}-launchtemplate`,
       instanceType: new InstanceType(instanceType.valueAsString),
-      machineImage: MachineImage.fromSsmParameter('/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2' || amiId.valueAsString),
+      machineImage: MachineImage.genericLinux({ 'ap-northeast-2': 'ami-0e4d9ed95865f3b40' }),
+      //machineImage: MachineImage.latestAmazonLinux(),
       role: ec2Role,
       //keyName: ec2InstanceKeyName.valueAsString,
       securityGroup: ec2SecurityGroup,
@@ -361,14 +392,13 @@ export class EC2LauchTemplate extends ProductStack {
     });
 
     const cfnEC2 = new CfnInstance(this, 'EC2Instance', {
-        launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: '1'},
-        subnetId: ec2Subnet1.valueAsString,
+      //launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: '1' },
+      launchTemplate: { 
+        launchTemplateId: launchTemplateId.valueAsString, version: '1'
+      },
+      subnetId: ec2Subnet1.valueAsString,
     });
-
     cfnEC2.cfnOptions.condition = createInstanceCondition;
-
-    cfnEC2
-
 
     const autoscale = new AutoScalingGroup(this, 'ASG', {
       autoScalingGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${instanceName.valueAsString}-asg`,
@@ -382,7 +412,7 @@ export class EC2LauchTemplate extends ProductStack {
           Subnet.fromSubnetId(this, 'ASGSubnet2', ec2Subnet2.valueAsString),
         ],
       },
-      launchTemplate: launchTemplate,
+      launchTemplate: LaunchTemplate.fromLaunchTemplateAttributes(this, 'LT', { launchTemplateId: launchTemplateId.valueAsString}),
     });
 
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
