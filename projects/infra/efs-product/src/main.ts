@@ -8,8 +8,8 @@ export class MyStack extends Stack {
     super(scope, id, props);
 
     // define resources here...
-    new servicecatalog.CloudFormationProduct(this, 'CheckAndMountEFSProduct', {
-      productName: 'CheckAndMountEFS',
+    new servicecatalog.CloudFormationProduct(this, 'CreateEFSFileSystemAndAccessPointProduct', {
+      productName: 'Create EFS FileSystem and AccessPoint',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {

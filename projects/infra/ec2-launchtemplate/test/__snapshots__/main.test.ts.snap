@@ -19,10 +19,28 @@ Object {
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4b0c4c581df2236679ddc247c7cc69316f9d47bade46088d683fed0fae9400c2.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/8453ec1f9934a9dd7f5e53856dc83b1ed68a6345dc38183b224d7d5c2f3cd6d1.json",
               },
             },
             "Name": "v1.0",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "EC2LaunchTemplateProduct7A4A4983": Object {
+      "Properties": Object {
+        "Name": "EC2 LaunchTemplate Product V2",
+        "Owner": "SK Cloud Transformation Group",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/bb8f83380ce9befd02184cd3fff9611f23df4b70b42ffb4de3c85d95264f4d7a.json",
+              },
+            },
+            "Name": "v2.0",
           },
         ],
       },
@@ -37,7 +55,7 @@ Object {
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/45cb6b69ce1cd05dbb2196bf8c4117f5fa4ebb7177053d2a56df2e09a3298eeb.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/1498eab68aa9cb396ec4b8d8a475bb9337697755692cd77d2acf5d0a037783ed.json",
               },
             },
             "Name": "v1.0",

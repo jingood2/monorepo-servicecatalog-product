@@ -153,7 +153,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     const ebsMountPoint = new CfnParameter(this, 'EBSMountPoint', {
       type: 'String',
       description: 'extention EBS Mount Point',
-      default: '/data'
+      default: '/data',
     });
 
     const ebsVolumeA = new CfnParameter(this, 'EBSVolumeA', {
@@ -214,13 +214,13 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     userData.addCommands(
       'ebs_mount_point_1=' + ebsMountPoint.valueAsString,
       'if [ -e /dev/xvdf ]; then',
-        'if [ ! -e ${ebs_mount_point_1} ]; then',
-          'mkfs.ext4 /dev/xvdf',
-          'mkdir -p ${ebs_mount_point_1}',
-          'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
-          'mount -a',
-        'fi',
-      'fi'
+      'if [ ! -e ${ebs_mount_point_1} ]; then',
+      'mkfs.ext4 /dev/xvdf',
+      'mkdir -p ${ebs_mount_point_1}',
+      'echo "/dev/xvdf ${ebs_mount_point_1} ext4 defaults,noatime 1 1" >> /etc/fstab',
+      'mount -a',
+      'fi',
+      'fi',
     );
 
     const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
@@ -257,7 +257,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
 
     const instance = new CfnInstance(this, 'Ec2Instance', {
-      launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: launchTemplate.latestVersionNumber},
+      launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: launchTemplate.latestVersionNumber },
       subnetId: ec2Subnet1.valueAsString,
     });
 
