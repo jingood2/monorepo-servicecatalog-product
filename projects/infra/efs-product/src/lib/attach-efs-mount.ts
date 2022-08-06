@@ -27,22 +27,14 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
               Label: {
                 default: 'Information of Network',
               },
-              Parameters: ['VpcId', 'Subnet1', 'Subnet2', 'AllowIPForSSH'],
+              Parameters: ['VpcId', 'Subnet1', 'Subnet2' ],
             },
             {
               Label: {
                 default: 'Information of Infrastructure',
               },
               Parameters: [
-                'InstacneType',
-                'EC2InstanceKeyName',
-                'Ec2AutoscaleMinSize',
-                'Ec2AutoscaleMaxSize',
-                'Ec2AutoscaleDesiredCapacity',
-                'EBSVolumeA',
-                'CreateASG',
-                'EFSAccessPointPath',
-                'EBSMountPoint',
+                'PosixUserGIds',
               ],
             },
   
