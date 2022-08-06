@@ -21,7 +21,7 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
               Label: {
                 default: 'Information of environmentType',
               },
-              Parameters: ['ProjectName', 'environmentType', 'ServerName'],
+              Parameters: ['ProjectName', 'environmentType', 'EFSName'],
             },
             {
               Label: {
@@ -55,9 +55,9 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
     description: 'environmentType Name',
     });
 
-    const serverName = new CfnParameter(this, 'ServerName', {
+    const efsName = new CfnParameter(this, 'EfsName', {
     type: 'String',
-    description: 'EC2 Server Name',
+    description: 'describe EFS Name',
     });
     
     const vpcId = new CfnParameter(this, 'VpcId', {
@@ -78,7 +78,8 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
 
     const AclPosixUserGids = new CfnParameter(this, 'PosixUserGIds', {
         type: 'List<String>',
-        description: 'ACL PosixUser Gids'
+        description: 'ACL PosixUser Gids',
+        default: ['501']
     });
 
     // Import existing vpc
@@ -89,7 +90,7 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
 
     // Security Group for EFS Filesystem
     const efsSecurityGroup = new ec2.SecurityGroup(this, 'EFSSecurityGroup', {
-      securityGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${serverName.valueAsString}-efs`,
+      securityGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${efsName.valueAsString}-efs`,
       vpc,
       allowAllOutbound: true,
     });
@@ -97,7 +98,6 @@ export class AttachEFSMount extends servicecatalog.ProductStack{
 
     // Create EFS FileSystem
     const fileSystem = new efs.FileSystem(this, 'MyEfsFileSystem', {
-      fileSystemName: `${projectName.valueAsString}-${environmentType.valueAsString}-${serverName.valueAsString}-efs`,
       vpc,
       vpcSubnets: {
         subnets: [
