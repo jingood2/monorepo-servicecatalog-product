@@ -1,6 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
+<<<<<<< HEAD
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+=======
+>>>>>>> f95ee6dd0d70ff2958c2f6b6a762671907714855
 import * as fsx from 'aws-cdk-lib/aws-fsx';
 import { Construct } from 'constructs/lib/construct';
 
