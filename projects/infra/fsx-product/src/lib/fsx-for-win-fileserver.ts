@@ -87,7 +87,7 @@ export class FsxForWinFileserver extends servicecatalog.ProductStack {
         windowsConfiguration: {
           // the properties below are optional
           //preferredSubnetId: 'preferredSubnetId',
-          throughputCapacity: 10,
+          throughputCapacity: 1024,
           selfManagedActiveDirectoryConfiguration: {
             dnsIps: dnsIps.valueAsList,
             domainName: domainName.valueAsString,
