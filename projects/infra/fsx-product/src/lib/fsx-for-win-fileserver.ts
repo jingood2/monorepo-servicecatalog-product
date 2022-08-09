@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as fsx from 'aws-cdk-lib/aws-fsx';
 import { Construct } from 'constructs/lib/construct';
 
@@ -55,9 +56,31 @@ export class FsxForWinFileserver extends servicecatalog.ProductStack {
             description: 'The password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain'
         });
 
+        const vpcId = new cdk.CfnParameter(this, 'VpcId', {
+            type: 'AWS::EC2::VPC::Id',
+            default: 'vpc-10544f72',
+            description: 'VpcId Where you deploy ec2 on',
+            });
+    
+     // Import existing vpc
+     const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
+        vpcId: vpcId.valueAsString,
+        availabilityZones: ['ap-northeast-2a', 'ap-northeast-2c'],
+      });
+    
+    const fsxSecurityGroup = new ec2.SecurityGroup(this, 'FSxSecurityGroup', {
+        securityGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${fsxName.valueAsString}-sg`,
+        vpc,
+        allowAllOutbound: true,
+        });
+
     const cfnFileSystem = new fsx.CfnFileSystem(this, 'MyCfnFileSystem', {
         fileSystemType: 'WINDOWS',
         subnetIds: accessSubnetIds.valueAsList,
+
+        securityGroupIds: [fsxSecurityGroup.securityGroupId],
+        storageCapacity: 123,
+        storageType: 'SSD',
       
         // the properties below are optional
         //kmsKeyId: 'kmsKeyId',
