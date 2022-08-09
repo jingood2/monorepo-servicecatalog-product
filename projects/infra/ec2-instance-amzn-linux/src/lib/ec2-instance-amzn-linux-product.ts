@@ -390,7 +390,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
 
 
     /************************* Add EBS Volume *********************/
-    const ec2Instance = new autoscaling.AutoScalingGroup(this, 'ASG', {
+    const ec2Instance = new autoscaling.AutoScalingGroup(this, 'ASGWithEBS', {
       autoScalingGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-asg`,
       instanceType: new ec2.InstanceType(instanceType.valueAsString),
       machineImage: ec2.MachineImage.latestAmazonLinux({
