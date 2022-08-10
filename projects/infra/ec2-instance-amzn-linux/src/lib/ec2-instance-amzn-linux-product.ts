@@ -457,7 +457,8 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
     // UserData
     /* let userData = ec2.UserData.forLinux();
     userData.addCommands(
-      `sed -i -e "s/$LogicalResourceId/${(ec2Instance.node.defaultChild as ec2.CfnInstance).logicalId}/g" /etc/cfn/hooks.d/cfn-auto-reloader.conf`,
+      `pid=aws servicecatalog search-provisioned-products --filters "SearchQuery"=${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-product | grep -w "Id" | awk '{print $2}'`,
+      `sed -i -e "s/LOGICAL_RESOURCE_ID/SC-${AWS::ACCOUNT_ID}-${pid}/g" /etc/cfn/hooks.d/cfn-auto-reloader.conf`,
       'systemctl start cfn-hup.service',
     );
     ec2Instance.addUserData(userData.render()); */
