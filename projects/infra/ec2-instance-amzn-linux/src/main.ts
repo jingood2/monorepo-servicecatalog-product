@@ -29,7 +29,7 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new Ec2AmznLinuxAsgProduct(this, 'EC2AmznLinuxAsg', {})),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new Ec2AmznLinuxAsgProduct(this, 'EC2AmznLinuxASG', {})),
         },
       ],
     });
