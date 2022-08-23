@@ -1,0 +1,71 @@
+Content-Type: multipart/mixed; boundary="===============2678395050260980330=="
+MIME-Version: 1.0
+
+--===============2678395050260980330==
+MIME-Version: 1.0
+Content-Type: text/x-shellscript; charset="us-ascii"
+#!/bin/bash
+
+# install amazon-linux-extras
+#sudo yum install -y amazon-linux-extras
+#sudo amazon-linux-extras enable python3.8
+#sudo yum install -y python38
+
+# remove python 2.7 and change default version as 3.8
+#sudo rm -rf /usr/bin/python
+#sudo ln -s /usr/bin/python3.8 /usr/bin/python
+
+echo "Part 3" >> /var/log/order.log
+
+EBS_DEVICE=$(lsblk | grep -e disk | awk '{print $1; }')
+for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then mkfs.xfs /dev/$i; fi done
+for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then mkdir -p /mnt/$i; fi done
+for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then sudo mount /dev/$i /mnt/$i; fi done
+for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then  echo "$(blkid -o export /dev/$i | grep ^UUID=) /mnt/$i xfs defaults,noatime" | tee -a /etc/fstab; fi done
+
+--===============2678395050260980330==
+MIME-Version: 1.0
+Content-Type: text/cloud-boothook; charset="us-ascii"
+
+#cloud-boothook
+echo "Part 4" >> /var/log/order.log
+
+--===============2678395050260980330==
+MIME-Version: 1.0
+Content-Type: text/cloud-config; charset="us-ascii"
+
+#cloud-config
+runcmd:
+    - [ ls, -l, / ]
+    - [ sh, -xc, "echo $(date) ': hello world!'" ]
+    - [ sh, -c, echo "=========hello world'=========" ]
+    - ls -l /root
+    - [ wget, "http://example.org", -O, /tmp/index.html ]
+
+--===============2678395050260980330==
+MIME-Version: 1.0
+Content-Type: text/upstart-job; charset="us-ascii"
+
+upstart-job
+description "Sample upstart job"
+author "Test"
+
+start on stopped rc RUNLEVEL=[345]
+
+script
+	echo "Part 6" >> /var/log/order.log
+end script
+--===============2678395050260980330==
+MIME-Version: 1.0
+Content-Type: text/upstart-job; charset="us-ascii"
+
+#upstart-job
+description "Sample upstart job which triggers at same time as rc scripts (This won't execute on first boot)"
+author "Test"
+
+start on starting rc RUNLEVEL=[345]
+
+script
+	echo "Part 7" >> /var/log/order.log
+end script
+--===============2678395050260980330==--

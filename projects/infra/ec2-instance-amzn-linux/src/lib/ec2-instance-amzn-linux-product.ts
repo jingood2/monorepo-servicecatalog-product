@@ -275,7 +275,6 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       });
       cfnEC2.cfnOptions.condition = createInstanceCondition; */
 
-
     // CloudFormation Init
     const handle = new ec2.InitServiceRestartHandle();
     const configSets = ec2.CloudFormationInit.fromConfigSets({
@@ -286,6 +285,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
           'usermanagement',
           'ebsautomount',
           //'setupCfnHup',
+          'createStack',
           'testCfnHup',
           //'efsautomount',
         ],
@@ -307,11 +307,11 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
           ec2.InitFile.fromString('/etc/cfn/ebs-mount.sh',
             [
               '#!/bin/bash\n',
-              'if [ -e /dev/sdb ]; then\n',
-              'mkfs.ext4 /dev/sdb\n',
-              'mkdir -p /mnt/data\n',
-              'echo "/dev/sdb /mnt/data ext4 defaults,noatime 1 1" >> /etc/fstab\n',
-              'fi',
+              'EBS_DEVICE=$(lsblk | grep -e disk | awk \'{sub("G","",$4)} {if ($4+0 > 4) print $1}\')\n',
+              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then mkfs.xfs /dev/$i; fi done\n',
+              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then j = j + 1; mkdir -p /mnt/$i; fi done\n',
+              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then sudo mount /dev/$i /mnt/$i; fi done\n',
+              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then  echo "$(blkid -o export /dev/$i | grep ^UUID=) /mnt/$i xfs defaults,noatime" | tee -a /etc/fstab; fi done',
             ].join(''),
           ),
           ec2.InitCommand.shellCommand('chmod +x /etc/cfn/ebs-mount.sh'),
@@ -319,14 +319,13 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
           ec2.InitCommand.shellCommand('/etc/cfn/ebs-mount.sh'),
           ec2.InitCommand.shellCommand('mount -a'),
         ]),
-
         setupCfnHup: new ec2.InitConfig([
           ec2.InitFile.fromString('/etc/cfn/cfn-hup.conf',
             [
               '[main]\n',
-              'stack=${AWS::StackName}\n',
+              `stack=${cdk.Stack.of(this).stackId}\n`,
               `region=${cdk.Stack.of(this).region}\n`,
-              'interval=2\n',
+              'interval=10\n',
               'verbose=true',
             ].join(''),
             { serviceRestartHandles: [handle] },
@@ -335,9 +334,10 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
             [
               '[cfn-auto-reloader-hook]\n',
               'triggers=post.update\n',
-              `path=Resources.$LogicalResourceId.Metadata.AWS::CloudFormation::Init\n`,
+              // ToDo: ResourceId
+              //`path=Resources.${ec2Instance.node.id}.Metadata.AWS::CloudFormation::Init\n`,
               'action=/opt/aws/bin/cfn-init -v ',
-              '--stack ${AWS::StackName} ',
+              `--stack ${cdk.Arn.split(cdk.Stack.of(this).stackId, cdk.ArnFormat.SLASH_RESOURCE_NAME).resourceName} `,
               '--resource $LogicalResourceId ',
               `--region ${cdk.Stack.of(this).region} `,
               '--configsets update\n',
@@ -350,7 +350,19 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
             serviceRestartHandle: handle,
           }),
         ]),
-
+        createStack: new ec2.InitConfig([
+          // Create a JSON file from tokens (can also create other files)
+          ec2.InitFile.fromString('/etc/cfn/cfn-hup.conf',
+            [
+              '[main]\n',
+              `stack=${cdk.Arn.split(cdk.Stack.of(this).stackId, cdk.ArnFormat.SLASH_RESOURCE_NAME).resourceName}\n`,
+              `region=${cdk.Stack.of(this).region}\n`,
+              'interval=10\n',
+              'verbose=true',
+            ].join(''),
+            { serviceRestartHandles: [handle] },
+          ),
+        ]),
         testCfnHup: new ec2.InitConfig([
           ec2.InitCommand.shellCommand('echo "+*+*+*+CFN-HUP+*+*+*+Working Well++++++"'),
         ]),
@@ -387,8 +399,6 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
     */
 
 
-
-
     /************************* Add EBS Volume *********************/
     const ec2Instance = new autoscaling.AutoScalingGroup(this, 'ASGWithEBS', {
       autoScalingGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-asg`,
@@ -410,7 +420,11 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       securityGroup: ec2SecurityGroup,
       signals: autoscaling.Signals.waitForAll(),
       blockDevices: [
-        { deviceName: '/dev/sdb', volume: autoscaling.BlockDeviceVolume.ebs(ebsVolumeA.valueAsNumber, { volumeType: autoscaling.EbsDeviceVolumeType.GP3 }) },
+        {
+          deviceName: '/dev/sdb',
+          volume: autoscaling.BlockDeviceVolume.ebs(ebsVolumeA.valueAsNumber,
+            { volumeType: autoscaling.EbsDeviceVolumeType.GP3 }),
+        },
       ],
       init: configSets,
     });
