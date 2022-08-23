@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot 1`] = `
+Object {
+  "Parameters": Object {
+    "BootstrapVersion": Object {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "VPCProduct78C3C509": Object {
+      "Properties": Object {
+        "Description": "Network VPC Product",
+        "Name": "Network VPC Product",
+        "Owner": "SK Cloud Transformation Group",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "Description": "2tier Subnet VPC",
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4740562e7ff767fa5fefe371a0bea5b123c76c5b5d2fac140d69e6188fe8980a.json",
+              },
+            },
+            "Name": "v1",
+          },
+          Object {
+            "Description": "3tier Subnet VPC",
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/b8ece719cb6875887037adb287077c32016ac561b72d0afccc31ffa9c1644b0a.yaml",
+              },
+            },
+            "Name": "v2",
+          },
+          Object {
+            "Description": "3tier Subnet VPC added Second CIDR",
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/dde6947043f9cc6264cb8b83fac14b0446386c61259151b979d2d6d820ae4ebd.yaml",
+              },
+            },
+            "Name": "v3",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+  },
+  "Rules": Object {
+    "CheckBootstrapVersion": Object {
+      "Assertions": Array [
+        Object {
+          "Assert": Object {
+            "Fn::Not": Array [
+              Object {
+                "Fn::Contains": Array [
+                  Array [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  Object {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

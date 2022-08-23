@@ -35,6 +35,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'ec2-instance-amzn', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}` });
+new MyStack(app, 'ec2-instance-amzn', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();
