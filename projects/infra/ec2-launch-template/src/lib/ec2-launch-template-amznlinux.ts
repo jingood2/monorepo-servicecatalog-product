@@ -86,7 +86,7 @@ export class EC2LaunchTemplateAmznProduct extends ProductStack {
     ec2Role.addToPolicy(new iam.PolicyStatement({
     sid: 'AttachVolume',
     effect: iam.Effect.ALLOW,
-    actions: ['ec2:AttachVolume'],
+    actions: ['ec2:AttachVolume', 'ec2:DescribeVolume'],
     resources: ['*'],
     }));
     
@@ -102,6 +102,11 @@ export class EC2LaunchTemplateAmznProduct extends ProductStack {
       filePath: localPath,
       arguments: '--verbose -y',
     }); */
+
+    // DefaultRoleForInstanceProfile
+    const instanceProfile = new iam.CfnInstanceProfile(this, "InstProfile", {
+      roles: ['MandatoryRoleForInstanceProfile']
+    });
 
     new ec2.LaunchTemplate(this, 'EC2AmznLaunchTemplate', {
       launchTemplateName: 'Amazon Linux Latest',

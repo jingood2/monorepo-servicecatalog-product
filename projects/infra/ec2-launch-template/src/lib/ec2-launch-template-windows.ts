@@ -109,9 +109,9 @@ export class EC2LaunchTemplateWinProduct extends ProductStack {
       //role: ec2Role,
       //securityGroup: ec2SecurityGroup,
       //userData: userData,
-      /* blockDevices: [
+      blockDevices: [
         { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(addEbsVolume.valueAsNumber, { volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3 }) },
-      ], */
+      ],
     });
   }
 }

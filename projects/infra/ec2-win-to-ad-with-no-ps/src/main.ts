@@ -10,20 +10,29 @@ export class MyStack extends Stack {
 
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'EC2WinToAdProduct', {
-      description: 'EC2 Windows To AD',
-      productName: 'ec2-win-to-ad-product',
+      description: 'Service Catalog Product for EC2 Windows',
+      productName: 'ec2-win-to-product',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
           productVersionName: 'v1.0',
+          description: 'Windows Server EC2 Worload Auto Attach and Format Disk',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
-            path.join(__dirname, './cfn-template/ec2-win-to-ad.yaml'),
+            path.join(__dirname, './cfn-template/ec2-win-v1.0.yaml'),
           ),
         },
+        {
+          productVersionName: 'v2.0',
+          description: 'Windows Server EC2 Worload to join Active Directory',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
+            path.join(__dirname, './cfn-template/ec2-win-adjoin-v2.0.yaml'),
+          ),
+        },
+
       ],
     });
 
-    new servicecatalog.CloudFormationProduct(this, 'DirectoryAdClientProduct', {
+    /* new servicecatalog.CloudFormationProduct(this, 'DirectoryAdClientProduct', {
       description: 'Directory AD Client Product',
       productName: 'directory-ad-client-product',
       owner: 'SK Cloud Transformation Group',
@@ -35,7 +44,7 @@ export class MyStack extends Stack {
           ),
         },
       ],
-    });
+    }); */
   }
 }
 
@@ -47,7 +56,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'ec2-win-to-ad-with-no-ps-dev', { env: devEnv });
+new MyStack(app, 'ec2-win-instance', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}` });
 // new MyStack(app, 'ec2-win-to-ad-with-no-ps-prod', { env: prodEnv });
 
 app.synth();

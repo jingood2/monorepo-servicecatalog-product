@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { CfnCondition, CfnParameter, Fn } from 'aws-cdk-lib';
 import { AutoScalingGroup, CfnAutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 import { BlockDeviceVolume, CfnInstance, EbsDeviceVolumeType, InstanceType, LaunchTemplate, MachineImage, MultipartBody, MultipartUserData, Port, SecurityGroup, Subnet, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as efs from 'aws-cdk-lib/aws-efs';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -120,9 +121,9 @@ export class EC2LauchTemplate extends ProductStack {
         ]
     }); */
 
-    const launchTemplateId = new CfnParameter(this, 'AmiId', {
+    const amiId = new CfnParameter(this, 'AmiId', {
         type: 'String',
-        default: 'lt-0ba1a4d4e4cb6f800'
+        default: 'ami-0e4d9ed95865f3b40'
     });
 
     const instanceType = new CfnParameter(this, 'InstacneType', {
@@ -375,9 +376,35 @@ export class EC2LauchTemplate extends ProductStack {
     multipartUserData.addPart(MultipartBody.fromUserData(userData));
     multipartUserData.addPart(MultipartBody.fromUserData(efsUserData));
 
+
+
+    const instanceProfile = new iam.CfnInstanceProfile(this, "InstProfile", {
+      roles: [],
+    });
+
+
+    const launchTemplate = new ec2.CfnLaunchTemplate(this, "LaunchTemplate", {
+      launchTemplateData: {
+        userData: undefined,
+        securityGroupIds: undefined,
+        imageId: amiId.valueAsString,
+        ebsOptimized: true,
+        iamInstanceProfile: { arn: instanceProfile.attrArn },
+        blockDeviceMappings: undefined
+      }
+    });
+
+
+
+
+
+
+
+
+
     // Create LaunchTemplate
     //const launchTemplate = new LaunchTemplate(this, 'EC2LaunchTemplate', {
-    new LaunchTemplate(this, 'EC2LaunchTemplate', {
+    /* new LaunchTemplate(this, 'EC2LaunchTemplate', {
       launchTemplateName: `${projectName.valueAsString}-${instanceName.valueAsString}-launchtemplate`,
       instanceType: new InstanceType(instanceType.valueAsString),
       machineImage: MachineImage.genericLinux({ 'ap-northeast-2': 'ami-0e4d9ed95865f3b40' }),
@@ -389,9 +416,16 @@ export class EC2LauchTemplate extends ProductStack {
       blockDevices: [
         { deviceName: '/dev/xvdf', volume: BlockDeviceVolume.ebs(ebsVolumeA.valueAsNumber, { volumeType: EbsDeviceVolumeType.GENERAL_PURPOSE_SSD_GP3 }) },
       ],
-    });
+    }); */
 
-    const cfnEC2 = new CfnInstance(this, 'EC2Instance', {
+
+
+
+
+
+
+
+    /* const cfnEC2 = new CfnInstance(this, 'EC2Instance', {
       //launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: '1' },
       launchTemplate: { 
         launchTemplateId: launchTemplateId.valueAsString, version: '1'
@@ -416,7 +450,7 @@ export class EC2LauchTemplate extends ProductStack {
     });
 
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
-    cfnAutoScaling.cfnOptions.condition = createASGCondition;
+    cfnAutoScaling.cfnOptions.condition = createASGCondition; */
 
   }
 }
