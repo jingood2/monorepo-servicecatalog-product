@@ -237,6 +237,7 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       ],
     });
 
+
     // Autoscaling Group
     const autoscale = new AutoScalingGroup(this, 'ASG', {
       autoScalingGroupName: `${projectName.valueAsString}-${environment.valueAsString}-${serverName.valueAsString}-asg`,
@@ -252,7 +253,6 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       },
       launchTemplate: launchTemplate,
     });
-
     const cfnAutoScaling = autoscale.node.defaultChild as CfnAutoScalingGroup;
     cfnAutoScaling.cfnOptions.condition = createASGCondition;
 
@@ -260,6 +260,8 @@ export class EC2ASGWithLaunchTemplate extends ProductStack {
       launchTemplate: { launchTemplateId: launchTemplate.launchTemplateId, version: launchTemplate.latestVersionNumber },
       subnetId: ec2Subnet1.valueAsString,
     });
+
+    instance.addOverride()
 
     instance.cfnOptions.condition = noCreateASGCondition;
 
