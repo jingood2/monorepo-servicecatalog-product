@@ -28,7 +28,6 @@ Metadata:
       - pCreateInternetGateway
       - pCreateNatGateway
       - pCreateSingleNatGateway
-      - sCidrCreate
     - Label:
         default: VPC Tier 1
       Parameters:
