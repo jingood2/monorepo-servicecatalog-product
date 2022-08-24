@@ -26,13 +26,13 @@ export class MyStack extends Stack {
             path.join(__dirname, './lib/cfn-template/3-tier.template.yaml'),
           ),
         },
-        {
+       /*  {
           productVersionName: 'v3',
           description: '3tier Subnet VPC added Second CIDR',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
             path.join(__dirname, './lib/cfn-template/vpc-3tier-zcp.template.yaml'),
           ),
-        },
+        }, */
       ],
     });
   }
