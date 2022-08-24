@@ -8,7 +8,7 @@ export class MyStack extends Stack {
     super(scope, id, props);
 
     // define resources here...
-    new servicecatalog.CloudFormationProduct(this, 'VPCProduct', {
+    new servicecatalog.CloudFormationProduct(this, 'VPCPeeringAccepterProduct', {
       description: 'vpc peering connection accepter',
       productName: 'Network VPC Peering Connection Accepter Product',
       owner: 'SK Cloud Transformation Group',
@@ -23,7 +23,7 @@ export class MyStack extends Stack {
       ],
     });
 
-    new servicecatalog.CloudFormationProduct(this, 'VPCProduct', {
+    new servicecatalog.CloudFormationProduct(this, 'VPCPeeringRequesterProduct', {
       description: 'vpc peering connection requester',
       productName: 'Network VPC Peering Connection Requester Product',
       owner: 'SK Cloud Transformation Group',
