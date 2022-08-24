@@ -1,0 +1,135 @@
+{
+ "Resources": {
+  "awstfiamportfolioA0759FC9": {
+   "Type": "AWS::ServiceCatalog::Portfolio",
+   "Properties": {
+    "DisplayName": "awstf-iam-portfolio",
+    "ProviderName": "AWSTF",
+    "AcceptLanguage": "en",
+    "Description": "AWS IAM Portfolio"
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/awstf-iam-portfolio/Resource"
+   }
+  },
+  "awstfiamportfolioPortolioPrincipalAssociation609650f29856259495BE": {
+   "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+   "Properties": {
+    "PortfolioId": {
+     "Ref": "awstfiamportfolioA0759FC9"
+    },
+    "PrincipalARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":group/AdminMasterAccountGroup"
+      ]
+     ]
+    },
+    "PrincipalType": "IAM"
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociation609650f29856"
+   }
+  },
+  "awstfiamportfolioPortolioPrincipalAssociationaf920892a672567670AE": {
+   "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+   "Properties": {
+    "PortfolioId": {
+     "Ref": "awstfiamportfolioA0759FC9"
+    },
+    "PrincipalARN": "arn:aws:iam::undefined:role/AssumableAdminRole",
+    "PrincipalType": "IAM"
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociationaf920892a672"
+   }
+  },
+  "awstfiamportfolioPortfolioProductAssociation57c4e8f800ef6D2F6E6C": {
+   "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
+   "Properties": {
+    "PortfolioId": {
+     "Ref": "awstfiamportfolioA0759FC9"
+    },
+    "ProductId": {
+     "Ref": "MyFirstProduct95C5EA99"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/awstf-iam-portfolio/PortfolioProductAssociation57c4e8f800ef"
+   }
+  },
+  "MyFirstProduct95C5EA99": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "create-iamuser-product",
+    "Owner": "SKCnC AWSTF",
+    "ProvisioningArtifactParameters": [
+     {
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-${AWS::AccountId}-ap-northeast-2/bc63ec63073ffa5249cfaac3aa536fbc14e45ab2364fa304c83876af3f6ada93.json"
+       }
+      },
+      "Name": "v1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/MyFirstProduct/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22NwQqDMBBEv8V7TFGh9yKUHsV+QEk3sazGbMkmliL+e6u1UIqn2Zl57OSyyGSWqAenoLvU4lWO56CgE+/owsYPCAZUUJZucqzIh4Yskigbt20qjw7wruyBmQBVQHJ/AOkI4bdeo2X3hBzIP0VpKeoj+X5BVmJ+tFlMojZM0YOZke89CUfayJZ3Q7aXWSHzpGXE1EcXsDey/ugLThBU7QQBAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "sc-iam-portfolio/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

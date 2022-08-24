@@ -1,0 +1,80 @@
+{
+ "Resources": {
+  "VPCProduct78C3C509": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "Network VPC Peering Product",
+    "Owner": "SK Cloud Transformation Group",
+    "ProvisioningArtifactParameters": [
+     {
+      "Description": "vpc peering connection accepter",
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/2d6442e0f7c1fdd5f2cffa467ed0e4b7ad77079a45b6e1b52cacec37d70c73e7.yaml"
+       }
+      },
+      "Name": "v1-peering-accepter"
+     },
+     {
+      "Description": "3tier Subnet VPC added Second CIDR",
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/c988d127b27271768c00e158bbb339649b69639d4ad24a97b8372f64dd1d6b55.yaml"
+       }
+      },
+      "Name": "v1-peering-requester"
+     }
+    ],
+    "Description": "Network VPC Peering Product"
+   },
+   "Metadata": {
+    "aws:cdk:path": "vpc-peering-dev/VPCProduct/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22NzQrCMBCEn6X3dDUWxKsteJb6ACUma0l/spDd1EPpu5vq1dMw3wczJ6guoAvz5tK6sZz8E9aHGDuqjLqVMS7eojViJuphbSZK7kZxNuIp3CO5ZEU1r/BXbIqrzjCjMFz3yB3qZEeU2jBu6gvzXe9Dv6+0yJSizSaQQxj4sOgzaA3HYmDvy5iC+Bmh/eUHYtIjpL0AAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "vpc-peering-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
