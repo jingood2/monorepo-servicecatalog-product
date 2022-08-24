@@ -17,6 +17,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'security-group', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });// new MyStack(app, 'security-group-prod', { env: prodEnv });
+new MyStack(app, 'security-group-product', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });// new MyStack(app, 'security-group-prod', { env: prodEnv });
 
 app.synth();
