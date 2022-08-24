@@ -1,0 +1,94 @@
+{
+  "version": "20.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "sc-iam-portfolio.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "sc-iam-portfolio.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "sc-iam-portfolio": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/ap-northeast-2",
+      "properties": {
+        "templateFile": "sc-iam-portfolio.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-ap-northeast-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-ap-northeast-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-ap-northeast-2/5337fc76306e492b7bc1f1c2afdc97e473b283434ecf86dc3f4d350998228410.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "sc-iam-portfolio.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-ap-northeast-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "sc-iam-portfolio.assets"
+      ],
+      "metadata": {
+        "/sc-iam-portfolio/awstf-iam-portfolio/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awstfiamportfolioA0759FC9"
+          }
+        ],
+        "/sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociation609650f29856": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awstfiamportfolioPortolioPrincipalAssociation609650f29856259495BE"
+          }
+        ],
+        "/sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociationaf920892a672": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awstfiamportfolioPortolioPrincipalAssociationaf920892a672567670AE"
+          }
+        ],
+        "/sc-iam-portfolio/awstf-iam-portfolio/PortfolioProductAssociation57c4e8f800ef": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "awstfiamportfolioPortfolioProductAssociation57c4e8f800ef6D2F6E6C"
+          }
+        ],
+        "/sc-iam-portfolio/MyFirstProduct/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MyFirstProduct95C5EA99"
+          }
+        ],
+        "/sc-iam-portfolio/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/sc-iam-portfolio/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/sc-iam-portfolio/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "sc-iam-portfolio"
+    }
+  }
+}

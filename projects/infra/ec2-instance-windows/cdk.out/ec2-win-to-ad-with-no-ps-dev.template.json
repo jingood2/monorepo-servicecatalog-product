@@ -1,0 +1,91 @@
+{
+ "Resources": {
+  "EC2WinToAdProduct0DA5DDFC": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "ec2-win-to-ad-product",
+    "Owner": "SK Cloud Transformation Group",
+    "ProvisioningArtifactParameters": [
+     {
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/296dcfb9f6c25adb626137383b378cf4422d0eeb93dd83f62932857c7b9aa8d2.yaml"
+       }
+      },
+      "Name": "v1.0"
+     }
+    ],
+    "Description": "EC2 Windows To AD"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ec2-win-to-ad-with-no-ps-dev/EC2WinToAdProduct/Resource"
+   }
+  },
+  "DirectoryAdClientProduct28B240F8": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "directory-ad-client-product",
+    "Owner": "SK Cloud Transformation Group",
+    "ProvisioningArtifactParameters": [
+     {
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/1000c053923f7c1f7b0e5982baca085a57b6b804e2f26d32407e0af7751ae248.yaml"
+       }
+      },
+      "Name": "v1.0"
+     }
+    ],
+    "Description": "Directory AD Client Product"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ec2-win-to-ad-with-no-ps-dev/DirectoryAdClientProduct/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22OzQ6CMBCEn8V7WUUS70Li2eADkLpdyfLTJt0tHgjvbtGrp8nMl8zMGaoKTgf7lgLdWEz8hPWhFkeTo24VigsjoVU7hR7WZgrJ3UKcrXLw9xhcQjXNy/8Fm5GqsyKkAtddsoc64UhaW6HNfMM817Pv95aWJKSImfjgCAY5LuUFyjI/HIS5iMkrzwTtTz9KBz16vQAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "ec2-win-to-ad-with-no-ps-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "Resources": {
+  "VPCProduct78C3C509": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "Network VPC Product",
+    "Owner": "SK Cloud Transformation Group",
+    "ProvisioningArtifactParameters": [
+     {
+      "Description": "2tier Subnet VPC",
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/343df5d8981a2669e947894fd74e08723a8826244abd30b014ba304128735698.json"
+       }
+      },
+      "Name": "v1"
+     },
+     {
+      "Description": "3tier Subnet VPC",
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/b8ece719cb6875887037adb287077c32016ac561b72d0afccc31ffa9c1644b0a.yaml"
+       }
+      },
+      "Name": "v2"
+     },
+     {
+      "Description": "3tier Subnet VPC added Second CIDR",
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/dde6947043f9cc6264cb8b83fac14b0446386c61259151b979d2d6d820ae4ebd.yaml"
+       }
+      },
+      "Name": "v3"
+     }
+    ],
+    "Description": "Network VPC Product"
+   },
+   "Metadata": {
+    "aws:cdk:path": "vpc-dev/VPCProduct/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22NzQrCMBCEn6X3dDUWxKsteJb6ACUma0l/spDd1EPpu5vq1dMw3wczJ6guoAvz5tK6sZz8E9aHGDuqjLqVMS7eojViJuphbSZK7kZxNuIp3CO5ZEU1r/BXbIqrzjCjMFz3yB3qZEeU2jBu6gvzXe9Dv6+0yJSizSaQQxj4sOgzaA3HYmDvy5iC+Bmh/eUHYtIjpL0AAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "vpc-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
