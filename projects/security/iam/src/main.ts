@@ -51,6 +51,7 @@ export class MyStack extends Stack {
     new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
         productName: 'create-iamuser-product',
         owner: 'SKCnC AWSTF',
+        distributor: 'jingood2@sk.com',
         description: 'IAM User SC Product',
         productVersions: [
           {

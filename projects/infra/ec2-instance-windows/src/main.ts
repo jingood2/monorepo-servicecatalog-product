@@ -12,6 +12,7 @@ export class MyStack extends Stack {
     new servicecatalog.CloudFormationProduct(this, 'EC2WinToAdProduct', {
       description: 'Service Catalog Product for EC2 Windows',
       productName: 'EC2 Windows Product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {

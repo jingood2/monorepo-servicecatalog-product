@@ -10,6 +10,7 @@ export class MyStack extends Stack {
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'VPCProduct', {
       description: 'Network VPC Product',
+      distributor: 'jingood2@sk.com',
       productName: 'Network VPC Product',
       owner: 'SK Cloud Transformation Group',
       productVersions: [

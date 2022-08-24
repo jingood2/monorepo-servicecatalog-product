@@ -15,6 +15,7 @@ export class MyStack extends Stack {
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'EC2InstanceAmznLinuxProduct', {
       productName: 'EC2 Instance with Multi EBS Volumes Product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
@@ -26,6 +27,7 @@ export class MyStack extends Stack {
 
     new servicecatalog.CloudFormationProduct(this, 'EC2AmznLinuxAsgProduct', {
       productName: 'Amazon Linux AutoScalingGroup Product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
@@ -37,6 +39,7 @@ export class MyStack extends Stack {
 
     new servicecatalog.CloudFormationProduct(this, 'EC2WithLaunchTemplateProduct', {
       productName: 'EC2 or AutoScaling Group through Launch Template Product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
@@ -49,6 +52,7 @@ export class MyStack extends Stack {
 
     new servicecatalog.CloudFormationProduct(this, 'EC2WithEFSMountProduct', {
       productName: 'EC2 or AutoScaling Group with EFS Automount Product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
