@@ -1197,15 +1197,7 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-<<<<<<< HEAD
-<<<<<<< HEAD:projects/network/security-group/yarn.lock
-aws-cdk-lib@^2.1.0:
-=======
 aws-cdk-lib@^2.38.1:
->>>>>>> 0e643006e997824b41f1fac2ecc2fa37c24a664a:projects/network/vpc/yarn.lock
-=======
-aws-cdk-lib@^2.1.0:
->>>>>>> 0e643006e997824b41f1fac2ecc2fa37c24a664a
   version "2.38.1"
   resolved "https://registry.yarnpkg.com/aws-cdk-lib/-/aws-cdk-lib-2.38.1.tgz#e96ee1362c86260786b3d808f593ca5edd813b29"
   integrity sha512-vEgJBUzL1yqlSMYGjipl+eRwy900x3RmbVzTcxKdCZvhtBMQ1hqJAMgVswvoyA5EnvfELLlz9ufm+qdKGs9DxQ==
@@ -1220,15 +1212,7 @@ aws-cdk-lib@^2.1.0:
     semver "^7.3.7"
     yaml "1.10.2"
 
-<<<<<<< HEAD
-<<<<<<< HEAD:projects/network/security-group/yarn.lock
-aws-cdk@^2.1.0:
-=======
 aws-cdk@^2.38.1:
->>>>>>> 0e643006e997824b41f1fac2ecc2fa37c24a664a:projects/network/vpc/yarn.lock
-=======
-aws-cdk@^2.1.0:
->>>>>>> 0e643006e997824b41f1fac2ecc2fa37c24a664a
   version "2.38.1"
   resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-2.38.1.tgz#285273b5507241712bcc1e5b40eb05a21f3bebfd"
   integrity sha512-bIHRCkmbXBmJWw1Gq5UsAUUYKABuE/ah1iAA14hXLS8+9AJlF/Ptn+NsUCt9K5v17cRqtUoeaOAMAPrZs8l+YA==
