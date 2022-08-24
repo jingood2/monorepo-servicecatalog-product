@@ -22,7 +22,7 @@ export class MyStack extends Stack {
           productVersionName: 'v1',
           description: '2tier Subnet VPC',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
-            path.join(__dirname, './lib/cfn-template/2-tier.template.yaml'),
+            path.join(__dirname, './lib/cfn-template/2-tier.template.json'),
           ),
         },
         {
