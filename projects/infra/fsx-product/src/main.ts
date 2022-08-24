@@ -13,7 +13,7 @@ export class MyStack extends Stack {
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: 'v1.0',
+          productVersionName: 'v1',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new FsxForWinFileserver(this, 'FsxForWinFileserver', {})),
         },
       ],
@@ -29,7 +29,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'efs-product-dev', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'fsx', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 // new MyStack(app, 'efs-product-prod', { env: prodEnv });
 
 app.synth();

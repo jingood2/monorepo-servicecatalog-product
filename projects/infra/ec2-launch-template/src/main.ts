@@ -52,7 +52,7 @@ export class MyStack extends Stack {
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: 'v1.0',
+          productVersionName: 'v1',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new EC2LaunchTemplateAmznProduct(this, 'Ec2LaunchTemplateAmznLinux', {})),
         },
@@ -64,7 +64,7 @@ export class MyStack extends Stack {
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: 'v1.0',
+          productVersionName: 'v1',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new EC2LaunchTemplateWinProduct(this, 'EC2LaunchTemplateWinProduct', {})),
         },
@@ -81,6 +81,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'ec2-instance-amzn-linux', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-ec2-launch-template-amznlinux` });
+new MyStack(app, 'ec2-launchtemplate', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();

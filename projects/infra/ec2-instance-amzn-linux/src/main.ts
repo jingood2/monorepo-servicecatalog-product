@@ -1,9 +1,11 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
+import { Ec2AmznLinuxAsgProduct } from './lib/ec2-amzn-linux-asg-product';
 import { EC2ASGWithLaunchTemplate } from './lib/ec2-amzn-linux-launchtemplate';
 import { Ec2InstanceMultiEBSProduct } from './lib/ec2-instance-multi-ebs-product';
-import { Ec2AmznLinuxAsgProduct } from './lib/ec2-amzn-linux-asg-product';
+import { EFSWithAutomountToEC2 } from './lib/efs-with-automount-to-ec2';
+//import { EC2LaunchTemplateAmzn2V1Product } from './lib/ec2-launchtemplate-amzn2-v1.0';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -19,7 +21,6 @@ export class MyStack extends Stack {
           productVersionName: 'v1',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new Ec2InstanceMultiEBSProduct(this, 'Ec2InstanceMultiEBS', {})),
         },
-        
       ],
     });
 
@@ -45,6 +46,18 @@ export class MyStack extends Stack {
         }
       ],
     });
+
+    new servicecatalog.CloudFormationProduct(this, 'EC2WithEFSMountProduct', {
+      productName: 'EC2 or AutoScaling Group with EFS Automount Product',
+      owner: 'SK Cloud Transformation Group',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          description: 'Latest Amazon Linux EC2 Instance or AutoscalingGroup with LaunchTemplate',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new EFSWithAutomountToEC2(this, 'EC2WithEFSMount', {})),
+        }
+      ],
+    });
   }
 }
 
@@ -56,7 +69,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'ec2-instance-amzn', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}` });
-//new Ec2InstanceAmznLinuxStack(app, 'ec2-stack', {});
+new MyStack(app, 'ec2-instance-amzn', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();

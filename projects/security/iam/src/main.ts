@@ -3,6 +3,7 @@ import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 //import { envVars } from './env-vars';
+import { IAMUserPrduct } from './lib/iam-user-product';
 
 interface IStackProps extends StackProps {
 
@@ -46,19 +47,32 @@ export class MyStack extends Stack {
       }
       */
 
-    // Only Manage Global TagOptions
-    new servicecatalog.TagOptions(this, 'StageTagOptions', {
-      allowedValuesForTags: {
-        'cz-stage': ['share','dev', 'stage', 'prod'],
-      },
+
+    new servicecatalog.CloudFormationProduct(this, 'sc-iamuser-product', {
+        productName: 'create-iamuser-product',
+        owner: 'SKCnC AWSTF',
+        description: 'IAM User SC Product',
+        productVersions: [
+          {
+            productVersionName: 'v1',
+            cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, 'IamUserProduct', {})),
+          },
+        ],
     });
 
-    new servicecatalog.TagOptions(this, 'OrgTagOptions', {
-      allowedValuesForTags: {
-        'cz-org': ['skch','skcnc', 'skib'],
-      },
+    /* const productStackHistory = new servicecatalog.ProductStackHistory(this, 'ProductStackHistory', {
+      productStack: new IAMUserPrduct(this, 'IAMUserProduct', {}),
+      currentVersionName: 'v1',
+      currentVersionLocked: false,
     });
 
+    const product = new servicecatalog.CloudFormationProduct(this, 'MyFirstProduct', {
+      productName: 'create-iamuser-product',
+      owner: 'SKCnC AWSTF',
+      productVersions: [productStackHistory.currentVersion()],
+    });
+
+    this.portfolio.addProduct(product); */
   }
 }
 
@@ -70,7 +84,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "mystack", { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, "iam", { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 // new MyStack(app, 'iam-prod', { env: prodEnv });
 
 app.synth();
