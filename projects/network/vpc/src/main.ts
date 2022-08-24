@@ -2,7 +2,6 @@ import path from 'path';
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { VpcProduct } from './lib/vpc-product';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -14,10 +13,17 @@ export class MyStack extends Stack {
       productName: 'Network VPC Product',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
-        {
+        /* {
           productVersionName: 'v1',
           description: '2tier Subnet VPC',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new VpcProduct(this, 'Vpc', {})),
+        }, */
+        {
+          productVersionName: 'v1',
+          description: '2tier Subnet VPC',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
+            path.join(__dirname, './lib/cfn-template/2-tier.template.yaml'),
+          ),
         },
         {
           productVersionName: 'v2',
