@@ -10,37 +10,41 @@ Object {
     },
   },
   "Resources": Object {
-    "EC2InstanceAmznLinuxProduct2296063D": Object {
+    "VPCProduct78C3C509": Object {
       "Properties": Object {
-        "Name": "EC2 Instance Amazon Linux Product",
+        "Description": "Network VPC Product",
+        "Name": "Network VPC Product",
         "Owner": "SK Cloud Transformation Group",
         "ProvisioningArtifactParameters": Array [
           Object {
+            "Description": "2tier Subnet VPC",
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/5fd352aa2d77b489a5558e16efc993369f385119b4ba45d9bf63c1d379893b92.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4740562e7ff767fa5fefe371a0bea5b123c76c5b5d2fac140d69e6188fe8980a.json",
               },
             },
-            "Name": "v3.0",
+            "Name": "v1",
           },
           Object {
+            "Description": "3tier Subnet VPC",
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c9972ef6e5dd81d855460bb63b5d43181143387bed1d4be099749c8c1aac0aaf.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/b8ece719cb6875887037adb287077c32016ac561b72d0afccc31ffa9c1644b0a.yaml",
               },
             },
-            "Name": "v2.0",
+            "Name": "v2",
           },
           Object {
+            "Description": "3tier Subnet VPC added Second CIDR",
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/f2c906d67bba2caea7360dc1e56b84ecf3047662b2bb1ba26094a8eefd88fd53.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/dde6947043f9cc6264cb8b83fac14b0446386c61259151b979d2d6d820ae4ebd.yaml",
               },
             },
-            "Name": "v5.0",
+            "Name": "v3",
           },
         ],
       },

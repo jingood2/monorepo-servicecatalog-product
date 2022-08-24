@@ -1,0 +1,399 @@
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: VPC Configuration
+        Parameters:
+          - Environment
+          - MaxAZs
+          - VPCCIDR
+          - PublicSubnetCIDRMask
+          - PrivateSubnetCIDRMask
+          - DbSubnetCIDRMask
+      - Label:
+          default: (Optional) Create Pod Subnet for ZCP
+        Parameters:
+          - useZCP
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dmz
+      - dev
+      - shared
+      - prod
+    Description: Environment
+  MaxAZs:
+    Type: Number
+    Default: 2
+    Description: Max Availability Zones
+    MaxValue: 4
+    MinValue: 2
+  VPCCIDR:
+    Type: String
+    Default: 10.229.0.0/16
+    AllowedPattern: >-
+      ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Description: CIDR block for the VPC
+  VPCCIDRSecondary:
+    Type: String
+    Default: 100.64.0.0/10
+    AllowedPattern: >-
+      ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Description: Secondary CIDR block for the VPC
+  PublicSubnetCIDRMask:
+    Type: Number
+    Default: 28
+    ConstraintDescription: CIDR network mask parameter must be in the form x.x.x.x/16-28
+    Description: CIDR block for the Public Subnet
+  PrivateSubnetCIDRMask:
+    Type: Number
+    Default: 24
+    ConstraintDescription: CIDR network mask parameter must be in the form x.x.x.x/16-28
+    Description: CIDR block for the Private Subnet
+  useZCP:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable/Disable ZCP
+  DbSubnetCIDRMask:
+    Type: Number
+    Default: 28
+    ConstraintDescription: CIDR network mask parameter must be in the form x.x.x.x/16-28
+    Description: CIDR block for the DB Subnet
+Conditions:
+  UseZCP: !Equals 
+    - 'true'
+    - !Ref useZCP
+  NotUseZCP: !Equals 
+    - 'false'
+    - !Ref useZCP
+Resources:
+  Vpc8378EB38:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.229.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - !Ref Environment
+              - '-vpc'
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/Resource
+  VpcCidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      CidrBlock: !Ref VPCCIDRSecondary
+    Condition: UseZCP
+  VpcPublicSubnet1Subnet5C2D37C4:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.0.0/28
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Public
+        - Key: 'aws-cdk:subnet-type'
+          Value: Public
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/Subnet
+  VpcPublicSubnet1RouteTable6C95E38E:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/RouteTable
+  VpcPublicSubnet1RouteTableAssociation97140677:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcPublicSubnet1RouteTable6C95E38E
+      SubnetId: !Ref VpcPublicSubnet1Subnet5C2D37C4
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/RouteTableAssociation
+  VpcPublicSubnet1DefaultRoute3DA9E72A:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref VpcPublicSubnet1RouteTable6C95E38E
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VpcIGWD7BA715C
+    DependsOn:
+      - VpcVPCGWBF912B6E
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/DefaultRoute
+  VpcPublicSubnet1EIPD7E02669:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/EIP
+  VpcPublicSubnet1NATGateway4D7517AA:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      SubnetId: !Ref VpcPublicSubnet1Subnet5C2D37C4
+      AllocationId: !GetAtt 
+        - VpcPublicSubnet1EIPD7E02669
+        - AllocationId
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet1/NATGateway
+  VpcPublicSubnet2Subnet691E08A3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.0.16/28
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2c
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Public
+        - Key: 'aws-cdk:subnet-type'
+          Value: Public
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet2/Subnet
+  VpcPublicSubnet2RouteTable94F7E489:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PublicSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet2/RouteTable
+  VpcPublicSubnet2RouteTableAssociationDD5762D8:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcPublicSubnet2RouteTable94F7E489
+      SubnetId: !Ref VpcPublicSubnet2Subnet691E08A3
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet2/RouteTableAssociation
+  VpcPublicSubnet2DefaultRoute97F91067:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref VpcPublicSubnet2RouteTable94F7E489
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VpcIGWD7BA715C
+    DependsOn:
+      - VpcVPCGWBF912B6E
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PublicSubnet2/DefaultRoute
+  VpcPrivateSubnet1Subnet536B997A:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.1.0/24
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Private
+        - Key: 'aws-cdk:subnet-type'
+          Value: Private
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PrivateSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet1/Subnet
+  VpcPrivateSubnet1RouteTableB2C5B500:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PrivateSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet1/RouteTable
+  VpcPrivateSubnet1RouteTableAssociation70C59FA6:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcPrivateSubnet1RouteTableB2C5B500
+      SubnetId: !Ref VpcPrivateSubnet1Subnet536B997A
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet1/RouteTableAssociation
+  VpcPrivateSubnet1DefaultRouteBE02A9ED:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref VpcPrivateSubnet1RouteTableB2C5B500
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref VpcPublicSubnet1NATGateway4D7517AA
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet1/DefaultRoute
+
+  #Subnet for Pod
+  VpcPodSubnet1Subnet536B997A:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 100.64.0.0/24
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Pod
+        - Key: 'aws-cdk:subnet-type'
+          Value: Private
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PodSubnet1
+    Condition: UseZCP
+  
+  VpcPodSubnet1RouteTableB2C5B500:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PrivateSubnet1
+    Condition: UseZCP
+  
+  VpcPodSubnet1RouteTableAssociation70C59FA6:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcPrivateSubnet1RouteTableB2C5B500
+      SubnetId: !Ref VpcPrivateSubnet1Subnet536B997A
+
+
+
+  VpcPrivateSubnet2Subnet3788AAA1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.2.0/24
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Private
+        - Key: 'aws-cdk:subnet-type'
+          Value: Private
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PrivateSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet2/Subnet
+  VpcPrivateSubnet2RouteTableA678073B:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/PrivateSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet2/RouteTable
+  VpcPrivateSubnet2RouteTableAssociationA89CAD56:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcPrivateSubnet2RouteTableA678073B
+      SubnetId: !Ref VpcPrivateSubnet2Subnet3788AAA1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet2/RouteTableAssociation
+  VpcPrivateSubnet2DefaultRoute060D2087:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref VpcPrivateSubnet2RouteTableA678073B
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref VpcPublicSubnet1NATGateway4D7517AA
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/PrivateSubnet2/DefaultRoute
+  VpcDbSubnet1Subnet2B414936:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.3.0/28
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Db
+        - Key: 'aws-cdk:subnet-type'
+          Value: Isolated
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/DbSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet1/Subnet
+  VpcDbSubnet1RouteTable7C431541:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/DbSubnet1
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet1/RouteTable
+  VpcDbSubnet1RouteTableAssociation3B57E8C2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcDbSubnet1RouteTable7C431541
+      SubnetId: !Ref VpcDbSubnet1Subnet2B414936
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet1/RouteTableAssociation
+  VpcDbSubnet2Subnet009B6CC4:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.229.3.16/28
+      VpcId: !Ref Vpc8378EB38
+      AvailabilityZone: ap-northeast-2c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: 'aws-cdk:subnet-name'
+          Value: Db
+        - Key: 'aws-cdk:subnet-type'
+          Value: Isolated
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/DbSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet2/Subnet
+  VpcDbSubnet2RouteTableB857358F:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      Tags:
+        - Key: Name
+          Value: EKSVpcCluster/Vpc/DbSubnet2
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet2/RouteTable
+  VpcDbSubnet2RouteTableAssociation82DF3E46:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref VpcDbSubnet2RouteTableB857358F
+      SubnetId: !Ref VpcDbSubnet2Subnet009B6CC4
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/DbSubnet2/RouteTableAssociation
+  VpcIGWD7BA715C:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - !Ref Environment
+              - '-vpc'
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/IGW
+  VpcVPCGWBF912B6E:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref Vpc8378EB38
+      InternetGatewayId: !Ref VpcIGWD7BA715C
+    Metadata:
+      'aws:cdk:path': EKSVpcCluster/Vpc/VPCGW

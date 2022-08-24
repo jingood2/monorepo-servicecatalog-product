@@ -29,6 +29,7 @@ export class MyStack extends Stack {
 
     new servicecatalog.CloudFormationProduct(this, "GithubOIDCProduct", {
       productName: "Github OIDC Provider Product",
+      distributor: 'jignood2@sk.com',
       owner: "SK Cloud Transformation Group",
       productVersions: [
         /* {
@@ -42,7 +43,7 @@ export class MyStack extends Stack {
           ),
         }, */
         {
-          productVersionName: "v1.0",
+          productVersionName: "v1",
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(path.join(__dirname, "github-oidc-provider.template.json")),
         },
       ],
@@ -61,6 +62,6 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "my-stack", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, "my-stack", { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 
 app.synth();

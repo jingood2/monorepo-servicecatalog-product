@@ -10,37 +10,31 @@ Object {
     },
   },
   "Resources": Object {
-    "EC2InstanceAmznLinuxProduct2296063D": Object {
+    "VPCProduct78C3C509": Object {
       "Properties": Object {
-        "Name": "EC2 Instance Amazon Linux Product",
+        "Description": "Network VPC Peering Product",
+        "Name": "Network VPC Peering Product",
         "Owner": "SK Cloud Transformation Group",
         "ProvisioningArtifactParameters": Array [
           Object {
+            "Description": "vpc peering connection accepter",
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/5fd352aa2d77b489a5558e16efc993369f385119b4ba45d9bf63c1d379893b92.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/2d6442e0f7c1fdd5f2cffa467ed0e4b7ad77079a45b6e1b52cacec37d70c73e7.yaml",
               },
             },
-            "Name": "v3.0",
+            "Name": "v1-peering-accepter",
           },
           Object {
+            "Description": "3tier Subnet VPC added Second CIDR",
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c9972ef6e5dd81d855460bb63b5d43181143387bed1d4be099749c8c1aac0aaf.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c988d127b27271768c00e158bbb339649b69639d4ad24a97b8372f64dd1d6b55.yaml",
               },
             },
-            "Name": "v2.0",
-          },
-          Object {
-            "DisableTemplateValidation": false,
-            "Info": Object {
-              "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/f2c906d67bba2caea7360dc1e56b84ecf3047662b2bb1ba26094a8eefd88fd53.json",
-              },
-            },
-            "Name": "v5.0",
+            "Name": "v1-peering-requester",
           },
         ],
       },

@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "aws:/Users/a10220/Library/Application%20Support/Code/User/globalStorage/amazonwebservices.aws-toolkit-vscode/cloudformation.schema.json": "file:///Users/a10220/git/monorepo-servicecatalog-product/projects/network/vpc/src/lib/cfn-template/3-tier.template.yaml"
+    }
+}
