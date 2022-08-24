@@ -11,6 +11,7 @@ export class MyStack extends Stack {
     new servicecatalog.CloudFormationProduct(this, 'CreateEFSFileSystemAndAccessPointProduct', {
       productName: 'Amazon FSx for Windows File Server',
       owner: 'SK Cloud Transformation Group',
+      distributor: 'jingood2@sk.com',
       productVersions: [
         {
           productVersionName: 'v1',

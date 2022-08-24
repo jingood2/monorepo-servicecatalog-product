@@ -11,6 +11,7 @@ export class MyStack extends Stack {
     new servicecatalog.CloudFormationProduct(this, 'AWSBackup', {
       description: 'AWS Backup Product',
       productName: 'aws-backup-product',
+      distributor: 'jingood2@sk.com',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {

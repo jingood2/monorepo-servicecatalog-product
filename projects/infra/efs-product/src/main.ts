@@ -11,6 +11,7 @@ export class MyStack extends Stack {
     new servicecatalog.CloudFormationProduct(this, 'CreateEFSFileSystemAndAccessPointProduct', {
       productName: 'Create EFS FileSystem and AccessPoint',
       owner: 'SK Cloud Transformation Group',
+      distributor: 'jingood2@sk.com',
       productVersions: [
         {
           productVersionName: 'v1',
