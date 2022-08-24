@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
+//import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
@@ -10,7 +10,7 @@ export interface Ec2InstanceAmznLinuxProductProps extends cdk.StackProps {
 
 }
 
-export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
+export class Ec2InstanceAmznLinuxProductV4 extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: Ec2InstanceAmznLinuxProductProps) {
     super(scope, id);
 
@@ -124,7 +124,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
     default: '/data',
     }); */
 
-    const ec2AutoscaleMinSize = new cdk.CfnParameter(this, 'Ec2AutoscaleMinSize', {
+    /* const ec2AutoscaleMinSize = new cdk.CfnParameter(this, 'Ec2AutoscaleMinSize', {
       type: 'Number',
       default: 1,
       description: 'AutoScalingGroup MinSize',
@@ -142,18 +142,20 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       description: 'AutoScalingGroup DesiredCapacity',
     });
 
-    const addEBS = new cdk.CfnParameter(this, 'AttachEBSVolume', {
-      type: 'String',
-      default: 'true',
-      allowedValues: ['true', 'false'],
-      description: 'Should add EBS Volume',
-    });
-
     const ebsVolumeA = new cdk.CfnParameter(this, 'EBSVolumeA', {
       type: 'Number',
       default: 1,
       description: 'Size of EBS Volume /dev/sdb',
     });
+
+    const addEBS = new cdk.CfnParameter(this, 'AttachEBSVolume', {
+      type: 'String',
+      default: 'true',
+      allowedValues: ['true', 'false'],
+      description: 'Should add EBS Volume',
+    }); */
+
+
     /*
     const attachEFS = new cdk.CfnParameter(this, 'AttachEFS', {
     type: 'String',
@@ -178,13 +180,13 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       expression: cdk.Fn.conditionEquals(createASG, 'false'),
     }); */
 
-    const attachEBSCondition = new cdk.CfnCondition(this, 'AddEBSCondition', {
+    /* const attachEBSCondition = new cdk.CfnCondition(this, 'AddEBSCondition', {
       expression: cdk.Fn.conditionEquals(addEBS, 'true'),
     });
 
     const noAttachEBSCondition = new cdk.CfnCondition(this, 'noAddEBSCondition', {
       expression: cdk.Fn.conditionEquals(addEBS, 'false'),
-    });
+    }); */
     /*
     const attachEFSCondition = new cdk.CfnCondition(this, 'attachEFSCondition', {
         expression: cdk.Fn.conditionEquals(attachEFS, 'true'),
@@ -283,11 +285,13 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
           'updateOS',
           'package',
           'usermanagement',
-          'ebsautomount',
-          //'setupCfnHup',
-          'createStack',
-          'testCfnHup',
+          'setupCfnHup',
+          //'createStack',
           //'efsautomount',
+        ],
+        update: [
+          'ebsautomount',
+          'testCfnHup',
         ],
       },
       configs: {
@@ -309,7 +313,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
               '#!/bin/bash\n',
               'EBS_DEVICE=$(lsblk | grep -e disk | awk \'{sub("G","",$4)} {if ($4+0 > 4) print $1}\')\n',
               'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then mkfs.xfs /dev/$i; fi done\n',
-              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then j = j + 1; mkdir -p /mnt/$i; fi done\n',
+              'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then mkdir -p /mnt/$i; fi done\n',
               'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then sudo mount /dev/$i /mnt/$i; fi done\n',
               'for i in $EBS_DEVICE; do if [ $i != "nvme0n1" -a $i != "xvda" ]; then  echo "$(blkid -o export /dev/$i | grep ^UUID=) /mnt/$i xfs defaults,noatime" | tee -a /etc/fstab; fi done',
             ].join(''),
@@ -319,7 +323,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
           ec2.InitCommand.shellCommand('/etc/cfn/ebs-mount.sh'),
           ec2.InitCommand.shellCommand('mount -a'),
         ]),
-        setupCfnHup: new ec2.InitConfig([
+        /* setupCfnHup: new ec2.InitConfig([
           ec2.InitFile.fromString('/etc/cfn/cfn-hup.conf',
             [
               '[main]\n',
@@ -349,7 +353,7 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
             ensureRunning: true,
             serviceRestartHandle: handle,
           }),
-        ]),
+        ]), */
         createStack: new ec2.InitConfig([
           // Create a JSON file from tokens (can also create other files)
           ec2.InitFile.fromString('/etc/cfn/cfn-hup.conf',
@@ -370,21 +374,29 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       },
     });
 
+    const volA = new ec2.CfnVolume(this, 'CfnVolumeA', {
+      availabilityZone: 'ap-northeast-2a',
+      size: 10,
+      volumeType: ec2.EbsDeviceVolumeType.GP3,
+    });
 
-    /*
     const ec2Instance = new ec2.Instance(this, 'Instance', {
       vpc,
-      availabilityZone: 'ap-northeast-2a',
-      vpcSubnets: vpc.selectSubnets({
+      //availabilityZone: 'ap-northeast-2a',
+      /* vpcSubnets: vpc.selectSubnets({
         availabilityZones: ['ap-northeast-2a'],
         subnets: [
             ec2.Subnet.fromSubnetId(this, 'ASGSubnet1', ec2Subnet1.valueAsString),
         ]
-      }),
+      }), */
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
+      },
       instanceType: new ec2.InstanceType(instanceType.valueAsString),
       machineImage: ec2.MachineImage.latestAmazonLinux({
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
       }),
+      propagateTagsToVolumeOnCreation: true,
       //machineImage: ec2.MachineImage.fromSsmParameter('/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'),
       //machineImage: new ec2.GenericSSMParameterImage(cdk.Lazy.string({ produce:() => machineImage.valueAsString }), ec2.OperatingSystemType.LINUX ),
       init: configSets,
@@ -395,49 +407,14 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
       role: ec2Role,
     });
     const cfnEc2 = ec2Instance.node.defaultChild as ec2.CfnInstance;
-    cfnEc2.cfnOptions.condition = createInstanceCondition;
-    */
 
-
-    /************************* Add EBS Volume *********************/
-    const ec2Instance = new autoscaling.AutoScalingGroup(this, 'ASGWithEBS', {
-      autoScalingGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-asg`,
-      instanceType: new ec2.InstanceType(instanceType.valueAsString),
-      machineImage: ec2.MachineImage.latestAmazonLinux({
-        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-      }),
-      vpc,
-      role: ec2Role,
-      minCapacity: ec2AutoscaleMinSize.valueAsNumber,
-      maxCapacity: ec2AutoscaleMaxSize.valueAsNumber,
-      desiredCapacity: ec2AutoscaleDesiredCapacity.valueAsNumber,
-      vpcSubnets: {
-        subnets: [
-          ec2.Subnet.fromSubnetId(this, 'ASGSubnetA', ec2Subnet1.valueAsString),
-          ec2.Subnet.fromSubnetId(this, 'ASGSubnetC', ec2Subnet2.valueAsString),
-        ],
-      },
-      securityGroup: ec2SecurityGroup,
-      signals: autoscaling.Signals.waitForAll(),
-      blockDevices: [
-        {
-          deviceName: '/dev/sdb',
-          volume: autoscaling.BlockDeviceVolume.ebs(ebsVolumeA.valueAsNumber,
-            { volumeType: autoscaling.EbsDeviceVolumeType.GP3 }),
-        },
-      ],
-      init: configSets,
-    });
-
-    //const ec2InstanceLogicalId = (ec2Instance.node.defaultChild as ec2.CfnInstance).logicalId;
-
-    /* const setupCfnHup = new ec2.InitConfig([
+    configSets.addConfig('setupCfnHup', new ec2.InitConfig([
       ec2.InitFile.fromString('/etc/cfn/cfn-hup.conf',
         [
           '[main]\n',
-          'stack=${AWS::StackName}\n',
+          `stack=${cdk.Arn.split(cdk.Stack.of(this).stackId, cdk.ArnFormat.SLASH_RESOURCE_NAME).resourceName}\n`,
           `region=${cdk.Stack.of(this).region}\n`,
-          'interval=2\n',
+          'interval=10\n',
           'verbose=true',
         ].join(''),
         { serviceRestartHandles: [handle] },
@@ -446,10 +423,11 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
         [
           '[cfn-auto-reloader-hook]\n',
           'triggers=post.update\n',
-          `path=Resources.${ec2InstanceLogicalId}.Metadata.AWS::CloudFormation::Init\n`,
+          // ToDo: ResourceId
+          //`path=Resources.${ec2Instance.node.id}.Metadata.AWS::CloudFormation::Init\n`,
           'action=/opt/aws/bin/cfn-init -v ',
-          '--stack ${AWS::StackName} ',
-          `--resource ${ec2InstanceLogicalId} `,
+          `--stack ${cdk.Arn.split(cdk.Stack.of(this).stackId, cdk.ArnFormat.SLASH_RESOURCE_NAME).resourceName} `,
+          `--resource ${ec2Instance.node.id} `,
           `--region ${cdk.Stack.of(this).region} `,
           '--configsets update\n',
         ].join(''),
@@ -460,52 +438,13 @@ export class Ec2InstanceAmznLinuxProduct extends servicecatalog.ProductStack {
         ensureRunning: true,
         serviceRestartHandle: handle,
       }),
-    ]);
+    ]));
 
-
-    configSetsA.addConfig('setupCfnHup', setupCfnHup);
-    configSetsA.addConfigSet('default', ['setupCfnHup']);
-
-    ec2Instance.applyCloudFormationInit(configSetsA); */
-
-    // UserData
-    /* let userData = ec2.UserData.forLinux();
-    userData.addCommands(
-      `pid=aws servicecatalog search-provisioned-products --filters "SearchQuery"=${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-product | grep -w "Id" | awk '{print $2}'`,
-      `sed -i -e "s/LOGICAL_RESOURCE_ID/SC-${AWS::ACCOUNT_ID}-${pid}/g" /etc/cfn/hooks.d/cfn-auto-reloader.conf`,
-      'systemctl start cfn-hup.service',
-    );
-    ec2Instance.addUserData(userData.render()); */
-
-    const cfnInstace = ec2Instance.node.defaultChild as autoscaling.CfnAutoScalingGroup;
-    cfnInstace.cfnOptions.condition = attachEBSCondition;
-
-
-    /************************* No Add EBS Volume *********************/
-    const autoscale = new autoscaling.AutoScalingGroup(this, 'ASG', {
-      autoScalingGroupName: `${projectName.valueAsString}-${environmentType.valueAsString}-${ec2Name.valueAsString}-asg`,
-      instanceType: new ec2.InstanceType(instanceType.valueAsString),
-      machineImage: ec2.MachineImage.latestAmazonLinux({
-        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-      }),
-      vpc,
-      role: ec2Role,
-      minCapacity: ec2AutoscaleMinSize.valueAsNumber,
-      maxCapacity: ec2AutoscaleMaxSize.valueAsNumber,
-      desiredCapacity: ec2AutoscaleDesiredCapacity.valueAsNumber,
-      vpcSubnets: {
-        subnets: [
-          ec2.Subnet.fromSubnetId(this, 'ASGSubneta', ec2Subnet1.valueAsString),
-          ec2.Subnet.fromSubnetId(this, 'ASGSubnetc', ec2Subnet2.valueAsString),
-        ],
-      },
-      securityGroup: ec2SecurityGroup,
-      signals: autoscaling.Signals.waitForAll(),
-      blockDevices: undefined,
-      init: configSets,
+    new ec2.CfnVolumeAttachment(this, 'VolAAttach', {
+      device: '/dev/xvdb',
+      instanceId: cfnEc2.ref,
+      volumeId: volA.ref,
     });
 
-    const cfnAutoscale = autoscale.node.defaultChild as autoscaling.CfnAutoScalingGroup;
-    cfnAutoscale.cfnOptions.condition = noAttachEBSCondition;
   }
 };

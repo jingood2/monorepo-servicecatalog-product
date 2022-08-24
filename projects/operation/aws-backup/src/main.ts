@@ -33,7 +33,7 @@ const devEnv = {
 const app = new App();
 
 //new MyStack(app, 'aws-backup-dev', { env: devEnv });
-new MyStack(app, 'aws-backup-stack', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'aws-backup', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 // new MyStack(app, 'aws-backup-prod', { env: prodEnv });
 
 app.synth();

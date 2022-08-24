@@ -19,10 +19,28 @@ Object {
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/aebdfb7370e82914cc1362378f19c8c92886ef9f5763c5737961dd7bcf81a79c.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/5fd352aa2d77b489a5558e16efc993369f385119b4ba45d9bf63c1d379893b92.json",
               },
             },
-            "Name": "v1.0",
+            "Name": "v3.0",
+          },
+          Object {
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c9972ef6e5dd81d855460bb63b5d43181143387bed1d4be099749c8c1aac0aaf.json",
+              },
+            },
+            "Name": "v2.0",
+          },
+          Object {
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/f2c906d67bba2caea7360dc1e56b84ecf3047662b2bb1ba26094a8eefd88fd53.json",
+              },
+            },
+            "Name": "v5.0",
           },
         ],
       },

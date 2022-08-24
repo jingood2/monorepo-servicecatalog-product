@@ -9,19 +9,27 @@ export class MyStack extends Stack {
 
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'VPCProduct', {
-      description: 'Network VPC Peering Product',
-      productName: 'Network VPC Peering Product',
+      description: 'vpc peering connection accepter',
+      productName: 'Network VPC Peering Connection Accepter Product',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
-          productVersionName: 'v1-peering-accepter',
+          productVersionName: 'v1',
           description: 'vpc peering connection accepter',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
             path.join(__dirname, './lib/cfn-template/vpc-peering-connection-accepter.template.yaml'),
           ),
         },
+      ],
+    });
+
+    new servicecatalog.CloudFormationProduct(this, 'VPCProduct', {
+      description: 'vpc peering connection requester',
+      productName: 'Network VPC Peering Connection Requester Product',
+      owner: 'SK Cloud Transformation Group',
+      productVersions: [
         {
-          productVersionName: 'v1-peering-requester',
+          productVersionName: 'v1',
           description: 'vpc peering connection requester',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
             path.join(__dirname, './lib/cfn-template/vpc-peering-connection.template.yaml'),
@@ -40,7 +48,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'vpc-peering-dev', { env: devEnv });
+new MyStack(app, 'vpc-peering', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });// new MyStack(app, 'security-group-prod', { env: prodEnv });
 // new MyStack(app, 'vpc-peering-prod', { env: prodEnv });
 
 app.synth();

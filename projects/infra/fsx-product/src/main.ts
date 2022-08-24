@@ -1,7 +1,7 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { AttachEFSMount } from './lib/attach-efs-mount';
+import { FsxForWinFileserver } from './lib/fsx-for-win-fileserver';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -9,12 +9,12 @@ export class MyStack extends Stack {
 
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'CreateEFSFileSystemAndAccessPointProduct', {
-      productName: 'Create EFS FileSystem and AccessPoint',
+      productName: 'Amazon FSx for Windows File Server',
       owner: 'SK Cloud Transformation Group',
       productVersions: [
         {
           productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new AttachEFSMount(this, 'EC2LaunchTemplate')),
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new FsxForWinFileserver(this, 'FsxForWinFileserver', {})),
         },
       ],
     });
@@ -29,7 +29,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'efs-product', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'fsx', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 // new MyStack(app, 'efs-product-prod', { env: prodEnv });
 
 app.synth();

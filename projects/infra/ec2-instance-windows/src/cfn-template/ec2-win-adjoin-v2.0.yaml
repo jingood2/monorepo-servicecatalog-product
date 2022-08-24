@@ -1,0 +1,451 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Join Windows instance to AWS-Active Directory or Microsoft AD (no powershell).
+  Create SSM document, IAM Role, SSM doc and EC2 Instance. Attaches EC2 instance
+  to AD. Will need to use Domain Logins to RDP in.
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: Project Information
+        Parameters:
+          - ProjectName
+          - environmentType 
+          - Ec2Name
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPC
+          - TargetSubnet
+      - Label:
+          default: EC2 Instance Configuration
+        Parameters:
+          - InstanceType
+          - WINFULLBASE
+          - KeyPair
+      - Label:
+          default: EBS Volume Configuration
+        Parameters:
+          - RootVolumeSize
+          - ShouldAttachVolumeA
+          - VolumeA
+          - ShouldAttachVolumeB
+          - VolumeB
+          - ShouldAttachVolumeC
+          - VolumeC
+          - ShouldAttachVolumeD
+          - VolumeD
+      - Label:
+          default: Directory Services Configuration
+        Parameters:
+          - ADDirectoryId
+          - ADRootDomainName
+          - ADDirectoryHostName
+          - ADDnsIpAddresses1
+          - ADDnsIpAddresses2
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: projectName
+    Description: Project Name
+  environmentType:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - shared
+      - dev
+      - stage
+      - prod
+    Description: environmentType Name
+  Ec2Name:
+    Type: String
+    Description: EC2 Name
+  KeyPair:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: KeyPair for EC2 Instance
+  TargetSubnet:
+    Type: 'AWS::EC2::Subnet::Id'
+    Description: Subnet to place instance in
+  VPC:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: VPC to place instance in
+  InstanceType:
+    Type: String
+    Default: t2.small
+    AllowedValues:
+      - 't2.small'
+      - 't2.medium'
+      - 't2.large'
+      - 't2.xlarge'
+      - 't2.2xlarge'
+      - 't3.small'
+      - 't3.medium'
+      - 't3.large'
+      - 't3.xlarge'
+      - 't3.2xlarge'
+      - 'm5.large' 
+      - 'm5.xlarge' 
+      - 'm5.2xlarge' 
+      - 'm5.4xlarge'
+      - 'c5.large' 
+      - 'c5.xlarge' 
+      - 'c5.2xlarge' 
+      - 'c5.4xlarge'
+      - 'r5.large' 
+      - 'r5.xlarge' 
+      - 'r5.2xlarge' 
+      - 'r5.4xlarge'
+    ConstraintDescription: Must be a valid EC2 instance type.
+  ADDirectoryId:
+    Type: String
+    Description: Active DirectoryId. Eg. d-12345679a
+  ADDirectoryHostName:
+    Type: String
+    Description: Active Directory Host Name. Eg. {adhostname}.ad.com
+  ADRootDomainName:
+    Type: String
+    Description: Active Directory Root DomainName. Eg. ad.com
+  ADDnsIpAddresses1:
+    Type: String
+    Description: Active Directory DNS 1. Eg. 10.0.0.142
+  ADDnsIpAddresses2:
+    Type: String
+    Description: Active Directory DNS 2. Eg. 10.0.0.143
+  WINFULLBASE:
+    Default: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+  RootVolumeSize:
+    Type: Number
+    Default: 50
+    Description: Root Volume Size
+  ShouldAttachVolumeA:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Should add EBS Volume
+  VolumeA:
+    Type: Number
+    Default: 1
+    Description: Size of EBS Volume /dev/sdb
+  ShouldAttachVolumeB:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Should add EBS Volume
+  VolumeB:
+    Type: Number
+    Default: 1
+    Description: Size of EBS Volume /dev/sdc
+  ShouldAttachVolumeC:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Should add EBS Volume
+  VolumeC:
+    Type: Number
+    Default: 1
+    Description: Size of EBS Volume /dev/sdd
+  ShouldAttachVolumeD:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Should add EBS Volume
+  VolumeD:
+    Type: Number
+    Default: 1
+    Description: Size of EBS Volume /dev/sde
+
+Conditions:
+  AttachVolACondition: !Equals 
+    - !Ref ShouldAttachVolumeA
+    - 'true'
+  AttachVolBCondition: !Equals 
+    - !Ref ShouldAttachVolumeB
+    - 'true'
+  AttachVolCCondition: !Equals 
+    - !Ref ShouldAttachVolumeC
+    - 'true'
+  AttachVolDCondition: !Equals 
+    - !Ref ShouldAttachVolumeD
+    - 'true'
+  
+Resources:
+  myssmdocument:
+    Type: 'AWS::SSM::Document'
+    Properties:
+      Content:
+        schemaVersion: '1.2'
+        description: Join instances to an AWS Directory Service domain.
+        parameters:
+          directoryId:
+            type: String
+            description: (Required) The ID of the AWS Directory Service directory.
+          directoryName:
+            type: String
+            description: >-
+              (Required) The name of the directory; for example,
+              test.example.com
+          dnsIpAddresses:
+            type: StringList
+            default: []
+            description: >-
+              (Optional) The IP addresses of the DNS servers in the directory.
+              Required when DHCP is not configured. Learn more at
+              http://docs.aws.amazon.com/directoryservice/latest/simple-ad/join_get_dns_addresses.html
+            allowedPattern: >-
+              ((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)
+        runtimeConfig:
+          'aws:domainJoin':
+            properties:
+              directoryId: '{{ directoryId }}'
+              directoryName: '{{ directoryName }}'
+              dnsIpAddresses: '{{ dnsIpAddresses }}'
+  myEC2InstanceSSM:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref RootVolumeSize
+            Encrypted: false
+            VolumeType: gp3
+      IamInstanceProfile: !Ref myInstanceProfile
+      PropagateTagsToVolumeOnCreation: true
+      SsmAssociations:
+        - DocumentName: !Ref myssmdocument
+          AssociationParameters:
+            - Key: directoryId
+              Value:
+                - !Ref ADDirectoryId
+            - Key: directoryName
+              Value:
+                - !Sub "${ADDirectoryHostName}.${ADRootDomainName}"
+            - Key: dnsIpAddresses
+              Value:
+                - !Ref ADDnsIpAddresses1
+                - !Ref ADDnsIpAddresses2
+      KeyName: !Ref KeyPair
+      ImageId: !Ref WINFULLBASE
+      InstanceType: !Ref InstanceType
+      Tags:
+        - Key: Name
+          Value: !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+      SubnetId: !Ref TargetSubnet
+      SecurityGroupIds:
+        - !GetAtt 
+          - InstanceSecurityGroup
+          - GroupId
+      UserData:
+        Fn::Base64: !Sub |
+          - <powershell>
+            Rename-Computer -NewName "${ADDirectoryHostName}" -Force
+            mkdir C:\setup
+
+            # Bootstrap
+            Read-S3Object -BucketName jingood2-servicecatalog-assets -Key /userdata/win_bootstrap.ps1 -File C:\setup\bootstrap.ps1
+            . C:\setup\bootstrap.ps1
+
+            # DataDog
+            Read-S3Object -BucketName jingood2-servicecatalog-assets -Key /package/datadog/"${ProjectName}"/win_datadog_agent.ps1 -File C:\setup\win_datadog_agent.ps1
+            . C:\setup\win_datadog_agent.ps1
+
+            </powershell>
+          - ADDirectoryHostName: !Ref ADDirectoryHostName
+          - ProjectName: !Ref ProjectName 
+  myInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles: 
+        - !Ref myEC2SSMRole
+      InstanceProfileName: !Join 
+        - ''
+        - - !Ref ProjectName
+          - '-ec2-'
+          - !Ref environmentType
+          - '-'
+          - !Ref Ec2Name
+          - '-instanceProfile'
+  myEC2SSMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - 'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
+      RoleName: !Join 
+        - ''
+        - - !Ref ProjectName
+          - '-ec2-'
+          - !Ref environmentType
+          - '-'
+          - !Ref Ec2Name
+          - '-role'
+  EC2RoleDefaultPolicy64E44857:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: 's3:List*'
+            Effect: Allow
+            Resource: 'arn:aws:s3:::jingood2-servicecatalog-assets'
+          - Action: 's3:*Object'
+            Effect: Allow
+            Resource: 'arn:aws:s3:::jingood2-servicecatalog-assets/*'
+          - Action: 'logs:*'
+            Effect: Allow
+            Resource: 'arn:aws:logs:*:*:*'
+          - Action: 'ec2:*'
+            Effect: Allow
+            Resource: '*'
+            Sid: AttachVolume
+        Version: 2012-10-17
+      PolicyName: EC2RoleDefaultPolicy64E44857
+      Roles:
+        - !Ref myEC2SSMRole
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3389'
+          ToPort: '3389'
+          CidrIp: 0.0.0.0/0
+      GroupName : !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+            - '-sg'
+  
+  DataVolumeA:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeA
+      VolumeType: gp3
+      Encrypted: true
+      AvailabilityZone: !GetAtt myEC2InstanceSSM.AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+            - '-ebs01'
+    Condition: AttachVolACondition
+  DataVolumeAttachmentA:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref myEC2InstanceSSM
+      VolumeId: !Ref DataVolumeA
+      Device: /dev/sdb
+    Condition: AttachVolACondition
+
+  DataVolumeB:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeB
+      VolumeType: gp3
+      Encrypted: true
+      AvailabilityZone: !GetAtt myEC2InstanceSSM.AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+            - '-ebs02'
+    Condition: AttachVolBCondition
+  DataVolumeAttachmentB:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref myEC2InstanceSSM
+      VolumeId: !Ref DataVolumeB
+      Device: /dev/sdc
+    Condition: AttachVolBCondition
+  
+  DataVolumeC:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeC
+      VolumeType: gp3
+      Encrypted: true
+      AvailabilityZone: !GetAtt myEC2InstanceSSM.AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+            - '-ebs03'
+    Condition: AttachVolCCondition
+            
+  DataVolumeAttachmentC:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref myEC2InstanceSSM
+      VolumeId: !Ref DataVolumeC
+      Device: /dev/sdd
+    Condition: AttachVolCCondition
+
+  DataVolumeD:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeD
+      VolumeType: gp3
+      Encrypted: true
+      AvailabilityZone: !GetAtt myEC2InstanceSSM.AvailabilityZone
+      Tags:
+        - Key: Name
+          Value: !Join 
+          - ''
+          - - !Ref ProjectName
+            - '-ec2-'
+            - !Ref environmentType
+            - '-'
+            - !Ref Ec2Name
+            - '-ebs04'
+    Condition: AttachVolDCondition
+  DataVolumeAttachmentD:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref myEC2InstanceSSM
+      VolumeId: !Ref DataVolumeD
+      Device: /dev/sde
+    Condition: AttachVolDCondition

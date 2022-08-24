@@ -54,7 +54,7 @@ export class MyStack extends Stack {
         description: 'IAM User SC Product',
         productVersions: [
           {
-            productVersionName: 'v1.0',
+            productVersionName: 'v1',
             cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(new IAMUserPrduct(this, 'IamUserProduct', {})),
           },
         ],
@@ -84,7 +84,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "mystack", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, "iam", { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
 // new MyStack(app, 'iam-prod', { env: prodEnv });
 
 app.synth();
