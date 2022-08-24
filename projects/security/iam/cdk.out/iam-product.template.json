@@ -1,0 +1,69 @@
+{
+ "Resources": {
+  "sciamuserproduct89ABF78E": {
+   "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+   "Properties": {
+    "Name": "sc-iamuser-product",
+    "Owner": "AWSTF",
+    "ProvisioningArtifactParameters": [
+     {
+      "DisableTemplateValidation": false,
+      "Info": {
+       "LoadTemplateFromURL": {
+        "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/57236fcdfb653b0ead36e345b8573fe5fb5ca659295abfdc05cde6cb203bebaf.json"
+       }
+      },
+      "Name": "v1"
+     }
+    ],
+    "Description": "IAM User SC Product"
+   },
+   "Metadata": {
+    "aws:cdk:path": "iam-product/sc-iamuser-product/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/23JTQqDMBBA4bO4T6ZEoRcQui72AGU6mZbRmIH86EK8e1vcunrwvhY6B67BNVvykw3ygu1RkCbzW8/MaRFiwoJBP7D1Qau/aZqxiMZ7Ul+pmP4dT2H/y8BZayLeTVTPMObL4q7gOmibMYvYVGORmWE4+gXhhdgikAAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "iam-product/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

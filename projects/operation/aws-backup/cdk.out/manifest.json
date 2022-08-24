@@ -1,0 +1,71 @@
+{
+  "version": "20.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "aws-backup-stack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "aws-backup-stack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "aws-backup-stack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://037729278610/ap-northeast-2",
+      "properties": {
+        "templateFile": "aws-backup-stack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::037729278610:role/cdk-hnb659fds-deploy-role-037729278610-ap-northeast-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::037729278610:role/cdk-hnb659fds-cfn-exec-role-037729278610-ap-northeast-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-037729278610-ap-northeast-2/a500d8bb8e455992ccb096be83fdf7ffd9590357e7cc855a1a18832936e6bdcd.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "aws-backup-stack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::037729278610:role/cdk-hnb659fds-lookup-role-037729278610-ap-northeast-2",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        },
+        "stackName": "sc-undefined-undefined"
+      },
+      "dependencies": [
+        "aws-backup-stack.assets"
+      ],
+      "metadata": {
+        "/aws-backup-stack/AWSBackup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AWSBackupD761F9A8"
+          }
+        ],
+        "/aws-backup-stack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/aws-backup-stack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/aws-backup-stack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "aws-backup-stack"
+    }
+  }
+}

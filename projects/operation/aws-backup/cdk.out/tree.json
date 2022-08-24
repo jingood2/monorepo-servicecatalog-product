@@ -1,0 +1,112 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.1.62"
+        }
+      },
+      "aws-backup-stack": {
+        "id": "aws-backup-stack",
+        "path": "aws-backup-stack",
+        "children": {
+          "AWSBackup": {
+            "id": "AWSBackup",
+            "path": "aws-backup-stack/AWSBackup",
+            "children": {
+              "Template36e1d0630b26": {
+                "id": "Template36e1d0630b26",
+                "path": "aws-backup-stack/AWSBackup/Template36e1d0630b26",
+                "children": {
+                  "Stage": {
+                    "id": "Stage",
+                    "path": "aws-backup-stack/AWSBackup/Template36e1d0630b26/Stage",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.AssetStaging",
+                      "version": "2.34.2"
+                    }
+                  },
+                  "AssetBucket": {
+                    "id": "AssetBucket",
+                    "path": "aws-backup-stack/AWSBackup/Template36e1d0630b26/AssetBucket",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                      "version": "2.34.2"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                  "version": "2.34.2"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "aws-backup-stack/AWSBackup/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::CloudFormationProduct",
+                  "aws:cdk:cloudformation:props": {
+                    "name": "aws-backup-product",
+                    "owner": "SK Cloud Transformation Group",
+                    "provisioningArtifactParameters": [
+                      {
+                        "name": "v1.0",
+                        "disableTemplateValidation": false,
+                        "info": {
+                          "LoadTemplateFromURL": {
+                            "Fn::Sub": "https://s3.ap-northeast-2.${AWS::URLSuffix}/cdk-hnb659fds-assets-037729278610-ap-northeast-2/5cd0573589aaafa22695fb5519e12c70e2d038f5c3d75634703e24903cff930c.yml"
+                          }
+                        }
+                      }
+                    ],
+                    "description": "AWS Backup Product"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnCloudFormationProduct",
+                  "version": "2.34.2"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_servicecatalog.CloudFormationProduct",
+              "version": "2.34.2"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "aws-backup-stack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "aws-backup-stack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.34.2"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.1.62"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.34.2"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.34.2"
+    }
+  }
+}

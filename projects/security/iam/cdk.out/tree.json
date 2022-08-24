@@ -1,0 +1,346 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.1.43"
+        }
+      },
+      "sc-iam-portfolio": {
+        "id": "sc-iam-portfolio",
+        "path": "sc-iam-portfolio",
+        "children": {
+          "awstf-iam-portfolio": {
+            "id": "awstf-iam-portfolio",
+            "path": "sc-iam-portfolio/awstf-iam-portfolio",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "sc-iam-portfolio/awstf-iam-portfolio/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::Portfolio",
+                  "aws:cdk:cloudformation:props": {
+                    "displayName": "awstf-iam-portfolio",
+                    "providerName": "AWSTF",
+                    "acceptLanguage": "en",
+                    "description": "AWS IAM Portfolio"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnPortfolio",
+                  "version": "2.31.1"
+                }
+              },
+              "PortolioPrincipalAssociation609650f29856": {
+                "id": "PortolioPrincipalAssociation609650f29856",
+                "path": "sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociation609650f29856",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+                  "aws:cdk:cloudformation:props": {
+                    "portfolioId": {
+                      "Ref": "awstfiamportfolioA0759FC9"
+                    },
+                    "principalArn": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":iam::",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":group/AdminMasterAccountGroup"
+                        ]
+                      ]
+                    },
+                    "principalType": "IAM"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnPortfolioPrincipalAssociation",
+                  "version": "2.31.1"
+                }
+              },
+              "PortolioPrincipalAssociationaf920892a672": {
+                "id": "PortolioPrincipalAssociationaf920892a672",
+                "path": "sc-iam-portfolio/awstf-iam-portfolio/PortolioPrincipalAssociationaf920892a672",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+                  "aws:cdk:cloudformation:props": {
+                    "portfolioId": {
+                      "Ref": "awstfiamportfolioA0759FC9"
+                    },
+                    "principalArn": "arn:aws:iam::undefined:role/AssumableAdminRole",
+                    "principalType": "IAM"
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnPortfolioPrincipalAssociation",
+                  "version": "2.31.1"
+                }
+              },
+              "PortfolioProductAssociation57c4e8f800ef": {
+                "id": "PortfolioProductAssociation57c4e8f800ef",
+                "path": "sc-iam-portfolio/awstf-iam-portfolio/PortfolioProductAssociation57c4e8f800ef",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::PortfolioProductAssociation",
+                  "aws:cdk:cloudformation:props": {
+                    "portfolioId": {
+                      "Ref": "awstfiamportfolioA0759FC9"
+                    },
+                    "productId": {
+                      "Ref": "MyFirstProduct95C5EA99"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnPortfolioProductAssociation",
+                  "version": "2.31.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_servicecatalog.Portfolio",
+              "version": "2.31.1"
+            }
+          },
+          "SCGroup": {
+            "id": "SCGroup",
+            "path": "sc-iam-portfolio/SCGroup",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.Resource",
+              "version": "2.31.1"
+            }
+          },
+          "awstf-iam-portfolioAdminRole": {
+            "id": "awstf-iam-portfolioAdminRole",
+            "path": "sc-iam-portfolio/awstf-iam-portfolioAdminRole",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.Resource",
+              "version": "2.31.1"
+            }
+          },
+          "IAMUserProduct": {
+            "id": "IAMUserProduct",
+            "path": "sc-iam-portfolio/IAMUserProduct",
+            "children": {
+              "UserName": {
+                "id": "UserName",
+                "path": "sc-iam-portfolio/IAMUserProduct/UserName",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnParameter",
+                  "version": "2.31.1"
+                }
+              },
+              "Password": {
+                "id": "Password",
+                "path": "sc-iam-portfolio/IAMUserProduct/Password",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnParameter",
+                  "version": "2.31.1"
+                }
+              },
+              "CreateAccessKey": {
+                "id": "CreateAccessKey",
+                "path": "sc-iam-portfolio/IAMUserProduct/CreateAccessKey",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnParameter",
+                  "version": "2.31.1"
+                }
+              },
+              "CreateAccessKeyCondition": {
+                "id": "CreateAccessKeyCondition",
+                "path": "sc-iam-portfolio/IAMUserProduct/CreateAccessKeyCondition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.31.1"
+                }
+              },
+              "GroupName": {
+                "id": "GroupName",
+                "path": "sc-iam-portfolio/IAMUserProduct/GroupName",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.31.1"
+                }
+              },
+              "User": {
+                "id": "User",
+                "path": "sc-iam-portfolio/IAMUserProduct/User",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "sc-iam-portfolio/IAMUserProduct/User/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::User",
+                      "aws:cdk:cloudformation:props": {
+                        "groups": [
+                          "UserCredentialsManagementGroup"
+                        ],
+                        "loginProfile": {
+                          "password": {
+                            "Ref": "Password"
+                          },
+                          "passwordResetRequired": false
+                        },
+                        "path": "/user/",
+                        "userName": {
+                          "Ref": "UserName"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnUser",
+                      "version": "2.31.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.User",
+                  "version": "2.31.1"
+                }
+              },
+              "CfnAccessKey": {
+                "id": "CfnAccessKey",
+                "path": "sc-iam-portfolio/IAMUserProduct/CfnAccessKey",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::IAM::AccessKey",
+                  "aws:cdk:cloudformation:props": {
+                    "userName": {
+                      "Ref": "User00B015A1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.CfnAccessKey",
+                  "version": "2.31.1"
+                }
+              },
+              "accessKeyId": {
+                "id": "accessKeyId",
+                "path": "sc-iam-portfolio/IAMUserProduct/accessKeyId",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnOutput",
+                  "version": "2.31.1"
+                }
+              },
+              "secretAccessKey": {
+                "id": "secretAccessKey",
+                "path": "sc-iam-portfolio/IAMUserProduct/secretAccessKey",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnOutput",
+                  "version": "2.31.1"
+                }
+              },
+              "CDKMetadata": {
+                "id": "CDKMetadata",
+                "path": "sc-iam-portfolio/IAMUserProduct/CDKMetadata",
+                "children": {
+                  "Default": {
+                    "id": "Default",
+                    "path": "sc-iam-portfolio/IAMUserProduct/CDKMetadata/Default",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.31.1"
+                    }
+                  },
+                  "Condition": {
+                    "id": "Condition",
+                    "path": "sc-iam-portfolio/IAMUserProduct/CDKMetadata/Condition",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnCondition",
+                      "version": "2.31.1"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "constructs.Construct",
+                  "version": "10.1.43"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_servicecatalog.ProductStack",
+              "version": "2.31.1"
+            }
+          },
+          "ProductStackHistory": {
+            "id": "ProductStackHistory",
+            "path": "sc-iam-portfolio/ProductStackHistory",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_servicecatalog.ProductStackHistory",
+              "version": "2.31.1"
+            }
+          },
+          "MyFirstProduct": {
+            "id": "MyFirstProduct",
+            "path": "sc-iam-portfolio/MyFirstProduct",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "sc-iam-portfolio/MyFirstProduct/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::ServiceCatalog::CloudFormationProduct",
+                  "aws:cdk:cloudformation:props": {
+                    "name": "create-iamuser-product",
+                    "owner": "SKCnC AWSTF",
+                    "provisioningArtifactParameters": [
+                      {
+                        "name": "v1",
+                        "disableTemplateValidation": false,
+                        "info": {}
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_servicecatalog.CfnCloudFormationProduct",
+                  "version": "2.31.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_servicecatalog.CloudFormationProduct",
+              "version": "2.31.1"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "sc-iam-portfolio/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "sc-iam-portfolio/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.31.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.1.43"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.31.1"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.31.1"
+    }
+  }
+}

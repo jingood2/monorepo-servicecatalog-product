@@ -1,0 +1,302 @@
+{
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Information for IAM User"
+          },
+          "Parameters": [
+            "UserName",
+            "Password"
+          ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "UserName": {
+      "Type": "String",
+      "Default": "johnDoe@exmaple.com",
+      "AllowedPattern": "[^@]+@[^@]+.[^@]+",
+      "Description": "Please enter your company email address as your IAM username"
+    },
+    "Password": {
+      "Type": "String",
+      "Description": "Please enter at least 14 characters including uppercase and lowercase letters and special characters",
+      "MinLength": 14
+    },
+    "CreateAccessKey": {
+      "Type": "String",
+      "AllowedValues": [
+        "yes",
+        "no"
+      ],
+      "Description": "Create Access Key & Secret Access Key then attach this IAM User"
+    }
+  },
+  "Conditions": {
+    "CreateAccessKeyCondition": {
+      "Fn::Equals": [
+        "yes",
+        {
+          "Ref": "CreateAccessKey"
+        }
+      ]
+    },
+    "CDKMetadataAvailable": {
+      "Fn::Or": [
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "af-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ca-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-northwest-1"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-3"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "me-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "sa-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-2"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-2"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "User00B015A1": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Groups": [
+          "UserCredentialsManagementGroup"
+        ],
+        "LoginProfile": {
+          "Password": {
+            "Ref": "Password"
+          },
+          "PasswordResetRequired": false
+        },
+        "Path": "/user/",
+        "UserName": {
+          "Ref": "UserName"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "sc-iam-portfolio/IAMUserProduct/User/Resource"
+      }
+    },
+    "CfnAccessKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": {
+          "Ref": "User00B015A1"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "sc-iam-portfolio/IAMUserProduct/CfnAccessKey"
+      },
+      "Condition": "CreateAccessKeyCondition"
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/zWKTQuDMBBEf4v3uCUKvRePPVQsPZd0sy3rRyLJxlLE/15FPM28N1NAqUFn5htztF3e8wvmFZ5zpDAxEhoxvf9AHbxNKHcx2Ck2A8yP9aGqtzvygkgxXum3LBvWJpiBZN8q7ywLe6caij4FpM3ekoxJtnbYRTlvCdp4mvQZdAlF1kbmPCQnPBA0e/4BXG0/YLUAAAA="
+      },
+      "Metadata": {
+        "aws:cdk:path": "sc-iam-portfolio/IAMUserProduct/CDKMetadata/Default"
+      },
+      "Condition": "CDKMetadataAvailable"
+    }
+  },
+  "Outputs": {
+    "accessKeyId": {
+      "Value": {
+        "Ref": "CfnAccessKey"
+      },
+      "Condition": "CreateAccessKeyCondition"
+    },
+    "secretAccessKey": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CfnAccessKey",
+          "SecretAccessKey"
+        ]
+      },
+      "Condition": "CreateAccessKeyCondition"
+    }
+  }
+}
