@@ -1,17 +1,17 @@
-name: Deploy s3-resource-based-policy Service Catalog Product 
+name: Deploy s3-resource-based-role Service Catalog Product 
 
 on:
   push:
     branches:
       - "main"
     paths:
-      - "projects/security/s3-resource-based-policy/**"
-      - "./github/workflows/security/s3-resource-based-policy.yaml"
+      - "projects/security/s3-resource-based-role/**"
+      - "./github/workflows/security/s3-resource-based-role.yaml"
 env:
   CI: "true"
   CDK_DEFAULT_ACCOUNT: '037729278610'
   CDK_DEFAULT_REGION: ap-northeast-2
-  PROJECT_NAME: 'security-s3-resource-based-policy'
+  PROJECT_NAME: 'security-s3-resource-based-role'
   EXECUTE_ROLE: github-deploy-role
 
 
@@ -39,13 +39,13 @@ jobs:
         #if: steps.cache.outputs.cache-hit != 'true'
         uses: bahmutov/npm-install@v1
         with:
-          working-directory: projects/security/s3-resource-based-policy
+          working-directory: projects/security/s3-resource-based-role
 
       - name: Cache node modules
         uses: actions/cache@v2
         id: cache
         with:
-          path: projects/security/s3-resource-based-policy/node_modules
+          path: projects/security/s3-resource-based-role/node_modules
           key: npm-packages-${{ hashFiles('**/package-lock.json')}}
 
       - name: assume role
@@ -57,7 +57,7 @@ jobs:
 
       - name: cdk build 
         run: npm run synth
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
       
       # Publish artifact
       #- name: Publish artifact
@@ -65,12 +65,12 @@ jobs:
       #  with:
       #    name: published-app
       #    path: |
-      #      projects/security/s3-resource-based-policy
-      #      !projects/security/s3-resource-based-policy/node_modules
+      #      projects/security/s3-resource-based-role
+      #      !projects/security/s3-resource-based-role/node_modules
       
       - name: Deploy to AWS cdk dev App
         run: yarn cdk deploy --all --require-approval never 
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
       
       #- uses: trstringer/manual-approval@v1
       #  with:
@@ -103,21 +103,21 @@ jobs:
       #  uses: actions/download-artifact@v2
       #  with:
       #    name: published-app
-      #    path: projects/security/s3-resource-based-policy
+      #    path: projects/security/s3-resource-based-role
       
       - name: Cache node modules
         uses: actions/cache@v2
         id: cache
         with:
           #working-directory: projects/${{inputs.app_name}}
-          path: projects/security/s3-resource-based-policy/node_modules
+          path: projects/security/s3-resource-based-role/node_modules
           key: npm-packages-${{ hashFiles('**/package-lock.json')}}
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         uses: bahmutov/npm-install@v1
         with:
-          working-directory: projects/security/s3-resource-based-policy
+          working-directory: projects/security/s3-resource-based-role
 
       - name: assume role
         uses: aws-actions/configure-aws-credentials@master
@@ -128,11 +128,11 @@ jobs:
       
       - name: cdk build 
         run: npm run synth
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
       
       - name: Destroy dev branch cdk app
         run: yarn cdk destroy --all --force
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
 
   deploy-prod:
     runs-on: ubuntu-latest
@@ -165,7 +165,7 @@ jobs:
         #if: steps.cache.outputs.cache-hit != 'true'
         uses: bahmutov/npm-install@v1
         with:
-          working-directory: projects/security/s3-resource-based-policy
+          working-directory: projects/security/s3-resource-based-role
 
       - name: assume role
         uses: aws-actions/configure-aws-credentials@master
@@ -176,12 +176,12 @@ jobs:
 
       - name: cdk build 
         run: npm run synth
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
       
       # Deploy to web app
       - name: Deploy to AWS CDK App
         run: yarn cdk deploy --all --require-approval never 
-        working-directory: projects/security/s3-resource-based-policy
+        working-directory: projects/security/s3-resource-based-role
   
   #destroy-dev:
   #  runs-on: 'ubuntu-latest'
