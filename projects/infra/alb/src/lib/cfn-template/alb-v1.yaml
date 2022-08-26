@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'EC2: Public ALB with ACM'
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: 'Target VPC Information '
+        Parameters:
+          - vpcId
+          - Subnets
+      - Label:
+          default: 'ACM Certificate Arn '
+        Parameters:
+          - CertificateArn
+Parameters:
+  vpcId:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: Select Vpc Id
+  Subnets:
+    Type: 'List<AWS::EC2::Subnet::Id>'
+    Description: Select Public Subnet Id
+  CertificateArn:
+    Type: String
+    Description: ACM CertificateArn
+Resources:
+  PublicLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: 'false'
+      Scheme: internet-facing
+      SecurityGroups:
+        - !GetAtt 
+          - PublicLoadBalancerSG
+          - GroupId
+      Subnets: !Ref Subnets
+      Type: application
+    Metadata:
+      'aws:cdk:path': my-stack-dev/test/ApplicationLoadBalancerPublic/Resource
+  PublicLoadBalancerSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: >-
+        Automatically created Security Group for ELB
+        mystackdevtestApplicationLoadBalancerPublicE0092CA1
+      SecurityGroupEgress:
+        - CidrIp: 255.255.255.255/32
+          Description: Disallow all traffic
+          FromPort: 252
+          IpProtocol: icmp
+          ToPort: 86
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow from anyone on port 80
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          Description: Allow from anyone on port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId: !Ref vpcId
+  PublicLoadBalancerHttpsListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - FixedResponseConfig:
+            ContentType: application/json
+            MessageBody: '{ message : 403 not found}'
+            StatusCode: '403'
+          Type: fixed-response
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 443
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      Protocol: HTTPS
+  PublicLoadBalancerRedirectHttpToHttpsListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Port: '443'
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+          Type: redirect
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+Outputs:
+  TemplateID:
+    Value: skcnc-service-catalog-reference-architectures/alb-with-acm
+  ExternalUrl:
+    Description: The url of the external load balancer
+    Value: !Join 
+      - ''
+      - - 'http://'
+        - !GetAtt 
+          - PublicLoadBalancer
+          - DNSName
+    Export:
+      Name: !Join 
+        - ':'
+        - - !Ref 'AWS::StackName'
+          - ExternalUrl
+  PublicLoadBalancer:
+    Description: The ARN of the Public LoadBalancer
+    Value: !Ref PublicLoadBalancer
+    Export:
+      Name: PublicLoadBalancer
+  PublicLoadBalancerHttpsListener:
+    Description: The ARN of the Public LoadBalancer HTTPS Listener
+    Value: !Ref PublicLoadBalancerHttpsListener
+    Export:
+      Name: PublicLoadBalancerHttpsListener
+  PublicLoadBalancerSG:
+    Description: A security group for public Alb
+    Value: !GetAtt 
+      - PublicLoadBalancerSG
+      - GroupId
+    Export:
+      Name: PublicLoadBalancerSecurityGroupId
