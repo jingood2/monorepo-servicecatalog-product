@@ -21,13 +21,6 @@ export class MyStack extends Stack {
             path.join(__dirname, './lib/cfn-template/alb-v1.yaml'),
           ),
         },
-        {
-          productVersionName: 'v2',
-          description: 'ALB with ACM create A Record on Route53',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
-            path.join(__dirname, './lib/cfn-template/alb-add-r53-record-v2.yaml'),
-          ),
-        },
       ],
     });
   }
