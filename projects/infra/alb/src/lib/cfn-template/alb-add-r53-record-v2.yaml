@@ -105,7 +105,10 @@ Resources:
       Name: !Sub '${RecordName}.'
       Type: A
       AliasTarget:
-        DNSName: !Sub 'dualstack.${PublicLoadBalancer}'
+        DNSName: !Join
+          - ''
+          - - 'dualstack.'
+            - !Ref PublicLoadBalancer 
         HostedZoneId: !Ref Route53HostedZoneId
       HostedZoneId: !Ref Route53HostedZoneId
 Outputs:
