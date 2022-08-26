@@ -10,9 +10,9 @@ export class MyStack extends Stack {
     // define resources here...
     new servicecatalog.CloudFormationProduct(this, 'sc-beanstalk-product', {
       productName: 'beanstalk-product',
-      owner: 'SKCnC AWSTF',
+      owner: 'jingood2@sk.com',
       distributor: 'SK Cloud Transformation Group',
-      description: 'IAM User SC Product',
+      description: 'SC Elastic Beanstalk Product',
       productVersions: [
         {
           productVersionName: 'v1',
