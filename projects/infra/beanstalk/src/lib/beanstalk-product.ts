@@ -113,6 +113,9 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
       default: '64bit Amazon Linux 2 v4.2.17 running Tomcat 8.5 Corretto 8',
       allowedValues:
         [
+          '64bit Amazon Linux 2 v3.3.1 running Corretto 17',
+          '64bit Amazon Linux 2 v3.3.1 running Corretto 11',
+          '64bit Amazon Linux 2 v3.3.1 running Corretto 8',
           '64bit Amazon Linux 2 v4.2.17 running Tomcat 8.5 Corretto 11',
           '64bit Amazon Linux 2 v4.2.17 running Tomcat 8.5 Corretto 8',
           '64bit Amazon Linux 2 v3.4.18 running Docker',
@@ -324,11 +327,11 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
         optionName: 'SharedLoadBalancer',
         value: ElbArn.valueAsString,
       },
-      {
+      /* {
         namespace: 'aws:elbv2:loadbalancer',
         optionName: 'ManagedSecurityGroup',
         value: elbSgId.valueAsString,
-      },
+      }, */
       {
         namespace: 'aws:elbv2:loadbalancer',
         optionName: 'SecurityGroups',
@@ -467,7 +470,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     const ebEnv = new eb.CfnEnvironment(this, 'EBEnvironment', {
       // default environmentName is `develop`
-      environmentName: `${projectName.valueAsString}-${Environment.valueAsString}-${serviceName.valueAsString}-eb-env`,
+      environmentName: `eb-${projectName.valueAsString}-${Environment.valueAsString}-${serviceName.valueAsString}`,
       applicationName: `${serviceName.valueAsString}`,
       solutionStackName: platformType.valueAsString,
       optionSettings: option_settings,
@@ -498,7 +501,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     });
     new cdk.CfnOutput(this, 'EnvironmentName', {
       description: 'EB Environment Name',
-      value: ebEnv.environmentName ?? 'sampleApp-eb-env',
+      value: ebEnv.environmentName ?? 'eb-sampleApp',
     });
 
   }
