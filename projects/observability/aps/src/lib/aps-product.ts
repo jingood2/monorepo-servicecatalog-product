@@ -12,7 +12,7 @@ export class APSConstruct extends servicecatalog.ProductStack {
     super(scope, id );
 
     new aps.CfnWorkspace(this, 'MyCfnWorkspace', /* all optional props */ {
-        alertManagerDefinition: 'alertManagerDefinition',
+        //alertManagerDefinition: 'alertManagerDefinition',
         alias: 'alias',
         tags: [{
             key: 'key',
