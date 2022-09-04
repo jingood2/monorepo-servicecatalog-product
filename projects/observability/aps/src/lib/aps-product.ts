@@ -11,7 +11,7 @@ export class APSConstruct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: APSConstructProps) {
     super(scope, id );
 
-    const cfnWorkspace = new aps.CfnWorkspace(this, 'MyCfnWorkspace', /* all optional props */ {
+    new aps.CfnWorkspace(this, 'MyCfnWorkspace', /* all optional props */ {
         alertManagerDefinition: 'alertManagerDefinition',
         alias: 'alias',
         tags: [{
