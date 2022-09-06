@@ -1,19 +1,18 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import { Construct } from 'constructs/lib/construct';
-//import { DnsRecordType } from 'aws-cdk-lib/aws-servicediscovery';
 
 export interface EcsFargateProductProps extends cdk.StackProps {
 
 }
 
-export class EcsFargateProduct extends servicecatalog.ProductStack {
+export class EcsEc2Product extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: EcsFargateProductProps) {
     super(scope, id);
 
@@ -121,16 +120,16 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       description: 'Health Check Path for ECS Container',
       default: '/',
     });
-    const tgHealthCheckPort = new cdk.CfnParameter(this, 'TGHealthCheckPort', {
+    /* const tgHealthCheckPort = new cdk.CfnParameter(this, 'TGHealthCheckPort', {
       type: 'Number',
       description: 'Health Check Path for ECS Container',
-      default: 80,
-    });
+      default: 0,
+    }); */
 
     const containerSGId = new cdk.CfnParameter(this, 'ContainerSGId', {
-      type: 'AWS::EC2::SecurityGroup::Id',
-      description: 'Security Id for ECS Container',
-    });
+        type: 'AWS::EC2::SecurityGroup::Id',
+        description: 'Security Id for ECS Container',
+    }); 
 
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
@@ -199,40 +198,18 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
 
     // ELB TargetGroup
     const atg = new elbv2.ApplicationTargetGroup(this, 'TargetGroup', {
-      //targetGroupName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}-tg`,
       targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
       vpc: vpc,
       port: cdk.Lazy.number({ produce: () => tgListenerPort.valueAsNumber }),
-      healthCheck: { path: tgHealthCheckPath.valueAsString, port: tgHealthCheckPort.valueAsString },
+      // dynamic port mapping
+      healthCheck: { path: tgHealthCheckPath.valueAsString, enabled: true  },
       protocol: elbv2.ApplicationProtocol.HTTP,
     });
 
-    const taskExecutionRole = new iam.Role(this, 'ecs-task-execution-role', {
-        assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-      });
-  
-      const executionRolePolicy = new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          resources: ['*'],
-          actions: [
-            'ecr:GetAuthorizationToken',
-            'ecr:BatchCheckLayerAvailability',
-            'ecr:GetDownloadUrlForLayer',
-            'ecr:BatchGetImage',
-            'logs:CreateLogStream',
-            'logs:PutLogEvents',
-            'elasticloadbalancing:*',
-          ],
-        });
-  
-        //taskExecutionRole.addToPolicy(executionRolePolicy);
-        taskExecutionRole.addToPrincipalPolicy(executionRolePolicy);
-
-    const taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
-      //executionRole: iam.Role.fromRoleName(this, 'ECSTaskExecutionRole', 'ecs-task-execution-role'),
-      executionRole: taskExecutionRole,
+    const taskDefinition = new ecs.Ec2TaskDefinition(this, 'TaskDef', {
+      executionRole: iam.Role.fromRoleName(this, 'ECSTaskExecutionRole', 'ecs-task-execution-role'),
       //memoryLimitMiB: Number(regionTable.findInMap(containerSize.valueAsString, 'mem')),
-      memoryLimitMiB: containerSize.valueAsNumber,
+      //memoryLimitMiB: containerSize.valueAsNumber,
       //taskRole: ecsTaskRoleArn ?? cdk.Aws.NO_VALUE,
     });
 
@@ -241,6 +218,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       //image: ecs.ContainerImage.fromEcrRepository(ecr.Repository.fromRepositoryName(this, 'ECRRepo', `${ECRRepoName.valueAsString}`), 'latest'),
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
       logging: ecs.LogDrivers.awsLogs({ logRetention: 7, streamPrefix: 'ecs' }),
+      memoryLimitMiB: containerSize.valueAsNumber,
     });
 
     container.addPortMappings({
@@ -248,18 +226,18 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       protocol: ecs.Protocol.TCP,
     });
 
+    //const containerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
+
+    //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
-    //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default` , vpc);
-
-    // Note: Unable to determine ARN separator for SSM parameter since the parameter name is an unresolved token. Use "fromAttributes" and specify "simpleName" explicitly
     const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace',{
-        namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName', 
-        { parameterName:'namespaceName'}).stringValue,
-        namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId', 
-        { parameterName: 'namespaceId'}).stringValue,
-        namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn', 
-        { parameterName: 'namespaceName'}).stringValue
+      namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName', 
+      { parameterName:'namespaceName'}).stringValue,
+      namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId', 
+      { parameterName: 'namespaceId'}).stringValue,
+      namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn', 
+      { parameterName: 'namespaceName'}).stringValue
     });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
@@ -270,29 +248,32 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       defaultCloudMapNamespace: namespace,
     });
 
-    const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
+    /* const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
       securityGroupName: `${projectName.valueAsString}-sg-${environment.valueAsString}-${serviceName.valueAsString}`,
       description: `Access to the container ${serviceName.valueAsString} instance`,
       vpc: vpc,
-    });
+    }); */
 
-
-    const svc = new ecs.FargateService(this, 'FargateService', {
+    const svc = new ecs.Ec2Service(this, 'EC2Service', {
       serviceName: serviceName.valueAsString,
       cluster: cluster,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       desiredCount: desireCount.valueAsNumber,
-      taskDefinition,
-      securityGroups: [defaultContainerSg, serviceSg],
+      taskDefinition: taskDefinition,
+      enableECSManagedTags: true,
+      //vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
+      //securityGroups: [defaultContainerSg, serviceSg],
+      //enableExecuteCommand: true,
       cloudMapOptions: {
         // Create A records - useful for AWSVPC network mode.
-        name: `${serviceName.valueAsString}`,
-        dnsRecordType: servicediscovery.DnsRecordType.A,
-        cloudMapNamespace: namespace,
+        // Create SRV records - useful for bridge networking
+        dnsRecordType: servicediscovery.DnsRecordType.SRV,
+        // Targets port TCP port 7600 `specificContainer`
+        container: container,
+        containerPort: containerPort.valueAsNumber,
       },
       capacityProviderStrategies: [
         {
-          capacityProvider: 'FARGATE_SPOT',
+          capacityProvider: `${projectName.valueAsString}-ecs-${environment.valueAsString}-capacity-provider`,
           weight: 1,
         },
       ],
