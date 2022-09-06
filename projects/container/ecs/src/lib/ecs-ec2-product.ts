@@ -255,7 +255,7 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
     }); */
 
     const svc = new ecs.Ec2Service(this, 'EC2Service', {
-      serviceName: serviceName.valueAsString,
+      serviceName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}`,
       cluster: cluster,
       desiredCount: desireCount.valueAsNumber,
       taskDefinition: taskDefinition,

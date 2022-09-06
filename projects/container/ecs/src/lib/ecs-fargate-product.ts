@@ -278,7 +278,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
 
 
     const svc = new ecs.FargateService(this, 'FargateService', {
-      serviceName: serviceName.valueAsString,
+      serviceName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}`,
       cluster: cluster,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       desiredCount: desireCount.valueAsNumber,
