@@ -243,9 +243,10 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       logging: ecs.LogDrivers.awsLogs({ logRetention: 7, streamPrefix: 'ecs' }),
     });
 
+    // Note: Host port (80) must be left out or equal to container port -1.8881545897088675e+289 for network mode awsvpc
     container.addPortMappings({
       containerPort: containerPort.valueAsNumber,
-      hostPort: 80,
+      //hostPort: 80,
       protocol: ecs.Protocol.TCP,
     });
 
