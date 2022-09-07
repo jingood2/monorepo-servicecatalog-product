@@ -20,7 +20,7 @@ export interface CDConstructProps {
   deployTargetType: string;
   approvalStage: string;
   pipeline: codepipeline.Pipeline;
-  sourceArtifact: string,
+  sourceArtifact: string;
   buildOutput: codepipeline.Artifact;
 }
 

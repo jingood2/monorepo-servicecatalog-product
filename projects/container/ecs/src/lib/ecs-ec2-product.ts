@@ -134,7 +134,7 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
       description: 'This will set the Container, Task Definition, and Service name in Fargate',
-      default: 'amazon-ecs-sample',
+      default: 'demoapp',
     });
 
     const ECRRepoName = new cdk.CfnParameter(this, 'ECRRepoName', {
@@ -255,7 +255,7 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
     }); */
 
     const svc = new ecs.Ec2Service(this, 'EC2Service', {
-      serviceName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}`,
+      serviceName: `${serviceName.valueAsString}-${environment.valueAsString}`,
       cluster: cluster,
       desiredCount: desireCount.valueAsNumber,
       taskDefinition: taskDefinition,

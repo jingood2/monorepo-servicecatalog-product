@@ -1,13 +1,14 @@
-import * as fs from 'fs';
-import * as path from 'path';
+//import * as fs from 'fs';
+//import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+//import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+//import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs/lib/construct';
 
-import * as yaml from 'yaml';
+//import * as yaml from 'yaml';
 
 export interface CDConstructProps {
   imageTag: string;
@@ -20,7 +21,7 @@ export interface CDConstructProps {
   deployTargetType: string;
   approvalStage: string;
   pipeline: codepipeline.Pipeline;
-  sourceArtifact: string,
+  sourceArtifact: string;
   buildOutput: codepipeline.Artifact;
 }
 
@@ -39,6 +40,7 @@ export class CDECSConstruct extends Construct {
 
     const buildOutput = props.buildOutput;
 
+    /*
     const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd-ecs.yaml'), 'utf8'));
 
     const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
@@ -51,16 +53,12 @@ export class CDECSConstruct extends Construct {
         //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         SERVICE_NAME: { value: props.serviceName },
         CONTAINER_PORT: { value: props.containerPort },
-        DEPLOY_ENV_NAME: { value: `eb-${props.projectName}-${props.environment}-${props.serviceName}` },
+        DEPLOY_ENV_NAME: { value: `${props.projectName}-ecs-${props.environment}-cluster` },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: props.sourceArtifact },
         IMAGE_TAG: { value: props.imageTag },
-        //S3_KEY: { value: objKey },
-        //TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
         TARGET_TYPE: { value: props.deployTargetType },
-        //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
-        //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
       },
     });
 
@@ -75,22 +73,28 @@ export class CDECSConstruct extends Construct {
         'cloudwatch:*',
         'logs:*',
         'cloudformation:*'],
-    }));
+    })); */
 
     if (props.approvalStage === 'true') {
       const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
       props.pipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
     }
 
-    const deployAction = new codepipeline_actions.CodeBuildAction({
+    /* const deployAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'Deploy',
       input: props.buildOutput,
       project: deployProject,
-    });
+    }); */
 
-    
+    const clusterName = `${props.projectName}-ecs-${props.environment}-cluster`;
+    const serviceName = `${props.serviceName}-${props.environment}`;
 
-    new codepipeline_actions.EcsDeployAction({
+    const service = ecs.BaseService.fromServiceArnWithCluster(this, 'EcsService',
+      `arn:aws:ecs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:service/${clusterName}/${serviceName}`,
+    );
+
+
+    const deployAction = new codepipeline_actions.EcsDeployAction({
       actionName: 'DeployAction',
       service,
       // if your file is called imagedefinitions.json,
@@ -101,10 +105,8 @@ export class CDECSConstruct extends Construct {
       // use the `imageFile` property,
       // and leave out the `input` property
       //imageFile: buildOutput.atPath('imageDef.json'),
-      deploymentTimeout: Duration.minutes(60), // optional, default is 60 minutes
-    }),
-
-
+      deploymentTimeout: cdk.Duration.minutes(60), // optional, default is 60 minutes
+    });
 
     props.pipeline.addStage( { stageName: 'Deploy', actions: [deployAction] });
 

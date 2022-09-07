@@ -10,7 +10,7 @@ exports[`Snapshot 1`] = `
     },
   },
   "Resources": {
-    "CICDPipelineCFBBD95C": {
+    "EBCICDPipelineCA3AA6C4": {
       "Properties": {
         "Description": "SC Elastic Beanstalk CICD Pipeline Product",
         "Distributor": "SK Cloud Transformation Group",
@@ -18,13 +18,55 @@ exports[`Snapshot 1`] = `
         "Owner": "jingood2@sk.com",
         "ProvisioningArtifactParameters": [
           {
+            "Description": "Elastic Beanstalk CICD Pieline with Github",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/2986da88cf5a04e6d9a906b3297d07c7bc337aabaed1ac879e15501b8c2b5ceb.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/d5f78b6b8c0963b0fc4baa0ba2542570e597e86dbd7dc3a5983b3ecc03c8d32c.json",
               },
             },
             "Name": "v1",
+          },
+          {
+            "Description": "Elastic Beanstalk CICD Pieline with CodeCommit",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/abcfc569602091d28bb1ab76a69bbbcbcdc2892c28ce379b4560fefb79f176d3.json",
+              },
+            },
+            "Name": "v2",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "ECSCICDPipeline3202AC4C": {
+      "Properties": {
+        "Description": "SC ECS CICD Pipeline Product",
+        "Distributor": "SK Cloud Transformation Group",
+        "Name": "ecs-cicd-pipeline-product",
+        "Owner": "jingood2@sk.com",
+        "ProvisioningArtifactParameters": [
+          {
+            "Description": "ECS CICD Pieline with Github",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/3327689557a86a68ada55eb011c424528e27cc87298bf6e4fb7dc7667181b697.json",
+              },
+            },
+            "Name": "v1",
+          },
+          {
+            "Description": "ECS CICD Pipeline with CodeCommit",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/08f7a6888b376e76c619cf64ea011450324c9c5071544ca7ebd45fa70be809d6.json",
+              },
+            },
+            "Name": "v2",
           },
         ],
       },

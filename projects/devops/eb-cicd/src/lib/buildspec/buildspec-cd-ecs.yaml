@@ -10,7 +10,7 @@ phases:
       - echo $CODEBUILD_BUILD_NUMBER
       #- echo $CONTAINER_PORT
       - echo $AWS_ACCOUNT_ID
-      #- echo $DEPLOY_ENV_NAME
+      - echo $DEPLOY_ENV_NAME
       - echo $REPOSITORY_URI
       - echo $TARGET_TYPE
       - echo $ARTIFACT_BUCKET

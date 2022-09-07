@@ -135,7 +135,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
       description: 'This will set the Container, Task Definition, and Service name in Fargate',
-      default: 'amazon-ecs-sample',
+      default: 'demoapp',
     });
 
     const ECRRepoName = new cdk.CfnParameter(this, 'ECRRepoName', {
@@ -278,7 +278,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
 
 
     const svc = new ecs.FargateService(this, 'FargateService', {
-      serviceName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}`,
+      serviceName: `${serviceName.valueAsString}-${environment.valueAsString}`,
       cluster: cluster,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       desiredCount: desireCount.valueAsNumber,
