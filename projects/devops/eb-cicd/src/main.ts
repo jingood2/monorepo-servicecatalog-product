@@ -3,6 +3,8 @@ import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 import { EBCICodeCommitProduct } from './lib/product-codecommit';
+import { ECSCodeCommitCICDProduct } from './lib/product-ecs-codecommit';
+import { ECSGithubCICDProduct } from './lib/product-ecs-github';
 import { EBCIGithubProduct } from './lib/product-github';
 //import { SCCIProduct } from './lib/sc-ci-product';
 
@@ -12,7 +14,7 @@ export class MyStack extends Stack {
 
     // define resources here...
 
-    new servicecatalog.CloudFormationProduct(this, 'CICDPipeline', {
+    new servicecatalog.CloudFormationProduct(this, 'EBCICDPipeline', {
       productName: 'eb-cicd-pipeline-product',
       owner: 'jingood2@sk.com',
       distributor: 'SK Cloud Transformation Group',
@@ -20,15 +22,36 @@ export class MyStack extends Stack {
       productVersions: [
         {
           productVersionName: 'v1',
-          description: 'Source Provider Github',
+          description: 'Elastic Beanstalk CICD Pieline with Github',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new EBCIGithubProduct(this, 'CIGithubPipelineProduct', {})),
         },
         {
           productVersionName: 'v2',
-          description: 'Source Provider CodeCommit',
+          description: 'Elastic Beanstalk CICD Pieline with CodeCommit',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new EBCICodeCommitProduct(this, 'CICodeCommitPipelineProduct', {})),
+        },
+      ],
+    });
+
+    new servicecatalog.CloudFormationProduct(this, 'ECSCICDPipeline', {
+      productName: 'ecs-cicd-pipeline-product',
+      owner: 'jingood2@sk.com',
+      distributor: 'SK Cloud Transformation Group',
+      description: 'SC ECS CICD Pipeline Product',
+      productVersions: [
+        {
+          productVersionName: 'v1',
+          description: 'ECS CICD Pieline with Github',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ECSGithubCICDProduct(this, 'ECSGithubCICDProduct', {})),
+        },
+        {
+          productVersionName: 'v2',
+          description: 'ECS CICD Pipeline with CodeCommit',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ECSCodeCommitCICDProduct(this, 'ECSCodeCommitCICDProduct', {})),
         },
       ],
     });

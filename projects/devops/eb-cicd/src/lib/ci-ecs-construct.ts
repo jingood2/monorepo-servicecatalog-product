@@ -26,7 +26,7 @@ export interface CIConstructProps {
   envType: string;
 }
 
-export class CIConstruct extends Construct {
+export class CIECSConstruct extends Construct {
   public readonly pipeline: codepipeline.Pipeline;
   public readonly buildOutput: codepipeline.Artifact;
   public readonly IMAGE_TAG: string;
@@ -62,9 +62,9 @@ export class CIConstruct extends Construct {
     (artifactS3.node.defaultChild as s3.CfnBucket).cfnOptions.condition = shouldCreateBucketCondition;
  */
 
-    const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
+    const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-ecs.yaml'), 'utf8'));
 
-    const buildProject = new codebuild.PipelineProject(this, 'CIBuildProject', {
+    const buildProject = new codebuild.PipelineProject(this, 'CIESBuildProject', {
       buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
       environment: {
         buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3, // for arm64/v8 cpu platform
