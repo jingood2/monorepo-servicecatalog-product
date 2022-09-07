@@ -200,7 +200,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     // ELB TargetGroup
     const atg = new elbv2.ApplicationTargetGroup(this, 'TargetGroup', {
       //targetGroupName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}-tg`,
-      targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
+      //targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
       vpc: vpc,
       port: cdk.Lazy.number({ produce: () => tgListenerPort.valueAsNumber }),
       healthCheck: { path: tgHealthCheckPath.valueAsString, port: tgHealthCheckPort.valueAsString },
@@ -245,6 +245,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
 
     container.addPortMappings({
       containerPort: containerPort.valueAsNumber,
+      hostPort: 80,
       protocol: ecs.Protocol.TCP,
     });
 
