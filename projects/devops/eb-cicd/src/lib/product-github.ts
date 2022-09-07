@@ -29,7 +29,7 @@ export class EBCIGithubProduct extends servicecatalog.ProductStack {
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
       description: 'Service Name',
-      default: 'hello-app',
+      default: 'demoapp',
     });
 
     const servicePort = new cdk.CfnParameter(this, 'ServicePort', {

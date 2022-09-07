@@ -198,7 +198,7 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
 
     // ELB TargetGroup
     const atg = new elbv2.ApplicationTargetGroup(this, 'TargetGroup', {
-      targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
+      //targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
       vpc: vpc,
       port: cdk.Lazy.number({ produce: () => tgListenerPort.valueAsNumber }),
       // dynamic port mapping
