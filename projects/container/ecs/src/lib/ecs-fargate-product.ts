@@ -265,7 +265,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
-      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-cluster`,
+      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
       clusterArn: `arn:aws:ecs:${process.env.CDK_DEFAULT_REGION}:${process.env.CDK_DEFAULT_ACCOUNT}:cluster/${projectName.valueAsString}-ecs-${environment.valueAsString}-cluster`,
       vpc: vpc,
       securityGroups: [defaultContainerSg],
