@@ -90,7 +90,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     });
 
     const cluster = new ecs.Cluster(this, 'ECSCluster', {
-      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-cluster`,
+      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
       vpc: vpc,
       enableFargateCapacityProviders: true,
       //defaultCloudMapNamespace: { name: 'svc.local', type: NamespaceType.DNS_PRIVATE, vpc: vpc },

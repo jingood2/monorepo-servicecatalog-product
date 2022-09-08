@@ -1,0 +1,56 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo deploy envorinment variables 
+      - echo $AWS_DEFAULT_REGION
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $SERVICE_NAME
+      - echo $CODEBUILD_BUILD_NUMBER
+      - echo $AWS_ACCOUNT_ID
+      - echo $REPOSITORY_URI
+      - echo $TARGET_TYPE
+      - echo $ARTIFACT_BUCKET
+      - echo $IMAGE_TAG
+      - aws --version
+      - |
+        if [ "TARGET_TYPE" = "EKS"]; then
+          curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mv ./kubectl /usr/local/bin/kubectl
+          mkdir ~/.kube
+          aws eks --region ${AWS_DEFAULT_REGION} update-kubeconfig --name ${DEPLOY_ENV_NAME}
+          kubectl get po -n kube-system
+        fi
+  build:
+    commands:
+      - echo Skip Build on `date`
+  post_build:
+    commands:
+      - echo Post Build started on `date`
+      - echo $TARGET_TYPE
+      - |
+        if [ "$TARGET_TYPE" = "ecs" ]; then 
+          aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "fargate" ]; then 
+          aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "beanstalk" ]; then 
+          aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket="$ARTIFACT_BUCKET",S3Key="$SERVICE_NAME/$IMAGE_TAG.zip" --auto-create-application
+          aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name "$DEPLOY_ENV_NAME-$SERVICE_NAME" --version-label=v$CODEBUILD_BUILD_NUMBER
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "eks" ]; then 
+          sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./EKS/deploy.yaml
+          sed -i.bak 's#DATE_STRING#'"$DATE"'#' ./EKS/deploy.yaml
+          kubectl apply -f ./EKS/deploy.yaml
+          kubectl apply -f ./EKS/svc.yaml
+        fi 
+      - |
+        if [ "$TARGET_TYPE" = "lambda" ]; then 
+          echo Nothing to do on LAMBDA 
+        fi 
