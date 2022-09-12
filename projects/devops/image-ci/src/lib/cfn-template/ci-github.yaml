@@ -293,12 +293,15 @@ Resources:
                   "echo $TARGET_TYPE",
                   "aws --version",
                   "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
-                  "export IMAGE_TAG=${COMMIT_HASH:=latest}",
+                  "IMAGE_TAG=${COMMIT_HASH:=latest}",
+                  "export MAVEN_OPTS=\"-Xmx1024m -XX:MaxPermSize=512m\"",
                   "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
                 ]
               },
               "build": {
                 "commands": [
+                  "export IMAGE_TAG=$COMMIT_HASH",
+                  "echo IMAGE_TAG is $IMAGE_TAG",
                   "echo Build started on `date`",
                   "echo $BUILD_TYPE",
                   "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  java --version ;\n  chmod +x gradlew ;\n  ./gradlew clean build ;\nfi\n",
@@ -489,10 +492,7 @@ Resources:
           Ref: S3BucketSourceArtifacts
         Type: S3
       Name:
-        Fn::Join:
-          - ""
-          - - Ref: ServiceName
-            - -pipeline
+        Ref: ServiceName
     DependsOn:
       - GitHubPipelineRoleDefaultPolicyDC5A4395
       - GitHubPipelineRoleB9AFBEB2
@@ -728,6 +728,10 @@ Resources:
             Type: PLAINTEXT
             Value:
               Ref: ServiceName
+          - Name: ENVIRONMENT
+            Type: PLAINTEXT
+            Value:
+              Ref: Environment
           - Name: DEPLOY_ENV_NAME
             Type: PLAINTEXT
             Value:
@@ -776,6 +780,7 @@ Resources:
                   "echo $AWS_DEFAULT_REGION",
                   "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
                   "echo $SERVICE_NAME",
+                  "echo $ENVIRONMENT",
                   "echo $CODEBUILD_BUILD_NUMBER",
                   "echo $AWS_ACCOUNT_ID",
                   "echo $REPOSITORY_URI",
@@ -795,9 +800,8 @@ Resources:
                 "commands": [
                   "echo Post Build started on `date`",
                   "echo $TARGET_TYPE",
-                  "if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
-                  "if [ \"$TARGET_TYPE\" = \"fargate\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
-                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" --auto-create-application\n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \"$SERVICE_NAME-$ENVIRONMENT\" --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/Build/$IMAGE_TAG.zip\" --auto-create-application\n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"eks\" ]; then \n  sed -i.bak 's#AWS_ECR_URI#'\"$AWS_ECR_URI\"'#' ./EKS/deploy.yaml\n  sed -i.bak 's#DATE_STRING#'\"$DATE\"'#' ./EKS/deploy.yaml\n  kubectl apply -f ./EKS/deploy.yaml\n  kubectl apply -f ./EKS/svc.yaml\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"lambda\" ]; then \n  echo Nothing to do on LAMBDA \nfi \n"
                 ]

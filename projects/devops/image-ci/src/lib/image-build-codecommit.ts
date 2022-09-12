@@ -173,7 +173,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
       environment: environment.valueAsString,
       serviceName: serviceName.valueAsString,
       ecrRepoName: serviceName.valueAsString,
-      containerPort: containerPort.valueAsNumber,// only use beanstalk
+      containerPort: containerPort.valueAsNumber, // only use beanstalk
       deployTargetType: envType.valueAsString,
       approvalStage: 'true',
       pipeline: codecommitPipeline,
