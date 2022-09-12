@@ -6,12 +6,13 @@ import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 
 import { Construct } from 'constructs/lib/construct';
 import yaml from 'yaml';
-import { CDConstruct } from './cd-construct';
+//import { CDConstruct } from './cd-construct';
 
 
 export interface StackNameProps extends cdk.StackProps {
@@ -155,6 +156,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
       input: sourceOutput,
       outputs: [buildOutput],
       project: buildProject,
+      variablesNamespace: 'Namespace',
     });
 
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
@@ -167,7 +169,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
     codecommitPipeline.addStage({ stageName: 'SOURCE' }).addAction(CodeCommitSourceAction);
     codecommitPipeline.addStage({ stageName: 'BUILD' }).addAction(buildAction);
 
-    new CDConstruct(this, 'CD', {
+    /* new CDConstruct(this, 'CD', {
       imageTag: buildAction.variable('IMAGE_TAG'),
       projectName: projectName.valueAsString,
       environment: environment.valueAsString,
@@ -179,7 +181,51 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
       pipeline: codecommitPipeline,
       sourceArtifact: sourceArtifact.valueAsString,
       buildOutput: buildOutput,
+    }); */
+
+    const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
+
+    const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
+      buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
+        privileged: true,
+      },
+      environmentVariables: {
+        //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
+        SERVICE_NAME: { value: serviceName.valueAsString },
+        ENVIRONMENT: { value: environment.valueAsString },
+        DEPLOY_ENV_NAME: { value: `${projectName.valueAsString}-${envType.valueAsString}-${environment.valueAsString}` },
+        AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
+        AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+        ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
+        IMAGE_TAG: { value: buildAction.variable('IMAGE_TAG') },
+        TARGET_TYPE: { value: envType.valueAsString },
+      },
     });
+
+    deployProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+      resources: ['*'],
+      actions: ['elasticbeanstalk:*',
+        'autoscaling:*',
+        'elasticloadbalancing:*',
+        'ecs:*',
+        's3:*',
+        'ec2:*',
+        'cloudwatch:*',
+        'logs:*',
+        'cloudformation:*'],
+    }));
+
+    const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
+    codecommitPipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
+
+    const deployAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'Deploy',
+      input: buildOutput,
+      project: deployProject,
+    });
+    codecommitPipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] });
 
 
   }
