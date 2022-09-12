@@ -162,6 +162,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         privileged: true,
       },
       environmentVariables: {
+        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },

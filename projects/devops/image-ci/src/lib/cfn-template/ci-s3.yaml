@@ -211,6 +211,9 @@ Resources:
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
+          - Name: IMAGE_TAG
+            Type: PLAINTEXT
+            Value: "#{SOURCE_S3Source_NS.VersionId}"
           - Name: REPOSITORY_URI
             Type: PLAINTEXT
             Value:
@@ -818,6 +821,12 @@ Resources:
             Type: PLAINTEXT
             Value:
               Ref: S3BucketSourceArtifacts
+<<<<<<< HEAD
+=======
+          - Name: IMAGE_TAG
+            Type: PLAINTEXT
+            Value: "#{SOURCE_S3Source_NS.VersionId}"
+>>>>>>> cf3afb2a720a7ff94bde7aaa28a71888c0b846c3
           - Name: TARGET_TYPE
             Type: PLAINTEXT
             Value:
