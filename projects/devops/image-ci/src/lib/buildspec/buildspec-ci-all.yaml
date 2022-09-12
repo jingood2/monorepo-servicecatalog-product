@@ -18,7 +18,7 @@ phases:
       - echo $TARGET_TYPE
       - aws --version
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - export IMAGE_TAG=${COMMIT_HASH:=latest}
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
       - export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
       - |
         if [ "$BUILD_TYPE" = "DOCKER" ]; then
@@ -26,6 +26,8 @@ phases:
         fi
   build:
     commands:
+      - export IMAGE_TAG=$COMMIT_HASH
+      - echo IMAGE_TAG is $IMAGE_TAG
       - echo Build started on `date`
       - echo $BUILD_TYPE
       - |
