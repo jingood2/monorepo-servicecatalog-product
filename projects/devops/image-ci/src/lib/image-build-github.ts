@@ -183,6 +183,9 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       input: sourceOutput,
       outputs: [buildOutput],
       project: buildProject,
+      environmentVariables: {
+        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+      },
     });
 
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
