@@ -161,6 +161,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         privileged: true,
       },
       environmentVariables: {
+        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
@@ -194,7 +195,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
     githubPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
     new CDConstruct(this, 'CD', {
-      imageTag: buildAction.variable('IMAGE_TAG'),
+      imageTag: githubSourceAction.variables.commitId,
       projectName: projectName.valueAsString,
       environment: environment.valueAsString,
       serviceName: serviceName.valueAsString,
