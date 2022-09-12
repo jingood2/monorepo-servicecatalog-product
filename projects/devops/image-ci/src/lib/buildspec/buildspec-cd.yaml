@@ -7,6 +7,7 @@ phases:
       - echo $AWS_DEFAULT_REGION
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo $SERVICE_NAME
+      - echo $ENVIRONMENT
       - echo $CODEBUILD_BUILD_NUMBER
       - echo $AWS_ACCOUNT_ID
       - echo $REPOSITORY_URI
@@ -32,7 +33,7 @@ phases:
       - echo $TARGET_TYPE
       - |
         if [ "$TARGET_TYPE" = "ecs" ]; then 
-          aws ecs update-service --cluster $DEPLOY_ENV_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_DEFAULT_REGION
+          aws ecs update-service --cluster $DEPLOY_ENV_NAME --service "$SERVICE_NAME-$ENVIRONMENT" --force-new-deployment --region $AWS_DEFAULT_REGION
         fi 
       - |
         if [ "$TARGET_TYPE" = "beanstalk" ]; then 

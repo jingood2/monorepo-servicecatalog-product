@@ -48,6 +48,7 @@ export class CDConstruct extends Construct {
       environmentVariables: {
         //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         SERVICE_NAME: { value: props.serviceName },
+        ENVIRONMENT: { value: props.environment },
         DEPLOY_ENV_NAME: { value: `${props.projectName}-${props.deployTargetType}-${props.environment}` },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
