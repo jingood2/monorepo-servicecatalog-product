@@ -158,17 +158,20 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
       outputs: [buildOutput],
       project: buildProject,
       variablesNamespace: 'Namespace',
+      environmentVariables: {
+        IMAGE_TAG: { value: CodeCommitSourceAction.variables.commitId },
+      },
     });
 
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
 
     // 1.2 Codecommit Pipeline
-    const codecommitPipeline = new codepipeline.Pipeline(this, 'CodeCommitPipeline', {
+    const pipeline = new codepipeline.Pipeline(this, 'CodeCommitPipeline', {
       pipelineName: `${serviceName.valueAsString}`,
       artifactBucket: artifactS3,
     });
-    codecommitPipeline.addStage({ stageName: 'SOURCE' }).addAction(CodeCommitSourceAction);
-    codecommitPipeline.addStage({ stageName: 'BUILD' }).addAction(buildAction);
+    pipeline.addStage({ stageName: 'SOURCE' }).addAction(CodeCommitSourceAction);
+    pipeline.addStage({ stageName: 'BUILD' }).addAction(buildAction);
 
     /* new CDConstruct(this, 'CD', {
       imageTag: buildAction.variable('IMAGE_TAG'),
@@ -179,7 +182,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
       containerPort: containerPort.valueAsNumber, // only use beanstalk
       deployTargetType: envType.valueAsString,
       approvalStage: 'true',
-      pipeline: codecommitPipeline,
+      pipeline: pipeline,
       sourceArtifact: sourceArtifact.valueAsString,
       buildOutput: buildOutput,
     }); */
@@ -200,7 +203,6 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
-        IMAGE_TAG: { value: CodeCommitSourceAction.variables.commitId },
         TARGET_TYPE: { value: envType.valueAsString },
       },
     });
@@ -219,14 +221,17 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
     }));
 
     const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
-    codecommitPipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
+    pipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
 
     const deployAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'Deploy',
       input: buildOutput,
       project: deployProject,
+      environmentVariables: {
+        IMAGE_TAG: { value: CodeCommitSourceAction.variables.commitId },
+      },
     });
-    codecommitPipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] });
+    pipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] });
 
 
   }

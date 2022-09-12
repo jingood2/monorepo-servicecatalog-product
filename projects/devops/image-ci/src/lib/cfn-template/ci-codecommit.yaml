@@ -480,6 +480,7 @@ Resources:
               Configuration:
                 ProjectName:
                   Ref: BuildProject097C5DB7
+                EnvironmentVariables: '[{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{SOURCE_CODECOMMIT_NS.CommitId}"}]'
               InputArtifacts:
                 - Name: Source
               Name: Build
@@ -514,6 +515,7 @@ Resources:
               Configuration:
                 ProjectName:
                   Ref: CodeBuildDeployPlojectF23FECA7
+                EnvironmentVariables: '[{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{SOURCE_CODECOMMIT_NS.CommitId}"}]'
               InputArtifacts:
                 - Name: Build
               Name: Deploy
@@ -879,6 +881,8 @@ Resources:
             Type: PLAINTEXT
             Value:
               Ref: S3BucketSourceArtifacts
+<<<<<<< HEAD
+=======
           - Name: IMAGE_TAG
             Type: PLAINTEXT
 <<<<<<< HEAD
@@ -886,6 +890,7 @@ Resources:
 =======
             Value: "#{Namespace.IMAGE_TAG}"
 >>>>>>> 5631ec19c1b774a75184646a7fb22a3ca70f7aff
+>>>>>>> cf3afb2a720a7ff94bde7aaa28a71888c0b846c3
           - Name: TARGET_TYPE
             Type: PLAINTEXT
             Value:
