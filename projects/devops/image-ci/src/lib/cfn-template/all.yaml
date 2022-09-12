@@ -54,17 +54,21 @@ Parameters:
       - S3
     Description: Source Provider Type
 Conditions:
-  IsProduction:
+  IsGithubCondition:
     Fn::Equals:
       - GITHUB
       - Ref: SourceProviderType
-  IsNotProduction:
+  IsCodecommitCondition:
     Fn::Equals:
       - CODECOMMIT
       - Ref: SourceProviderType
+  IsS3Condition:
+    Fn::Equals:
+      - S3
+      - Ref: SourceProviderType
 Resources:
   GithubPipeline:
-    Condition: IsProduction
+    Condition: IsGithubCondition
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
@@ -79,7 +83,27 @@ Resources:
         EnvType: !Ref EnvType
       TemplateURL: https://jingood2-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/ci-github.yaml
   CodeCommitPipeline:
-    Condition: IsNotProduction
+    Condition: IsCodecommitCondition
     Type: 'AWS::CloudFormation::Stack'
     Properties:
+      RepoName: !Ref RepoName
+      RepoBranch: !Ref RepoBranch
+      ServiceName: !Ref ServiceName
+      ContainerPort: !Ref ContainerPort
+      S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
+      PackagingType: 'DOCKER'
+      EnvType: !Ref EnvType
       TemplateURL: https://jingood2-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/ci-codecommit.yaml
+  S3Pipeline:
+    Condition: IsS3Condition
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      RepoName: !Ref RepoName
+      RepoBranch: !Ref RepoBranch
+      ServiceName: !Ref ServiceName
+      ContainerPort: !Ref ContainerPort
+      S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
+      PackagingType: 'DOCKER'
+      EnvType: !Ref EnvType
+      TemplateURL: https://jingood2-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/ci-s3.yaml
+
