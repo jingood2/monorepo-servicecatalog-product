@@ -246,6 +246,9 @@ Resources:
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
+          - Name: IMAGE_TAG
+            Type: PLAINTEXT
+            Value: "#{SOURCE_CODECOMMIT_NS.CommitId}"
           - Name: REPOSITORY_URI
             Type: PLAINTEXT
             Value:
@@ -318,6 +321,7 @@ Resources:
                   "echo $AWS_DEFAULT_REGION",
                   "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
                   "echo $CODEBUILD_SOURCE_VERSION",
+                  "echo $IMAGE_TAG",
                   "echo $AWS_ACCOUNT_ID",
                   "echo $SERVICE_NAME",
                   "echo $CONTAINER_PORT",
@@ -325,16 +329,12 @@ Resources:
                   "echo $BUILD_TYPE",
                   "echo $TARGET_TYPE",
                   "aws --version",
-                  "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
-                  "IMAGE_TAG=${COMMIT_HASH:=latest}",
                   "export MAVEN_OPTS=\"-Xmx1024m -XX:MaxPermSize=512m\"",
                   "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
                 ]
               },
               "build": {
                 "commands": [
-                  "export IMAGE_TAG=$COMMIT_HASH",
-                  "echo IMAGE_TAG is $IMAGE_TAG",
                   "echo Build started on `date`",
                   "echo $BUILD_TYPE",
                   "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  java --version ;\n  chmod +x gradlew ;\n  ./gradlew clean build ;\nfi\n",
@@ -462,6 +462,7 @@ Resources:
                   Ref: RepoBranch
                 PollForSourceChanges: false
               Name: CODECOMMIT
+              Namespace: SOURCE_CODECOMMIT_NS
               OutputArtifacts:
                 - Name: Source
               RoleArn:
@@ -880,7 +881,7 @@ Resources:
               Ref: S3BucketSourceArtifacts
           - Name: IMAGE_TAG
             Type: PLAINTEXT
-            Value: "#{Namespace.IMAGE_TAG}"
+            Value: "#{SOURCE_CODECOMMIT_NS.CommitId}"
           - Name: TARGET_TYPE
             Type: PLAINTEXT
             Value:

@@ -137,6 +137,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
         privileged: true,
       },
       environmentVariables: {
+        IMAGE_TAG: { value: CodeCommitSourceAction.variables.commitId },
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
@@ -199,7 +200,7 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
-        IMAGE_TAG: { value: buildAction.variable('IMAGE_TAG') },
+        IMAGE_TAG: { value: CodeCommitSourceAction.variables.commitId },
         TARGET_TYPE: { value: envType.valueAsString },
       },
     });
