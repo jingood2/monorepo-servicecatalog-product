@@ -1,0 +1,32 @@
+version: 0.2
+
+env:
+  exported-variables:
+    - IMAGE_TAG
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - echo $ECR_REPOSITORY_URI
+      - echo $AWS_DEFAULT_REGION
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $CODEBUILD_SOURCE_VERSION
+      - echo $AWS_ACCOUNT_ID
+      - aws --version
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - export IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo Build started on `date`
+      - |
+        echo Building the Docker image...
+        docker build -t $ECR_REPOSITORY_URI:latest .
+        echo Tagging Docker image...
+        docker tag $ECR_REPOSITORY_URI:latest $ECR_REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $ECR_REPOSITORY_URI:latest
+      - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG

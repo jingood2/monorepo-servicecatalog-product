@@ -1,0 +1,1206 @@
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Git Repository Common Information
+        Parameters:
+          - SourceProviderType
+          - RepoName
+          - RepoBranch
+      - Label:
+          default: GitHub Information
+        Parameters:
+          - RepoOwner
+          - GithubSecretTokenId
+      - Label:
+          default: Configuration for Codebuild
+        Parameters:
+          - ServiceName
+          - sourceArtifact
+          - ecsCluster
+          - vpcId
+          - albArn
+Parameters:
+  SourceProviderType:
+    Type: String
+    Default: GITHUB
+    AllowedValues:
+      - GITHUB
+      - CODECOMMIT
+      - JENKINS
+      - BITBUCKET
+      - S3
+    Description: Source Provider Type
+  RepoName:
+    Type: String
+    Description: Git Repository or S3 Bucket Name
+  RepoOwner:
+    Type: String
+    Default: main
+  RepoBranch:
+    Type: String
+    Default: main
+  GithubSecretTokenId:
+    Type: String
+    Description: (Github Only Use)Secret Token Id for Github
+  ServiceName:
+    Type: String
+    Default: demoapp
+    Description: Service Name
+  ContainerPort:
+    Type: Number
+    Default: "80"
+    Description: Container Port
+  S3BucketSourceArtifacts:
+    Type: String
+    Default: acme-servicecatalog-cicd-bucket
+    Description: S3 Bucket Name for Source and Build Artifact
+  PackagingType:
+    Type: String
+    Default: DOCKER
+    AllowedValues:
+      - MAVEN
+      - GRADLE
+      - NPM
+      - PYTHON
+      - DOCKER
+    Description: Source Packaging Tool
+  EnvType:
+    Type: String
+    Default: beanstalk
+    AllowedValues:
+      - ecs
+      - fargate
+      - eks
+      - beanstalk
+      - lambda
+    Description: Source Packaging Tool
+Conditions:
+  CIIsGithubConditionDC471D05:
+    Fn::Equals:
+      - GITHUB
+      - Ref: SourceProviderType
+  CIIsCodecommitConditionB61C3196:
+    Fn::Equals:
+      - CODECOMMIT
+      - Ref: SourceProviderType
+  CIIsS3Condition7E12ADD3:
+    Fn::Equals:
+      - S3
+      - Ref: SourceProviderType
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+Resources:
+  CIECRRepositoryName770746DB:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName:
+        Ref: ServiceName
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/ECRRepositoryName/Resource
+  CIGitRepositoryimageciCIAllProductCICodeCommitD110CB560EventRule637B2616:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        resources:
+          - Fn::Join:
+              - ""
+              - - "arn:"
+                - Ref: AWS::Partition
+                - ":codecommit:"
+                - Ref: AWS::Region
+                - ":"
+                - Ref: AWS::AccountId
+                - ":"
+                - Ref: RepoName
+        detail-type:
+          - CodeCommit Repository State Change
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceName:
+            - Ref: RepoBranch
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::Join:
+              - ""
+              - - "arn:"
+                - Ref: AWS::Partition
+                - ":codepipeline:"
+                - Ref: AWS::Region
+                - ":"
+                - Ref: AWS::AccountId
+                - ":"
+                - Ref: CICodeCommit3E3C2BAC
+          Id: Target0
+          RoleArn:
+            Fn::GetAtt:
+              - CICodeCommitEventsRole0E4E4E9F
+              - Arn
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitRepository/imageciCIAllProductCICodeCommitD110CB560EventRule/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CIMyBucket24546C93:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: RepoName
+      VersioningConfiguration:
+        Status: Enabled
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/MyBucket
+    Condition: CIIsS3Condition7E12ADD3
+  CIBuildProjectRole5B2311C1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/BuildProject/Role/Resource
+  CIBuildProjectRoleDefaultPolicyFD2212BC:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: CIBuildProject308E279B
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: CIBuildProject308E279B
+                    - :*
+          - Action:
+              - codebuild:CreateReportGroup
+              - codebuild:CreateReport
+              - codebuild:UpdateReport
+              - codebuild:BatchPutTestCases
+              - codebuild:BatchPutCodeCoverages
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":codebuild:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - :report-group/
+                  - Ref: CIBuildProject308E279B
+                  - -*
+          - Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIECRRepositoryName770746DB
+                - Arn
+          - Action: ecr:GetAuthorizationToken
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - ecr:PutImage
+              - ecr:InitiateLayerUpload
+              - ecr:UploadLayerPart
+              - ecr:CompleteLayerUpload
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIECRRepositoryName770746DB
+                - Arn
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+        Version: 2012-10-17
+      PolicyName: CIBuildProjectRoleDefaultPolicyFD2212BC
+      Roles:
+        - Ref: CIBuildProjectRole5B2311C1
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/BuildProject/Role/DefaultPolicy/Resource
+  CIBuildProject308E279B:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: REPOSITORY_URI
+            Type: PLAINTEXT
+            Value:
+              Fn::Join:
+                - ""
+                - - Fn::Select:
+                      - 4
+                      - Fn::Split:
+                          - ":"
+                          - Fn::GetAtt:
+                              - CIECRRepositoryName770746DB
+                              - Arn
+                  - .dkr.ecr.
+                  - Fn::Select:
+                      - 3
+                      - Fn::Split:
+                          - ":"
+                          - Fn::GetAtt:
+                              - CIECRRepositoryName770746DB
+                              - Arn
+                  - .
+                  - Ref: AWS::URLSuffix
+                  - /
+                  - Ref: CIECRRepositoryName770746DB
+          - Name: AWS_DEFAULT_REGION
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::AccountId
+          - Name: CONTAINER_PORT
+            Type: PLAINTEXT
+            Value:
+              Ref: ContainerPort
+          - Name: BUILD_TYPE
+            Type: PLAINTEXT
+            Value:
+              Ref: PackagingType
+          - Name: TARGET_TYPE
+            Type: PLAINTEXT
+            Value:
+              Ref: EnvType
+          - Name: SERVICE_NAME
+            Type: PLAINTEXT
+            Value:
+              Ref: ServiceName
+          
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+      ServiceRole:
+        Fn::GetAtt:
+          - CIBuildProjectRole5B2311C1
+          - Arn
+      Source:
+        BuildSpec: >-
+          {
+            "version": 0.2,
+            "env": {
+              "exported-variables": [
+                "IMAGE_TAG"
+              ]
+            },
+            "phases": {
+              "pre_build": {
+                "commands": [
+                  "echo Logging in to Amazon ECR...",
+                  "echo $AWS_DEFAULT_REGION",
+                  "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
+                  "echo $CODEBUILD_SOURCE_VERSION",
+                  "echo $AWS_ACCOUNT_ID",
+                  "echo $SERVICE_NAME",
+                  "echo $CONTAINER_PORT",
+                  "echo $ARTIFACT_BUCKET",
+                  "echo $BUILD_TYPE",
+                  "echo $TARGET_TYPE",
+                  "echo $IMAGE_TAG",
+                  "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
+                  "export IMAGE_TAG=${COMMIT_HASH:=latest}",
+                  "aws --version",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
+                ]
+              },
+              "build": {
+                "commands": [
+                  "echo Build started on `date`",
+                  "echo $BUILD_TYPE",
+                  "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  java --version ;\n  chmod +x gradlew ;\n  ./gradlew clean build ;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"MAVEN\" ]; then \n  which mvn;\n  chmod +x mvnw ;\n  ./mvnw package;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"NPM\" ]; then \n  echo Installing source NPM dependencies...;\n  npm install -y -g --unsafe-perm ;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then \n  echo Building the Docker image...\n  docker build -t $REPOSITORY_URI:latest .\n\n  echo Tagging Docker image...\n  docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG\n\n  echo Pushing the Docker images...\n  docker push $REPOSITORY_URI:latest\n  docker push $REPOSITORY_URI:$IMAGE_TAG\nfi\n"
+                ]
+              },
+              "post_build": {
+                "commands": [
+                  "echo Build completed on `date`",
+                  "echo $BUILD_TYPE",
+                  "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  mv build/libs/*.jar app.jar\n  mv .ebextentions .ebextentions\n  echo Writing Procfile for Beanstlak...\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"MAVEN\" ]; then \n  mv target/*.jar app.jar\n  mv .ebextentions .ebextentions\n  echo Writing Procfile for Beanstlak...\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then \n  if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n    echo Writing image definitions file for ECS...\n    printf '[{\"name\": \"%s\", \"imageUri\":\"%s\"}]' $SERVICE_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json\n    zip -r $IMAGE_TAG.zip imagedefinitions.json\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n    echo Writing Dockerrun.aws.json file for Beanstalk ...\n    printf '{ \"AWSEBDockerrunVersion\":\"1\",\"Image\": {\"Name\": \"%s\"}, \"Ports\":[{\"ContainerPort\": \"%s\"}] }' $REPOSITORY_URI:$IMAGE_TAG $CONTAINER_PORT > Dockerrun.aws.json\n    zip -r $IMAGE_TAG.zip Dockerrun.aws.json\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"EKS\" ]; then \n    echo Writing image definitions file for EKS...\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"LAMBDA\" ]; then \n    echo Writing image definitions file for LAMBDA...\n  fi \nfi\n"
+                ]
+              }
+            },
+            "artifacts": {
+              "files": [
+                "**/*"
+              ],
+              "name": "$IMAGE_TAG"
+            }
+          }
+        Type: CODEPIPELINE
+      Cache:
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+        Type: LOCAL
+      EncryptionKey: alias/aws/s3
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/BuildProject/Resource
+  CIGitHubRole2792B294:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/Role/Resource
+    Condition: CIIsGithubConditionDC471D05
+  CIGitHubRoleDefaultPolicy287ADA7B:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIGitHubBUILDBuildCodePipelineActionRole67B338C4
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CIGitHubRoleDefaultPolicy287ADA7B
+      Roles:
+        - Ref: CIGitHubRole2792B294
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/Role/DefaultPolicy/Resource
+    Condition: CIIsGithubConditionDC471D05
+  CIGitHub61451375:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+          - CIGitHubRole2792B294
+          - Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: "1"
+              Configuration:
+                Owner:
+                  Ref: RepoOwner
+                Repo:
+                  Ref: RepoName
+                Branch:
+                  Ref: RepoBranch
+                OAuthToken:
+                  Fn::Join:
+                    - ""
+                    - - "{{resolve:secretsmanager:"
+                      - Ref: GithubSecretTokenId
+                      - :SecretString:::}}
+                PollForSourceChanges: false
+              Name: GITHUB
+              Namespace: SOURCE_GITHUB_NS
+              OutputArtifacts:
+                - Name: Source
+              RunOrder: 1
+          Name: SOURCE
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: CIBuildProject308E279B
+              InputArtifacts:
+                - Name: Source
+              Name: Build
+              OutputArtifacts:
+                - Name: Build
+              RoleArn:
+                Fn::GetAtt:
+                  - CIGitHubBUILDBuildCodePipelineActionRole67B338C4
+                  - Arn
+              RunOrder: 1
+          Name: BUILD
+      ArtifactStore:
+        Location:
+          Ref: S3BucketSourceArtifacts
+        Type: S3
+      Name:
+        Fn::Join:
+          - ""
+          - - Ref: ServiceName
+            - -pipeline
+    DependsOn:
+      - CIGitHubRoleDefaultPolicy287ADA7B
+      - CIGitHubRole2792B294
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/Resource
+    Condition: CIIsGithubConditionDC471D05
+  CIGitHubSOURCEGITHUBWebhookResourceE4C5E8B8:
+    Type: AWS::CodePipeline::Webhook
+    Properties:
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken:
+          Fn::Join:
+            - ""
+            - - "{{resolve:secretsmanager:"
+              - Ref: GithubSecretTokenId
+              - :SecretString:::}}
+      Filters:
+        - JsonPath: $.ref
+          MatchEquals: refs/heads/{Branch}
+      TargetAction: GITHUB
+      TargetPipeline:
+        Ref: CIGitHub61451375
+      TargetPipelineVersion: 1
+      RegisterWithThirdParty: true
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/SOURCE/GITHUB/WebhookResource
+    Condition: CIIsGithubConditionDC471D05
+  CIGitHubBUILDBuildCodePipelineActionRole67B338C4:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/BUILD/Build/CodePipelineActionRole/Resource
+    Condition: CIIsGithubConditionDC471D05
+  CIGitHubBUILDBuildCodePipelineActionRoleDefaultPolicy8C2A96B9:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIBuildProject308E279B
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CIGitHubBUILDBuildCodePipelineActionRoleDefaultPolicy8C2A96B9
+      Roles:
+        - Ref: CIGitHubBUILDBuildCodePipelineActionRole67B338C4
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/GitHub/BUILD/Build/CodePipelineActionRole/DefaultPolicy/Resource
+    Condition: CIIsGithubConditionDC471D05
+  CICodeCommitRole5CDD9124:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/Role/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitRoleDefaultPolicy46429E2E:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CICodeCommitSOURCECodePipelineActionRoleA10A3CF1
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CICodeCommitBUILDBuildCodePipelineActionRole4EDE5192
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CICodeCommitRoleDefaultPolicy46429E2E
+      Roles:
+        - Ref: CICodeCommitRole5CDD9124
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/Role/DefaultPolicy/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommit3E3C2BAC:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+          - CICodeCommitRole5CDD9124
+          - Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: "1"
+              Configuration:
+                RepositoryName:
+                  Ref: RepoName
+                BranchName:
+                  Ref: RepoBranch
+                PollForSourceChanges: false
+              Name: SOURCE
+              Namespace: SOURCE_SOURCE_NS
+              OutputArtifacts:
+                - Name: Source
+              RoleArn:
+                Fn::GetAtt:
+                  - CICodeCommitSOURCECodePipelineActionRoleA10A3CF1
+                  - Arn
+              RunOrder: 1
+          Name: SOURCE
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: CIBuildProject308E279B
+              InputArtifacts:
+                - Name: Source
+              Name: Build
+              OutputArtifacts:
+                - Name: Build
+              RoleArn:
+                Fn::GetAtt:
+                  - CICodeCommitBUILDBuildCodePipelineActionRole4EDE5192
+                  - Arn
+              RunOrder: 1
+          Name: BUILD
+      ArtifactStore:
+        Location:
+          Ref: S3BucketSourceArtifacts
+        Type: S3
+      Name:
+        Fn::Join:
+          - ""
+          - - Ref: ServiceName
+            - -pipeline
+    DependsOn:
+      - CICodeCommitRoleDefaultPolicy46429E2E
+      - CICodeCommitRole5CDD9124
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitSOURCECodePipelineActionRoleA10A3CF1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/SOURCE/SOURCE/CodePipelineActionRole/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitSOURCECodePipelineActionRoleDefaultPolicyF42A55D0:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+          - Action:
+              - codecommit:GetBranch
+              - codecommit:GetCommit
+              - codecommit:UploadArchive
+              - codecommit:GetUploadArchiveStatus
+              - codecommit:CancelUploadArchive
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":codecommit:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - ":"
+                  - Ref: RepoName
+        Version: 2012-10-17
+      PolicyName: CICodeCommitSOURCECodePipelineActionRoleDefaultPolicyF42A55D0
+      Roles:
+        - Ref: CICodeCommitSOURCECodePipelineActionRoleA10A3CF1
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/SOURCE/SOURCE/CodePipelineActionRole/DefaultPolicy/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitEventsRole0E4E4E9F:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/EventsRole/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitEventsRoleDefaultPolicy7E924DD3:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: codepipeline:StartPipelineExecution
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":codepipeline:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - ":"
+                  - Ref: CICodeCommit3E3C2BAC
+        Version: 2012-10-17
+      PolicyName: CICodeCommitEventsRoleDefaultPolicy7E924DD3
+      Roles:
+        - Ref: CICodeCommitEventsRole0E4E4E9F
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/EventsRole/DefaultPolicy/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitBUILDBuildCodePipelineActionRole4EDE5192:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/BUILD/Build/CodePipelineActionRole/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CICodeCommitBUILDBuildCodePipelineActionRoleDefaultPolicy9234027E:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIBuildProject308E279B
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CICodeCommitBUILDBuildCodePipelineActionRoleDefaultPolicy9234027E
+      Roles:
+        - Ref: CICodeCommitBUILDBuildCodePipelineActionRole4EDE5192
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/CodeCommit/BUILD/Build/CodePipelineActionRole/DefaultPolicy/Resource
+    Condition: CIIsCodecommitConditionB61C3196
+  CIS3Role3423C1EF:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/Role/Resource
+    Condition: CIIsS3Condition7E12ADD3
+  CIS3RoleDefaultPolicy0789D446:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIS3SOURCES3SourceCodePipelineActionRole9E17B95E
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIS3BUILDBuildCodePipelineActionRoleD920E45D
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CIS3RoleDefaultPolicy0789D446
+      Roles:
+        - Ref: CIS3Role3423C1EF
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/Role/DefaultPolicy/Resource
+    Condition: CIIsS3Condition7E12ADD3
+  CIS31B946F99:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+          - CIS3Role3423C1EF
+          - Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: S3
+                Version: "1"
+              Configuration:
+                S3Bucket:
+                  Fn::Select:
+                    - 0
+                    - Fn::Split:
+                        - /
+                        - Fn::Select:
+                            - 5
+                            - Fn::Split:
+                                - ":"
+                                - Fn::GetAtt:
+                                    - CIMyBucket24546C93
+                                    - Arn
+                S3ObjectKey:
+                  Fn::Join:
+                    - ""
+                    - - Ref: RepoBranch
+                      - /
+                      - Ref: ServiceName
+                      - .zip
+              Name: S3Source
+              Namespace: SOURCE_S3Source_NS
+              OutputArtifacts:
+                - Name: Source
+              RoleArn:
+                Fn::GetAtt:
+                  - CIS3SOURCES3SourceCodePipelineActionRole9E17B95E
+                  - Arn
+              RunOrder: 1
+          Name: SOURCE
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: CIBuildProject308E279B
+              InputArtifacts:
+                - Name: Source
+              Name: Build
+              OutputArtifacts:
+                - Name: Build
+              RoleArn:
+                Fn::GetAtt:
+                  - CIS3BUILDBuildCodePipelineActionRoleD920E45D
+                  - Arn
+              RunOrder: 1
+          Name: BUILD
+      ArtifactStore:
+        Location:
+          Ref: S3BucketSourceArtifacts
+        Type: S3
+      Name:
+        Fn::Join:
+          - ""
+          - - Ref: ServiceName
+            - -pipeline
+    DependsOn:
+      - CIS3RoleDefaultPolicy0789D446
+      - CIS3Role3423C1EF
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/Resource
+    Condition: CIIsS3Condition7E12ADD3
+  CIS3SOURCES3SourceCodePipelineActionRole9E17B95E:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/SOURCE/S3Source/CodePipelineActionRole/Resource
+  CIS3SOURCES3SourceCodePipelineActionRoleDefaultPolicy810456D5:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - CIMyBucket24546C93
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - CIMyBucket24546C93
+                        - Arn
+                    - /
+                    - Ref: RepoBranch
+                    - /
+                    - Ref: ServiceName
+                    - .zip
+          - Action:
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+        Version: 2012-10-17
+      PolicyName: CIS3SOURCES3SourceCodePipelineActionRoleDefaultPolicy810456D5
+      Roles:
+        - Ref: CIS3SOURCES3SourceCodePipelineActionRole9E17B95E
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/SOURCE/S3Source/CodePipelineActionRole/DefaultPolicy/Resource
+    Condition: CIIsS3Condition7E12ADD3
+  CIS3BUILDBuildCodePipelineActionRoleD920E45D:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/BUILD/Build/CodePipelineActionRole/Resource
+  CIS3BUILDBuildCodePipelineActionRoleDefaultPolicyDD60B7BE:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CIBuildProject308E279B
+                - Arn
+        Version: 2012-10-17
+      PolicyName: CIS3BUILDBuildCodePipelineActionRoleDefaultPolicyDD60B7BE
+      Roles:
+        - Ref: CIS3BUILDBuildCodePipelineActionRoleD920E45D
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CI/S3/BUILD/Build/CodePipelineActionRole/DefaultPolicy/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/02QS07EMBBEz8LeaQggDjBzgSizYImcTgOdOO7InyBk+e44caRhVVWq9ivJz/DawtOD/vENjnNjeIBUwkfy5DZGQh20kS/onIwRwy1onBWhg9TTKp6DuF91/bT3lBVtZIMvF9HQ0RXNyr9AKuEScaagqly0Lw3KSENkM0LqeCXDlsrcRBj216fNivVSmHIyd+3EMB7z1VXUejLutOPin3+n4VtkzvkotNMLBXJ7uIodObBY1ZOX6LCOnT4rW/gw+cetfYN2/7jJMzcu2sALQV/1D5wZwadUAQAA
+    Metadata:
+      aws:cdk:path: image-ci/CIAllProduct/CDKMetadata/Default
+    Condition: CDKMetadataAvailable

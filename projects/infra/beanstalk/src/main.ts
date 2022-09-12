@@ -32,7 +32,8 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'beanstalk', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+const a = new MyStack(app, 'beanstalk', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+
 // new MyStack(app, 'beanstalk-prod', { env: prodEnv });
 
 app.synth();

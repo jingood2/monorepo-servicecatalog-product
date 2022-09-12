@@ -14,9 +14,12 @@ phases:
       - echo $SERVICE_NAME
       - echo $CONTAINER_PORT
       - echo $ARTIFACT_BUCKET
+      - echo $BUILD_TYPE
+      - echo $TARGET_TYPE
       - aws --version
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - export IMAGE_TAG=${COMMIT_HASH:=latest}
+      - export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
       - |
         if [ "$BUILD_TYPE" = "DOCKER" ]; then
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
@@ -33,7 +36,6 @@ phases:
         fi
       - |
         if [ "$BUILD_TYPE" = "MAVEN" ]; then 
-          export MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=128m";
           which mvn;
           chmod +x mvnw ;
           ./mvnw package;
