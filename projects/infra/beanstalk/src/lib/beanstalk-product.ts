@@ -343,6 +343,11 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
         value: 'hostheaders,pathpatterns',
       },
       {
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'Port',
+        value: processListenerPort.valueAsString,
+      },
+      /* {
         namespace: 'aws:elasticbeanstalk:environment:process:default',
         optionName: 'Port',
         value: processListenerPort.valueAsString,
@@ -351,7 +356,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
         namespace: 'aws:elasticbeanstalk:environment:process:default',
         optionName: 'Protocol',
         value: 'HTTP',
-      },
+      }, */
       {
         namespace: 'aws:elbv2:listenerrule:hostheaders',
         optionName: 'HostHeaders',

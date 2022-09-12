@@ -1,0 +1,103 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ECSCICDPipeline3202AC4C": {
+      "Properties": {
+        "Description": "SC CI Using Docker Compose Product",
+        "Distributor": "SK Cloud Transformation Group",
+        "Name": "image-build-product",
+        "Owner": "jingood2@sk.com",
+        "ProvisioningArtifactParameters": [
+          {
+            "Description": "ECS CICD Pieline with Github",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/3c946f934a6900894523669d8bb668156685a1b9fbb7ef978909777cd8633877.json",
+              },
+            },
+            "Name": "v1",
+          },
+          {
+            "Description": "ECS CICD Pieline with CodeCommit",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/8a019737142888108d49e4e484fb8ec93da9279e06ad74a41c830a0f922c652e.json",
+              },
+            },
+            "Name": "v2",
+          },
+          {
+            "Description": "ECS CICD Pieline with CodeCommit",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/6a00fdc27fb4ccf2cbada1aaeef594256d4259b1354a59a8f71a8f0a0aa3ea48.json",
+              },
+            },
+            "Name": "v3",
+          },
+          {
+            "Description": "All-in-one CICD Pieline V4",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4b0854b31e1d4b3509470e3e4ae9284302453ea8150f7c3c4040a346e922c4f7.json",
+              },
+            },
+            "Name": "v4",
+          },
+          {
+            "Description": "CICD Pieline V5",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/db0bf88e4eb800d3b9ce757e2223f5d5f5ae44864c2dc381425c3b5e66ea8f0a.yaml",
+              },
+            },
+            "Name": "v5",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
