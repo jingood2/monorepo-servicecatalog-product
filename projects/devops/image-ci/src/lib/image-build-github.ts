@@ -170,6 +170,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         BUILD_TYPE: { value: buildType.valueAsString },
         TARGET_TYPE: { value: envType.valueAsString },
         SERVICE_NAME: { value: serviceName.valueAsString },
+        ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
       },
       // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
@@ -182,9 +183,6 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       input: sourceOutput,
       outputs: [buildOutput],
       project: buildProject,
-      environmentVariables: {
-        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
-      },
     });
 
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
@@ -253,7 +251,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       input: buildOutput,
       project: deployProject,
       environmentVariables: {
-        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+        IMAGE_TAG: { value: buildAction.variable('IMAGE_TAG') },
       },
     });
     pipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] });
