@@ -246,9 +246,6 @@ Resources:
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         EnvironmentVariables:
-          - Name: IMAGE_TAG
-            Type: PLAINTEXT
-            Value: "#{SOURCE_CODECOMMIT_NS.CommitId}"
           - Name: REPOSITORY_URI
             Type: PLAINTEXT
             Value:
@@ -321,7 +318,6 @@ Resources:
                   "echo $AWS_DEFAULT_REGION",
                   "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
                   "echo $CODEBUILD_SOURCE_VERSION",
-                  "echo $IMAGE_TAG",
                   "echo $AWS_ACCOUNT_ID",
                   "echo $SERVICE_NAME",
                   "echo $CONTAINER_PORT",
@@ -329,12 +325,16 @@ Resources:
                   "echo $BUILD_TYPE",
                   "echo $TARGET_TYPE",
                   "aws --version",
+                  "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
+                  "IMAGE_TAG=${COMMIT_HASH:=latest}",
                   "export MAVEN_OPTS=\"-Xmx1024m -XX:MaxPermSize=512m\"",
                   "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
                 ]
               },
               "build": {
                 "commands": [
+                  "export IMAGE_TAG=$COMMIT_HASH",
+                  "echo IMAGE_TAG is $IMAGE_TAG",
                   "echo Build started on `date`",
                   "echo $BUILD_TYPE",
                   "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  java --version ;\n  chmod +x gradlew ;\n  ./gradlew clean build ;\nfi\n",
@@ -433,7 +433,7 @@ Resources:
             Effect: Allow
             Resource:
               Fn::GetAtt:
-                - CodeCommitPipelineDEPLOYDeployCodePipelineActionRole868CD33F
+                - CodeCommitPipelineDeployCodePipelineActionRole27A97461
                 - Arn
         Version: 2012-10-17
       PolicyName: CodeCommitPipelineRoleDefaultPolicy9DE81801
@@ -462,7 +462,6 @@ Resources:
                   Ref: RepoBranch
                 PollForSourceChanges: false
               Name: CODECOMMIT
-              Namespace: SOURCE_CODECOMMIT_NS
               OutputArtifacts:
                 - Name: Source
               RoleArn:
@@ -483,7 +482,7 @@ Resources:
               InputArtifacts:
                 - Name: Source
               Name: Build
-              Namespace: Namespace
+              Namespace: BUILD_Build_NS
               OutputArtifacts:
                 - Name: Build
               RoleArn:
@@ -513,16 +512,16 @@ Resources:
                 Version: "1"
               Configuration:
                 ProjectName:
-                  Ref: CodeBuildDeployPlojectF23FECA7
+                  Ref: CDCodeBuildDeployPloject13A3785D
               InputArtifacts:
                 - Name: Build
               Name: Deploy
               RoleArn:
                 Fn::GetAtt:
-                  - CodeCommitPipelineDEPLOYDeployCodePipelineActionRole868CD33F
+                  - CodeCommitPipelineDeployCodePipelineActionRole27A97461
                   - Arn
               RunOrder: 1
-          Name: DEPLOY
+          Name: Deploy
       ArtifactStore:
         Location:
           Ref: S3BucketSourceArtifacts
@@ -702,7 +701,7 @@ Resources:
         Version: 2012-10-17
     Metadata:
       aws:cdk:path: image-ci/CICodeCommitProduct/CodeCommitPipeline/Approval/Approval/CodePipelineActionRole/Resource
-  CodeCommitPipelineDEPLOYDeployCodePipelineActionRole868CD33F:
+  CodeCommitPipelineDeployCodePipelineActionRole27A97461:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -720,8 +719,8 @@ Resources:
                     - :root
         Version: 2012-10-17
     Metadata:
-      aws:cdk:path: image-ci/CICodeCommitProduct/CodeCommitPipeline/DEPLOY/Deploy/CodePipelineActionRole/Resource
-  CodeCommitPipelineDEPLOYDeployCodePipelineActionRoleDefaultPolicy3D91840D:
+      aws:cdk:path: image-ci/CICodeCommitProduct/CodeCommitPipeline/Deploy/Deploy/CodePipelineActionRole/Resource
+  CodeCommitPipelineDeployCodePipelineActionRoleDefaultPolicy3FA0E9F3:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
@@ -733,15 +732,15 @@ Resources:
             Effect: Allow
             Resource:
               Fn::GetAtt:
-                - CodeBuildDeployPlojectF23FECA7
+                - CDCodeBuildDeployPloject13A3785D
                 - Arn
         Version: 2012-10-17
-      PolicyName: CodeCommitPipelineDEPLOYDeployCodePipelineActionRoleDefaultPolicy3D91840D
+      PolicyName: CodeCommitPipelineDeployCodePipelineActionRoleDefaultPolicy3FA0E9F3
       Roles:
-        - Ref: CodeCommitPipelineDEPLOYDeployCodePipelineActionRole868CD33F
+        - Ref: CodeCommitPipelineDeployCodePipelineActionRole27A97461
     Metadata:
-      aws:cdk:path: image-ci/CICodeCommitProduct/CodeCommitPipeline/DEPLOY/Deploy/CodePipelineActionRole/DefaultPolicy/Resource
-  CodeBuildDeployPlojectRoleF0DE6E1C:
+      aws:cdk:path: image-ci/CICodeCommitProduct/CodeCommitPipeline/Deploy/Deploy/CodePipelineActionRole/DefaultPolicy/Resource
+  CDCodeBuildDeployPlojectRole47745E7E:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -752,8 +751,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      aws:cdk:path: image-ci/CICodeCommitProduct/CodeBuildDeployPloject/Role/Resource
-  CodeBuildDeployPlojectRoleDefaultPolicy56D21E97:
+      aws:cdk:path: image-ci/CICodeCommitProduct/CD/CodeBuildDeployPloject/Role/Resource
+  CDCodeBuildDeployPlojectRoleDefaultPolicy53C6375E:
     Type: AWS::IAM::Policy
     Properties:
       PolicyDocument:
@@ -773,7 +772,7 @@ Resources:
                     - ":"
                     - Ref: AWS::AccountId
                     - :log-group:/aws/codebuild/
-                    - Ref: CodeBuildDeployPlojectF23FECA7
+                    - Ref: CDCodeBuildDeployPloject13A3785D
               - Fn::Join:
                   - ""
                   - - "arn:"
@@ -783,7 +782,7 @@ Resources:
                     - ":"
                     - Ref: AWS::AccountId
                     - :log-group:/aws/codebuild/
-                    - Ref: CodeBuildDeployPlojectF23FECA7
+                    - Ref: CDCodeBuildDeployPloject13A3785D
                     - :*
           - Action:
               - codebuild:CreateReportGroup
@@ -802,7 +801,7 @@ Resources:
                   - ":"
                   - Ref: AWS::AccountId
                   - :report-group/
-                  - Ref: CodeBuildDeployPlojectF23FECA7
+                  - Ref: CDCodeBuildDeployPloject13A3785D
                   - -*
           - Action:
               - elasticbeanstalk:*
@@ -836,12 +835,12 @@ Resources:
                     - Ref: S3BucketSourceArtifacts
                     - /*
         Version: 2012-10-17
-      PolicyName: CodeBuildDeployPlojectRoleDefaultPolicy56D21E97
+      PolicyName: CDCodeBuildDeployPlojectRoleDefaultPolicy53C6375E
       Roles:
-        - Ref: CodeBuildDeployPlojectRoleF0DE6E1C
+        - Ref: CDCodeBuildDeployPlojectRole47745E7E
     Metadata:
-      aws:cdk:path: image-ci/CICodeCommitProduct/CodeBuildDeployPloject/Role/DefaultPolicy/Resource
-  CodeBuildDeployPlojectF23FECA7:
+      aws:cdk:path: image-ci/CICodeCommitProduct/CD/CodeBuildDeployPloject/Role/DefaultPolicy/Resource
+  CDCodeBuildDeployPloject13A3785D:
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
@@ -881,11 +880,7 @@ Resources:
               Ref: S3BucketSourceArtifacts
           - Name: IMAGE_TAG
             Type: PLAINTEXT
-<<<<<<< HEAD
-            Value: "#{SOURCE_CODECOMMIT_NS.CommitId}"
-=======
-            Value: "#{Namespace.IMAGE_TAG}"
->>>>>>> 5631ec19c1b774a75184646a7fb22a3ca70f7aff
+            Value: "#{BUILD_Build_NS.IMAGE_TAG}"
           - Name: TARGET_TYPE
             Type: PLAINTEXT
             Value:
@@ -896,7 +891,7 @@ Resources:
         Type: LINUX_CONTAINER
       ServiceRole:
         Fn::GetAtt:
-          - CodeBuildDeployPlojectRoleF0DE6E1C
+          - CDCodeBuildDeployPlojectRole47745E7E
           - Arn
       Source:
         BuildSpec: >-
@@ -942,7 +937,7 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      aws:cdk:path: image-ci/CICodeCommitProduct/CodeBuildDeployPloject/Resource
+      aws:cdk:path: image-ci/CICodeCommitProduct/CD/CodeBuildDeployPloject/Resource
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
