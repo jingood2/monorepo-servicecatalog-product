@@ -15,7 +15,7 @@ export interface ComposeToCfnProps extends cdk.StackProps {
 }
 
 export class ComposeToCfnCD extends servicecatalog.ProductStack {
-  constructor(scope: Construct, id: string, props: ComposeToCfnProps) {
+  constructor(scope: Construct, id: string, _props: ComposeToCfnProps) {
     super(scope, id );
 
     this.templateOptions.metadata = {
