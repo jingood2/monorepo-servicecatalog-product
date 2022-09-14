@@ -248,11 +248,10 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
           'ecr:*',
           'logs:*',
           'cloudformation:*'],
-      });
+      }),
     );
 
     
-
     pipeline.addStage({ stageName: 'DeployCFN', actions: [
       
       new codepipeline_actions.ManualApprovalAction({
