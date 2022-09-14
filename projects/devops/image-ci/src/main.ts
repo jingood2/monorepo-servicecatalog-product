@@ -2,10 +2,11 @@ import path from 'path';
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { CIProduct } from './lib/ci-product';
+import { GithubCICDProduct } from './lib/github-cicd-product';
 import { ImageBuildCodecommit } from './lib/image-build-codecommit';
 import { ImageBuildGithub } from './lib/image-build-github';
 import { ImageBuildS3 } from './lib/image-build-s3';
+import { ComposeToCfnCD } from './lib/compose-to-cfn-cd';
 
 
 export class MyStack extends Stack {
@@ -39,9 +40,9 @@ export class MyStack extends Stack {
         },
         {
           productVersionName: 'v4',
-          description: 'All-in-one CICD Pieline V4',
+          description: 'Github CICD',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
-            new CIProduct(this, 'CIAllProduct', {})),
+            new GithubCICDProduct(this, 'GithubCICDProduct', {})),
         },
         {
           productVersionName: 'v5',
@@ -49,6 +50,18 @@ export class MyStack extends Stack {
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
             path.join(__dirname, './lib/cfn-template/all.yaml'),
           ),
+        },
+        {
+          productVersionName: 'v6',
+          description: 'Github Docker Compose CICD',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new GithubCICDProduct(this, 'GithubDockerComposeCICDProduct', {})),
+        },
+        {
+          productVersionName: 'v7',
+          description: 'Github Docker Compose CD',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ComposeToCfnCD(this, 'GithubDockerComposeCDProduct', {})),
         },
       ],
     });
