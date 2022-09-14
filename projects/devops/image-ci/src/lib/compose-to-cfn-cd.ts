@@ -205,15 +205,33 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
     const stackName = 'DockerComposeDeployOnECSStack';
     const changeSetName = 'StagedChangeSet';
 
+    const createChangeSetAction = new codepipeline_actions.CloudFormationCreateReplaceChangeSetAction({
+      actionName: 'PrepareChanges',
+      stackName,
+      changeSetName,
+      adminPermissions: true,
+      templatePath: cfnBuildOutput.atPath('cloudformation.yml'),
+      runOrder: 1,
+    });
+
+    createChangeSetAction.addToDeploymentRolePolicy(new iam.PolicyStatement({
+      resources: ['*'],
+      actions: ['elasticbeanstalk:*',
+        'autoscaling:*',
+        'elasticloadbalancing:*',
+        'ecs:*',
+        's3:*',
+        'ec2:*',
+        'cloudwatch:*',
+        'ecr:*',
+        'logs:*',
+        'cloudformation:*'],
+    }));
+
     pipeline.addStage({ stageName: 'DeployCFN', actions: [
-      new codepipeline_actions.CloudFormationCreateReplaceChangeSetAction({
-        actionName: 'PrepareChanges',
-        stackName,
-        changeSetName,
-        adminPermissions: true,
-        templatePath: cfnBuildOutput.atPath('cloudformation.yml'),
-        runOrder: 1,
-      }),
+
+      createChangeSetAction,
+      
       new codepipeline_actions.ManualApprovalAction({
         actionName: 'ApproveChanges',
         runOrder: 2,
