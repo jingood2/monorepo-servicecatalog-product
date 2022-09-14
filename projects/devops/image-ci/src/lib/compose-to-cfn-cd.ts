@@ -189,9 +189,6 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
           'cloudformation:*'],
     }));
 
-    cfnProject.
-
-
     const cfnBuildOutput = new codepipeline.Artifact('ExtrancedCfn');
 
     const cfnAction = new codepipeline_actions.CodeBuildAction({
