@@ -125,7 +125,7 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
-    const ci = new CIConstruct(this, 'CD',{
+    const ci = new CIConstruct(this, 'CI',{
         repoName: repoName.valueAsString, 
         repoOwner: repoOwner.valueAsString,
         repoBranch: repoBranch.valueAsString,
