@@ -184,9 +184,10 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
           's3:*',
           'ec2:*',
           'cloudwatch:*',
+          'ecr:*',
           'logs:*',
           'cloudformation:*'],
-      }));
+    }));
 
     const cfnBuildOutput = new codepipeline.Artifact('ExtrancedCfn');
 
