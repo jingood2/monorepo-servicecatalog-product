@@ -214,7 +214,7 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
       runOrder: 1,
     });
 
-    createChangeSetAction.addToDeploymentRolePolicy(new iam.PolicyStatement({
+    createChangeSetAction.deploymentRole.addToPrincipalPolicy(new iam.PolicyStatement({
       resources: ['*'],
       actions: ['elasticbeanstalk:*',
         'autoscaling:*',
@@ -228,9 +228,32 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
         'cloudformation:*'],
     }));
 
-    pipeline.addStage({ stageName: 'DeployCFN', actions: [
+    const exeuteAction = new codepipeline_actions.CloudFormationExecuteChangeSetAction({
+      actionName: 'ExecuteChanges',
+      stackName,
+      changeSetName,
+      runOrder: 3,
+    });
 
-      createChangeSetAction,
+    exeuteAction.actionProperties.role?.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        resources: ['*'],
+        actions: ['elasticbeanstalk:*',
+          'autoscaling:*',
+          'elasticloadbalancing:*',
+          'ecs:*',
+          's3:*',
+          'ec2:*',
+          'cloudwatch:*',
+          'ecr:*',
+          'logs:*',
+          'cloudformation:*'],
+      });
+    );
+
+    
+
+    pipeline.addStage({ stageName: 'DeployCFN', actions: [
       
       new codepipeline_actions.ManualApprovalAction({
         actionName: 'ApproveChanges',
