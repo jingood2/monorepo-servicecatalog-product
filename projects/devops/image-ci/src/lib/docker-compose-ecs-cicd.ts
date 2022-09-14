@@ -2,16 +2,16 @@ import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 
 import { Construct } from 'constructs/lib/construct';
-import { CIV2Construct } from './ci-v2-construct';
-//import { CIConstruct } from './ci-construct';
+import { CIConstruct } from './ci-construct';
+import { ComposeToCfn } from './compose-to-cfn';
+//import { CDConstruct } from './cd-construct';
 
 
 export interface StackNameProps extends cdk.StackProps {
 
-
 }
 
-export class CIProduct extends servicecatalog.ProductStack {
+export class DockerComposeECSCICD extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: StackNameProps) {
     super(scope, id);
 
@@ -44,7 +44,6 @@ export class CIProduct extends servicecatalog.ProductStack {
             Parameters: [
               'ServiceName',
               'sourceArtifact',
-              'ecsCluster',
               'vpcId',
               'albArn',
             ],
@@ -54,15 +53,15 @@ export class CIProduct extends servicecatalog.ProductStack {
     };
 
     // Define Parameters
-    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+    /* const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
       type: 'String',
       description: 'Source Provider Type',
       default: 'GITHUB',
-      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET', 'S3'],
-    });
+      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET', 'S3', 'GENERAL'],
+    }); */
 
     // Informations of Tag Convention
-    /* const projectName = new cdk.CfnParameter(this, 'ProjectName', {
+    const projectName = new cdk.CfnParameter(this, 'ProjectName', {
       description: 'The name of the Project Name',
       type: 'String',
       default: 'acme',
@@ -73,7 +72,7 @@ export class CIProduct extends servicecatalog.ProductStack {
       type: 'String',
       default: 'dev',
       allowedValues: ['dmz', 'dev', 'shared', 'prod'],
-    }); */
+    });
 
     const repoName = new cdk.CfnParameter(this, 'RepoName', {
       type: 'String',
@@ -111,13 +110,6 @@ export class CIProduct extends servicecatalog.ProductStack {
       default: 'acme-servicecatalog-cicd-bucket',
     });
 
-    const buildType = new cdk.CfnParameter(this, 'PackagingType', {
-      type: 'String',
-      description: 'Source Packaging Tool',
-      default: 'DOCKER',
-      allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON', 'DOCKER'],
-    });
-
     const envType = new cdk.CfnParameter(this, 'EnvType', {
       type: 'String',
       description: 'Source Packaging Tool',
@@ -125,34 +117,43 @@ export class CIProduct extends servicecatalog.ProductStack {
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
-    const IsGithubCondition = new cdk.CfnCondition(this, 'IsGithubCondition', {
-      expression: cdk.Fn.conditionEquals('GITHUB', cdk.Lazy.string({ produce: () => provider.valueAsString })),
+    const vpcId = new cdk.CfnParameter(this, 'VpcId', {
+      type: 'AWS::EC2::VPC::Id',
+      description: 'VPC ID for ECS Cluster',
     });
 
-    const IsCodecommitCondition = new cdk.CfnCondition(this, 'IsCodecommitCondition', {
-      expression: cdk.Fn.conditionEquals('CODECOMMIT', cdk.Lazy.string({ produce: () => provider.valueAsString })),
+    const albArn = new cdk.CfnParameter(this, 'AlbArn', {
+      type: 'String',
+      description: 'external alb arn',
     });
 
-    /* const IsS3Condition = new cdk.CfnCondition(this, 'IsS3Condition', {
-      expression: cdk.Fn.conditionEquals('S3', cdk.Lazy.string({ produce:() => provider.valueAsString })),
-    }); */
-
-    const sourceProvider = cdk.Fn.conditionIf(IsGithubCondition.logicalId, 'GITHUB',
-      cdk.Fn.conditionIf(IsCodecommitCondition.logicalId,
-        'CODECOMMIT', 'S3'),
+    const ci = new CIConstruct(this, 'CD',{
+        repoName: repoName.valueAsString, 
+        repoOwner: repoOwner.valueAsString,
+        repoBranch: repoBranch.valueAsString,
+        secretKey: secretKey.valueAsString,
+        serviceName: serviceName.valueAsString,
+        containerPort: containerPort.valueAsNumber,
+        sourceArtifact: sourceArtifact.valueAsString,
+        buildType: 'DOCKER',
+        envType: envType.valueAsString,
+      }
     );
 
-    new CIV2Construct(this, 'CIV2', {
-      provider: sourceProvider.toString(),
-      repoName: repoName.valueAsString,
-      repoOwner: repoOwner.valueAsString,
-      repoBranch: repoBranch.valueAsString,
-      secretKey: secretKey.valueAsString,
+    new ComposeToCfn(this, 'DockerComposeToCICD', {
+      imageTag: ci.imageTag,
+      projectName: projectName.valueAsString,
+      environment: environment.valueAsString,
       serviceName: serviceName.valueAsString,
-      containerPort: containerPort.valueAsString,
+      ecrRepoName: serviceName.valueAsString,
+      containerPort: containerPort.valueAsNumber, // only use beanstalk
+      deployTargetType: envType.valueAsString,
+      pipeline: ci.pipeline,
       sourceArtifact: sourceArtifact.valueAsString,
-      buildType: buildType.valueAsString,
-      envType: envType.valueAsString,
+      vpcId: vpcId.valueAsString,
+      existingAlbArn: albArn.valueAsString,
+      sourceOutput: ci.sourceOutput,
+      ecrRepoUri: ci.ecrRepoUri
     });
 
   }

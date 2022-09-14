@@ -53,7 +53,6 @@ export class CDConstruct extends Construct {
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: props.sourceArtifact },
-        IMAGE_TAG: { value: props.imageTag },
         TARGET_TYPE: { value: props.deployTargetType },
       },
     });
@@ -80,6 +79,10 @@ export class CDConstruct extends Construct {
       actionName: 'Deploy',
       input: props.buildOutput,
       project: deployProject,
+
+      environmentVariables: {
+        IMAGE_TAG: { value: props.imageTag },
+      },
     });
     props.pipeline.addStage( { stageName: 'Deploy', actions: [deployAction] });
 

@@ -12,7 +12,6 @@ phases:
       - echo $CODEBUILD_SOURCE_VERSION
       - echo $AWS_ACCOUNT_ID
       - echo $SERVICE_NAME
-      - echo $CONTAINER_PORT
       - echo $ARTIFACT_BUCKET
       - echo $BUILD_TYPE
       - echo $TARGET_TYPE

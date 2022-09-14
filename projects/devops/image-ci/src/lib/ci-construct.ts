@@ -2,9 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import { CfnPipeline } from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -14,7 +12,6 @@ import yaml from 'yaml';
 
 
 export interface StackNameProps extends cdk.StackProps {
-  provider: string;
   repoName: string;
   repoOwner: string;
   repoBranch: string;
@@ -27,100 +24,18 @@ export interface StackNameProps extends cdk.StackProps {
 }
 
 export class CIConstruct extends Construct {
+  public readonly pipeline: codepipeline.Pipeline;
+  public readonly imageTag: string;
+  public readonly sourceOutput: codepipeline.Artifact;
+  public readonly buildOutput: codepipeline.Artifact;
+  public readonly ecrRepoUri: string;
+
   constructor(scope: Construct, id: string, props: StackNameProps) {
     super(scope, id);
-
-    // Define Parameters
-    /* const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
-      type: 'String',
-      description: 'Source Provider Type',
-      default: 'GITHUB',
-      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET', 'S3', 'GENERAL'],
-    }); */
-
-    // Informations of Tag Convention
-    /* const projectName = new cdk.CfnParameter(this, 'ProjectName', {
-      description: 'The name of the Project Name',
-      type: 'String',
-      default: 'acme',
-    });
-
-    const environment = new cdk.CfnParameter(this, 'Environment', {
-      description: 'The name of the Environment',
-      type: 'String',
-      default: 'dev',
-      allowedValues: ['dmz', 'dev', 'shared', 'prod'],
-    }); */
-
-    /* const repoName = new cdk.CfnParameter(this, 'RepoName', {
-      type: 'String',
-      description: 'Git Repository or S3 Bucket Name',
-    });
-
-    const repoOwner= new cdk.CfnParameter(this, 'RepoOwner', {
-      default: 'main',
-    });
-
-    const repoBranch = new cdk.CfnParameter(this, 'RepoBranch', {
-      default: 'main',
-    });
-
-    const secretKey = new cdk.CfnParameter(this, 'Github Secret Token Id', {
-      type: 'String',
-      description: '(Github Only Use)Secret Token Id for Github',
-    });
-
-    const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
-      type: 'String',
-      description: 'Service Name',
-      default: 'demoapp',
-    });
-
-    const containerPort = new cdk.CfnParameter(this, 'ContainerPort', {
-      type: 'Number',
-      description: 'Container Port',
-      default: '80',
-    });
-
-    const sourceArtifact = new cdk.CfnParameter(this, 'S3BucketSourceArtifacts', {
-      type: 'String',
-      description: 'S3 Bucket Name for Source and Build Artifact',
-      default: 'acme-servicecatalog-cicd-bucket',
-    });
-
-    const buildType = new cdk.CfnParameter(this, 'PackagingType', {
-      type: 'String',
-      description: 'Source Packaging Tool',
-      default: 'DOCKER',
-      allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON', 'DOCKER'],
-    });
-
-    const envType = new cdk.CfnParameter(this, 'EnvType', {
-      type: 'String',
-      description: 'Source Packaging Tool',
-      default: 'beanstalk',
-      allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
-    }); */
 
     // Prerequisites CodePipeline
     const sourceOutput = new codepipeline.Artifact('Source');
     const buildOutput = new codepipeline.Artifact('Build');
-
-
-    // 1. Define Pipeline Source Action
-    // Source Action
-
-    const IsGithubCondition = new cdk.CfnCondition(this, 'IsGithubCondition', {
-      expression: cdk.Fn.conditionEquals('GITHUB', props.provider),
-    });
-
-    const IsCodecommitCondition = new cdk.CfnCondition(this, 'IsCodecommitCondition', {
-      expression: cdk.Fn.conditionEquals('CODECOMMIT', props.provider),
-    });
-
-    const IsS3Condition = new cdk.CfnCondition(this, 'IsS3Condition', {
-      expression: cdk.Fn.conditionEquals('S3', props.provider),
-    });
 
 
     const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
@@ -139,36 +54,9 @@ export class CIConstruct extends Construct {
       output: sourceOutput,
     });
 
-    // 1.2 Codecommit Source Action
-    const CodeCommitSourceAction = new codepipeline_actions.CodeCommitSourceAction({
-      actionName: 'SOURCE',
-      repository: codecommit.Repository.fromRepositoryName(this, 'GitRepository', props.repoName),
-      branch: props.repoBranch,
-      output: sourceOutput,
-    });
-
-    // 1.3 S3 Source Action
-    const sourceBucket = new s3.CfnBucket(this, 'MyBucket', {
-      bucketName: props.repoName,
-      versioningConfiguration: { status: 'Enabled' },
-    });
-    sourceBucket.cfnOptions.condition = IsS3Condition;
-
-    const S3SourceAction = new codepipeline_actions.S3SourceAction({
-      actionName: 'S3Source',
-      bucket: s3.Bucket.fromBucketArn(this, 'Bucket', sourceBucket.attrArn),
-      bucketKey: `${props.repoBranch}/${props.serviceName}.zip`,
-      output: sourceOutput,
-    });
-
-    // generate image tag
-    /* const imageTag = cdk.Fn.conditionIf(IsGithubCondition.logicalId, githubSourceAction.variables.commitId,
-      cdk.Fn.conditionIf(IsCodecommitCondition.logicalId,
-        CodeCommitSourceAction.variables.commitId, S3SourceAction.variables.versionId),
-    ); */
 
     // Configure Build Action
-    const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-v2.yaml'), 'utf8'));
+    const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
@@ -202,16 +90,20 @@ export class CIConstruct extends Construct {
 
     // 1.1 Github Pipeline
     const githubPipeline = new codepipeline.Pipeline(this, 'GitHub', {
-      pipelineName: `${props.serviceName}-pipeline`,
+      pipelineName: `${props.serviceName}`,
       artifactBucket: artifactS3,
     });
 
     githubPipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
     githubPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
-    (githubPipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsGithubCondition;
 
+    this.pipeline = githubPipeline;
+    this.imageTag = buildAction.variable('IMAGE_TAG');
+    this.sourceOutput = sourceOutput;
+    this.buildOutput = buildOutput;
+    this.ecrRepoUri = ecrRepository.repositoryUri;
 
-    // 1.2 CodeCommit Pipeline
+    /* // 1.2 CodeCommit Pipeline
     const codecommitPipeline = new codepipeline.Pipeline(this, 'CodeCommit', {
       pipelineName: `${props.serviceName}-pipeline`,
       artifactBucket: artifactS3,
@@ -228,7 +120,7 @@ export class CIConstruct extends Construct {
     });
     s3Pipeline.addStage({ stageName: 'SOURCE' }).addAction(S3SourceAction);
     s3Pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
-    (s3Pipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsS3Condition;
+    (s3Pipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsS3Condition; */
 
   }
 }
