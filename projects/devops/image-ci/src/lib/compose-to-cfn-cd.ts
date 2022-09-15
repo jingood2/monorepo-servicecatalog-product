@@ -157,7 +157,7 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
 
     const extractBuildRole = new iam.Role(this, 'ExtractBuildRole', {
       assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal('codebuild.amazonaaws.com'),
+        new iam.ServicePrincipal('codebuild.amazonaws.com'),
         new iam.ServicePrincipal('cloudformation.amazonaws.com')
       ),
       description: 'CFN Extract Build Role'
