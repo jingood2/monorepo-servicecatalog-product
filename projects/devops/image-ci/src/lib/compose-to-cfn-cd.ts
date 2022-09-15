@@ -155,6 +155,42 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
 
     pipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
 
+    const extractBuildRole = new iam.Role(this, 'ExtractBuildRole', {
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal('codebuild.amazonaaws.com'),
+        new iam.ServicePrincipal('cloudformation.amazonaws.com')
+      ),
+      description: 'CFN Extract Build Role'
+    });
+
+    extractBuildRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'));
+
+    extractBuildRole.addToPolicy(new iam.PolicyStatement({
+      resources: ['*'],
+      actions: ['logs:*']
+    }));
+
+    extractBuildRole.addToPolicy(new iam.PolicyStatement({
+      resources: ['*'],
+      actions: ['s3:*']
+    }));
+
+    extractBuildRole.addToPolicy(new iam.PolicyStatement({
+      actions: [
+        'cloudformation:*',
+        'ecs:*',
+        'ec2:*',
+        'elasticfilesystem:*',
+        'iam:*',
+        'elasticloadbalancing:*',
+        'application-autoscaling:*',
+        'logs:*',
+        'servicediscovery:*',
+        'route53:*'
+      ]
+    }));
+    
+
     // 3. CFN Build Stage
     const cfnSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cfn.yaml'), 'utf8'));
 
@@ -173,9 +209,10 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
         AWS_ELB: { value: albArn.valueAsString},
         CONTAINER_PORT: { value: containerPort.valueAsNumber },
       },
+      role: extractBuildRole
     });
 
-    cfnProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+    /* cfnProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ['elasticbeanstalk:*',
           'autoscaling:*',
@@ -188,7 +225,7 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
           'logs:*',
           'cloudformation:*'],
     }));
-
+    */
     const cfnBuildOutput = new codepipeline.Artifact('ExtrancedCfn');
 
     const cfnAction = new codepipeline_actions.CodeBuildAction({
@@ -205,16 +242,9 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
     const stackName = 'DockerComposeDeployOnECSStack';
     const changeSetName = 'StagedChangeSet';
 
-    const createChangeSetAction = new codepipeline_actions.CloudFormationCreateReplaceChangeSetAction({
-      actionName: 'PrepareChanges',
-      stackName,
-      changeSetName,
-      adminPermissions: true,
-      templatePath: cfnBuildOutput.atPath('cloudformation.yml'),
-      runOrder: 1,
-    });
+    
 
-    createChangeSetAction.deploymentRole.addToPrincipalPolicy(new iam.PolicyStatement({
+    /* createChangeSetAction.deploymentRole.addToPrincipalPolicy(new iam.PolicyStatement({
       resources: ['*'],
       actions: ['elasticbeanstalk:*',
         'autoscaling:*',
@@ -226,9 +256,9 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
         'ecr:*',
         'logs:*',
         'cloudformation:*'],
-    }));
+    })); */
 
-    const exeuteAction = new codepipeline_actions.CloudFormationExecuteChangeSetAction({
+   /*  const exeuteAction = new codepipeline_actions.CloudFormationExecuteChangeSetAction({
       actionName: 'ExecuteChanges',
       stackName,
       changeSetName,
@@ -249,10 +279,18 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
           'logs:*',
           'cloudformation:*'],
       }),
-    );
+    ); */
 
     
     pipeline.addStage({ stageName: 'DeployCFN', actions: [
+      new codepipeline_actions.CloudFormationCreateReplaceChangeSetAction({
+        actionName: 'PrepareChanges',
+        stackName,
+        changeSetName,
+        adminPermissions: true,
+        templatePath: cfnBuildOutput.atPath('cloudformation.yml'),
+        runOrder: 1,
+      }),
       
       new codepipeline_actions.ManualApprovalAction({
         actionName: 'ApproveChanges',
