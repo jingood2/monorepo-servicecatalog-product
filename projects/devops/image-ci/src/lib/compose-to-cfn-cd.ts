@@ -187,7 +187,8 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
         'logs:*',
         'servicediscovery:*',
         'route53:*'
-      ]
+      ],
+      resources: ['*']
     }));
     
 
