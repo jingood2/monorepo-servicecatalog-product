@@ -31,6 +31,42 @@ export class ComposeToCfn extends Construct {
   constructor(scope: Construct, id: string, props: ComposeToCfnProps) {
     super(scope, id );
 
+    const extractBuildRole = new iam.Role(this, 'ExtractBuildRole', {
+        assumedBy: new iam.CompositePrincipal(
+          new iam.ServicePrincipal('codebuild.amazonaws.com'),
+          new iam.ServicePrincipal('cloudformation.amazonaws.com')
+        ),
+        description: 'CFN Extract Build Role'
+      });
+  
+      extractBuildRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'));
+  
+      extractBuildRole.addToPolicy(new iam.PolicyStatement({
+        resources: ['*'],
+        actions: ['logs:*']
+      }));
+  
+      extractBuildRole.addToPolicy(new iam.PolicyStatement({
+        resources: ['*'],
+        actions: ['s3:*']
+      }));
+  
+      extractBuildRole.addToPolicy(new iam.PolicyStatement({
+        actions: [
+          'cloudformation:*',
+          'ecs:*',
+          'ec2:*',
+          'elasticfilesystem:*',
+          'iam:*',
+          'elasticloadbalancing:*',
+          'application-autoscaling:*',
+          'logs:*',
+          'servicediscovery:*',
+          'route53:*'
+        ],
+        resources: ['*']
+      }));
+
     // 3. CFN Build Stage
     const cfnSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cfn.yaml'), 'utf8'));
 
@@ -49,9 +85,10 @@ export class ComposeToCfn extends Construct {
         AWS_ELB: { value: props.existingAlbArn},
         CONTAINER_PORT: { value: props.containerPort },
       },
+      role: extractBuildRole
     });
 
-    cfnProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
+    /* cfnProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
         resources: ['*'],
         actions: ['elasticbeanstalk:*',
           'autoscaling:*',
@@ -62,7 +99,7 @@ export class ComposeToCfn extends Construct {
           'cloudwatch:*',
           'logs:*',
           'cloudformation:*'],
-      }));
+      })); */
 
     const cfnBuildOutput = new codepipeline.Artifact('ExtrancedCfn');
 
