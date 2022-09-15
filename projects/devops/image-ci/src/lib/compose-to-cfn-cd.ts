@@ -163,7 +163,7 @@ export class ComposeToCfnCD extends servicecatalog.ProductStack {
       description: 'CFN Extract Build Role'
     });
 
-    extractBuildRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'));
+    extractBuildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'ECRReadOnly','arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'));
 
     extractBuildRole.addToPolicy(new iam.PolicyStatement({
       resources: ['*'],
