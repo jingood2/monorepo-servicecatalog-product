@@ -1,6 +1,6 @@
 const { awscdk } = require('projen');
 const project = new awscdk.AwsCdkTypeScriptApp({
-  cdkVersion: '2.38.1',
+  cdkVersion: '2.42.0',
   defaultReleaseBranch: 'main',
   name: 's3-resource-based-policy',
 

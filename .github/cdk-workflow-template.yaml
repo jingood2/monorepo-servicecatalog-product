@@ -12,7 +12,8 @@ env:
   CDK_DEFAULT_ACCOUNT: '{{TARGET_ACCOUNT}}'
   CDK_DEFAULT_REGION: ap-northeast-2
   PROJECT_NAME: '{{CATEGORY}}-{{PROJECT}}'
-  EXECUTE_ROLE: github-deploy-role
+  #EXECUTE_ROLE: github-deploy-role
+  EXECUTE_ROLE: githubActionRole
 
 
 jobs:

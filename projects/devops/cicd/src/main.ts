@@ -1,5 +1,5 @@
 //import * as path from 'path';
-import { App, Stack, StackProps } from 'aws-cdk-lib';
+import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 import { CICDProduct } from './lib/cicd-product';
@@ -54,7 +54,13 @@ const devEnv = {
 const app = new App();
 
 //new MyStack(app, 'cicd-dev', { env: devEnv });
-new MyStack(app, 'cicd', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'cicd', { 
+  env: devEnv, stackName: 
+  `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 // new MyStack(app, 'cicd-prod', { env: prodEnv });
 
 app.synth();

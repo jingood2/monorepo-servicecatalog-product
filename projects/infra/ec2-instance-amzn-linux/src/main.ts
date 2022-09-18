@@ -1,4 +1,4 @@
-import { App, Stack, StackProps } from 'aws-cdk-lib';
+import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 import { Ec2AmznLinuxAsgProduct } from './lib/ec2-amzn-linux-asg-product';
@@ -73,6 +73,12 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'ec2-instance-amzn', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'ec2-instance-amzn', { 
+  env: devEnv, 
+  stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 
 app.synth();

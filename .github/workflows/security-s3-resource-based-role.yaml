@@ -9,10 +9,11 @@ on:
       - "./github/workflows/security/s3-resource-based-role.yaml"
 env:
   CI: "true"
-  CDK_DEFAULT_ACCOUNT: '037729278610'
+  CDK_DEFAULT_ACCOUNT: '484752921218'
   CDK_DEFAULT_REGION: ap-northeast-2
   PROJECT_NAME: 'security-s3-resource-based-role'
-  EXECUTE_ROLE: github-deploy-role
+  #EXECUTE_ROLE: github-deploy-role
+  EXECUTE_ROLE: githubActionRole
 
 
 jobs:

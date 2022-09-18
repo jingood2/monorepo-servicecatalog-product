@@ -1,4 +1,4 @@
-import { App, Stack, StackProps } from 'aws-cdk-lib';
+import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 import { SCProductBeanstalkDockerStack } from './lib/beanstalk-product';
@@ -32,7 +32,13 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'beanstalk', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'beanstalk', { 
+  env: devEnv, 
+  stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 
 // new MyStack(app, 'beanstalk-prod', { env: prodEnv });
 

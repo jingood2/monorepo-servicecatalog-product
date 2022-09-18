@@ -30,7 +30,13 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "s3-resource-based-policy", { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, "s3-resource-based-policy", { 
+  env: devEnv, 
+  stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 // new MyStack(app, 's3-resource-based-policy-prod', { env: prodEnv });
 
 app.synth();

@@ -1,5 +1,5 @@
 import path from 'path';
-import { App, Stack, StackProps } from 'aws-cdk-lib';
+import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 
@@ -53,6 +53,12 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'vpc-product', { env: devEnv, stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'vpc-product', { 
+  env: devEnv, 
+  stackName: `sc-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 
 app.synth();

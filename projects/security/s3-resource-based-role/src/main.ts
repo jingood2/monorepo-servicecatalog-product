@@ -32,6 +32,12 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'iam-cross-account-role', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });
+new MyStack(app, 'iam-cross-account-role', { 
+  env: devEnv, 
+  stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });
 
 app.synth();

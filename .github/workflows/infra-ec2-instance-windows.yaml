@@ -9,10 +9,11 @@ on:
       - "./github/workflows/infra/ec2-instance-windows.yaml"
 env:
   CI: "true"
-  CDK_DEFAULT_ACCOUNT: '037729278610'
+  CDK_DEFAULT_ACCOUNT: '484752921218'
   CDK_DEFAULT_REGION: ap-northeast-2
   PROJECT_NAME: 'infra-ec2-instance-windows'
-  EXECUTE_ROLE: github-deploy-role
+  #EXECUTE_ROLE: github-deploy-role
+  EXECUTE_ROLE: githubActionRole
 
 
 jobs:

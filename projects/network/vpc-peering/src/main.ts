@@ -1,5 +1,5 @@
 import path from 'path';
-import { App, Stack, StackProps } from 'aws-cdk-lib';
+import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
 
@@ -48,7 +48,13 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'vpc-peering', { env: devEnv, stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}` });// new MyStack(app, 'security-group-prod', { env: prodEnv });
+new MyStack(app, 'vpc-peering', { 
+  env: devEnv, 
+  stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
+  synthesizer: new DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+  }),
+ });// new MyStack(app, 'security-group-prod', { env: prodEnv });
 // new MyStack(app, 'vpc-peering-prod', { env: prodEnv });
 
 app.synth();
