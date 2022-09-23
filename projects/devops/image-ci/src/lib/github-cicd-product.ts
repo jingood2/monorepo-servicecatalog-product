@@ -2,8 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 
 import { Construct } from 'constructs/lib/construct';
-import { CIConstruct } from './ci-construct';
 import { CDConstruct } from './cd-construct';
+import { CIConstruct } from './ci-construct';
 //import { CDConstruct } from './cd-construct';
 
 
@@ -125,17 +125,17 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
-    const ci = new CIConstruct(this, 'CI',{
-        repoName: repoName.valueAsString, 
-        repoOwner: repoOwner.valueAsString,
-        repoBranch: repoBranch.valueAsString,
-        secretKey: secretKey.valueAsString,
-        serviceName: serviceName.valueAsString,
-        containerPort: containerPort.valueAsNumber,
-        sourceArtifact: sourceArtifact.valueAsString,
-        buildType: buildType.valueAsString,
-        envType: envType.valueAsString,
-      }
+    const ci = new CIConstruct(this, 'CI', {
+      repoName: repoName.valueAsString,
+      repoOwner: repoOwner.valueAsString,
+      repoBranch: repoBranch.valueAsString,
+      secretKey: secretKey.valueAsString,
+      serviceName: serviceName.valueAsString,
+      containerPort: containerPort.valueAsNumber,
+      sourceArtifact: sourceArtifact.valueAsString,
+      buildType: buildType.valueAsString,
+      envType: envType.valueAsString,
+    },
     );
 
 

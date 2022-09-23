@@ -1,11 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { DnsRecordType } from 'aws-cdk-lib/aws-servicediscovery';
 
@@ -207,26 +208,60 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       protocol: elbv2.ApplicationProtocol.HTTP,
     });
 
+    const ecsTaskRole = new iam.Role(this, 'ecs-task-role', {
+      roleName: `${serviceName.valueAsString}-ecs-${environment.valueAsString}-task-role`,
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+    });
+
+    const ecsTaskRolePolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: [
+        'ecr:GetAuthorizationToken',
+        'ecr:BatchCheckLayerAvailability',
+        'ecr:GetDownloadUrlForLayer',
+        'ecr:BatchGetImage',
+        'ec2:*',
+        'cloudwatch:*',
+        'xray:*',
+        'logs:*',
+        'ssm:*',
+        's3:*',
+        'sqs:*',
+        'sns:*',
+      ],
+    });
+
+    //taskExecutionRole.addToPolicy(executionRolePolicy);
+    ecsTaskRole.addToPrincipalPolicy(ecsTaskRolePolicy);
+
     const taskExecutionRole = new iam.Role(this, 'ecs-task-execution-role', {
-        assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-      });
-  
-      const executionRolePolicy = new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          resources: ['*'],
-          actions: [
-            'ecr:GetAuthorizationToken',
-            'ecr:BatchCheckLayerAvailability',
-            'ecr:GetDownloadUrlForLayer',
-            'ecr:BatchGetImage',
-            'logs:CreateLogStream',
-            'logs:PutLogEvents',
-            'elasticloadbalancing:*',
-          ],
-        });
-  
-        //taskExecutionRole.addToPolicy(executionRolePolicy);
-        taskExecutionRole.addToPrincipalPolicy(executionRolePolicy);
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+    });
+
+    taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchLogsFullAccess'));
+    taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'ECSTaskExecutionPolicy', 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'));
+    taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMReadOnlyAccess'));
+    taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('ElasticLoadBalancingFullAccess'));
+
+
+    /* const executionRolePolicy = new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: [
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:BatchGetImage',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
+          'elasticloadbalancing:*',
+        ],
+    });
+
+    //taskExecutionRole.addToPolicy(executionRolePolicy);
+    taskExecutionRole.addToPrincipalPolicy(executionRolePolicy);
+    */
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
       //executionRole: iam.Role.fromRoleName(this, 'ECSTaskExecutionRole', 'ecs-task-execution-role'),
@@ -234,13 +269,20 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       //memoryLimitMiB: Number(regionTable.findInMap(containerSize.valueAsString, 'mem')),
       memoryLimitMiB: containerSize.valueAsNumber,
       //taskRole: ecsTaskRoleArn ?? cdk.Aws.NO_VALUE,
+      taskRole: ecsTaskRole,
     });
 
     const container = taskDefinition.addContainer('app', {
       containerName: `${serviceName.valueAsString}`,
       //image: ecs.ContainerImage.fromEcrRepository(ecr.Repository.fromRepositoryName(this, 'ECRRepo', `${ECRRepoName.valueAsString}`), 'latest'),
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
-      logging: ecs.LogDrivers.awsLogs({ logRetention: 7, streamPrefix: 'ecs' }),
+      logging: ecs.LogDrivers.awsLogs({
+        logGroup: new LogGroup(this, 'LogGroup', { 
+          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`, 
+          retention: 7, 
+          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+        streamPrefix: 'ecs',
+      }),
     });
 
     // Note: Host port (80) must be left out or equal to container port -1.8881545897088675e+289 for network mode awsvpc
@@ -255,13 +297,13 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default` , vpc);
 
     // Note: Unable to determine ARN separator for SSM parameter since the parameter name is an unresolved token. Use "fromAttributes" and specify "simpleName" explicitly
-    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace',{
-        namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName', 
-        { parameterName:'namespaceName'}).stringValue,
-        namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId', 
-        { parameterName: 'namespaceId'}).stringValue,
-        namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn', 
-        { parameterName: 'namespaceName'}).stringValue
+    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+      namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
+        { parameterName: 'namespaceName' }).stringValue,
+      namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
+        { parameterName: 'namespaceId' }).stringValue,
+      namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
+        { parameterName: 'namespaceName' }).stringValue,
     });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {

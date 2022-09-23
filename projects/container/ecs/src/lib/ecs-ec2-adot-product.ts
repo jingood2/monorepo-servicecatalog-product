@@ -13,7 +13,7 @@ export interface EcsFargateProductProps extends cdk.StackProps {
 
 }
 
-export class EcsEc2Product extends servicecatalog.ProductStack {
+export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: EcsFargateProductProps) {
     super(scope, id);
 
@@ -198,6 +198,13 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       default: 'default',
     });
 
+    // ADOT Collector Config
+    const commands = new cdk.CfnParameter(this, 'Command', {
+      type: 'List<String>',
+      description: 'Using the right command to choose the config file you want to config your ADOT Collector',
+      default: '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
+    });
+
 
     // Condition
     const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
@@ -291,6 +298,27 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       containerPort: containerPort.valueAsNumber,
       protocol: ecs.Protocol.TCP,
     });
+
+    // 1-2 OTEL Collector
+    const otelCollector = taskDefinition.addContainer('OtelCollectorSideCar', {
+      containerName: 'aws-otel-collector',
+      image: ecs.ContainerImage.fromRegistry('amazon/aws-otel-collector'),
+      cpu: 256,
+      essential: true,
+      /* command: [
+        '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
+      ], */
+      command: commands.valueAsList,
+      logging: ecs.LogDrivers.awsLogs({
+        logGroup: new LogGroup(this, 'LogGroupOtel', { 
+          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}-otel`, 
+          retention: 1, 
+          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+        streamPrefix: 'ecs',
+      }),
+    });
+
+    container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
 
     //const containerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 

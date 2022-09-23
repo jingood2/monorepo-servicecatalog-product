@@ -21,7 +21,7 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/442b6217ce68a4b21c0fdde9ba63122f0401c6df2fcb793b95ebefc4f28dc202.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c03080ec68b120e78ee22d83b5844e947a030367545aeed804e2ad8f7fcfb979.json",
               },
             },
             "Name": "v1",
@@ -30,21 +30,61 @@ exports[`Snapshot 1`] = `
       },
       "Type": "AWS::ServiceCatalog::CloudFormationProduct",
     },
-    "ecsserviceproduct8F3318C2": {
+    "ecsec2serviceproductCF732215": {
       "Properties": {
         "Description": "SC ECS Serivce Product",
         "Distributor": "SK Cloud Transformation Group",
-        "Name": "ecs-service-product",
+        "Name": "ecs-ec2-service-product",
         "Owner": "jingood2@sk.com",
         "ProvisioningArtifactParameters": [
           {
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/3e18157112c83147f34915c5cb26808456625456ce497aa9e4676810cd8ea8be.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/192a0268936fa4ae017f5bb67f534c6010951236bbb2512e1e421854eeb834b1.json",
+              },
+            },
+            "Name": "v1",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "ecsfargateserviceproduct2D955E64": {
+      "Properties": {
+        "Description": "SC ECS Serivce Product",
+        "Distributor": "SK Cloud Transformation Group",
+        "Name": "ecs-fargate-service-product",
+        "Owner": "jingood2@sk.com",
+        "ProvisioningArtifactParameters": [
+          {
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/1ca65f3f238435d53efa24f3499e71da15426f315ba06de65ab765929b9bb197.json",
+              },
+            },
+            "Name": "v1",
+          },
+          {
+            "Description": "ECS Fargate with ADOT Collector sidecar",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/968aaa5c0e896a85e6c610c1d12d6dd9d6e59312567630d23bcf9d30ff50ccf5.json",
               },
             },
             "Name": "v2",
+          },
+          {
+            "Description": "ECS Fargate with ADOT Collector sidecar Loki",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/d2ab291d296181f5fd7eb43aab5c219414bbd99c7cced5936e09af32a2a28155.json",
+              },
+            },
+            "Name": "v3",
           },
         ],
       },

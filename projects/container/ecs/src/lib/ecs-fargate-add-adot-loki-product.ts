@@ -3,17 +3,17 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
+//import { DnsRecordType } from 'aws-cdk-lib/aws-servicediscovery';
 
 export interface EcsFargateProductProps extends cdk.StackProps {
 
 }
 
-export class EcsEc2Product extends servicecatalog.ProductStack {
+export class EcsFargateAddADOTLokiProduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: EcsFargateProductProps) {
     super(scope, id);
 
@@ -58,13 +58,13 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
               default: 'ECS Service Configuration',
             },
             Parameters: [
-              'TaskRoleArn',
-              'TaskExecutionRoleArn',
               'ServiceName',
+              //'ContainerSGId',
               'ECRRepoName',
               'ContainerSize',
               'ContainerPort',
               'DesireCount',
+              //'ContainerEnv',
               'Priority',
             ],
           },
@@ -72,7 +72,6 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       },
     };
 
-    // Configure Parameters
     const projectName = new cdk.CfnParameter(this, 'ProjectName', {
       description: 'The name of the Project Name',
       type: 'String',
@@ -122,14 +121,12 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       description: 'Health Check Path for ECS Container',
       default: '/',
     });
-    
-    // ECS on EC2 use health check dynamic port mapping
-    /* const tgHealthCheckPort = new cdk.CfnParameter(this, 'TGHealthCheckPort', {
+    const tgHealthCheckPort = new cdk.CfnParameter(this, 'TGHealthCheckPort', {
       type: 'Number',
       description: 'Health Check Path for ECS Container',
       default: 80,
     });
-    */
+
     const containerSGId = new cdk.CfnParameter(this, 'ContainerSGId', {
       type: 'AWS::EC2::SecurityGroup::Id',
       description: 'Security Id for ECS Container',
@@ -186,28 +183,6 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       default: 'test.example.com',
     });
 
-    const taskRoleArn = new cdk.CfnParameter(this, 'TaskRoleArn', {
-      type: 'String',
-      description: 'ECS TaskRole Arn',
-      default: 'default',
-    });
-
-    const taskExecutionRoleArn = new cdk.CfnParameter(this, 'TaskExecutionRoleArn', {
-      type: 'String',
-      description: 'ECS TaskExecutionRole Arn',
-      default: 'default',
-    });
-
-
-    // Condition
-    const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
-      expression: cdk.Fn.conditionEquals(taskRoleArn.valueAsString, 'default'),
-    });
-
-    const defaultTaskExecutionRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskExecutionRoleCondition', {
-      expression: cdk.Fn.conditionEquals(taskExecutionRoleArn.valueAsString, 'default'),
-    });
-
     const elbSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ELBSG', elbSgId.valueAsString );
 
     const listener = elbv2.ApplicationListener.fromApplicationListenerAttributes(this, 'listener', {
@@ -224,11 +199,11 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
 
     // ELB TargetGroup
     const atg = new elbv2.ApplicationTargetGroup(this, 'TargetGroup', {
+      //targetGroupName: `${projectName.valueAsString}-ecs-${environment.valueAsString}-${serviceName.valueAsString}-tg`,
       //targetGroupName: `${serviceName.valueAsString}-${environment.valueAsString}-tg`,
       vpc: vpc,
       port: cdk.Lazy.number({ produce: () => tgListenerPort.valueAsNumber }),
-      // dynamic port mapping
-      healthCheck: { path: tgHealthCheckPath.valueAsString, enabled: true },
+      healthCheck: { path: tgHealthCheckPath.valueAsString, port: tgHealthCheckPort.valueAsString },
       protocol: elbv2.ApplicationProtocol.HTTP,
     });
 
@@ -242,6 +217,10 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       effect: iam.Effect.ALLOW,
       resources: ['*'],
       actions: [
+        //'ecr:GetAuthorizationToken',
+        //'ecr:BatchCheckLayerAvailability',
+        //'ecr:GetDownloadUrlForLayer',
+        //'ecr:BatchGetImage',
         'ec2:*',
         'cloudwatch:*',
         'xray:*',
@@ -263,40 +242,138 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
     taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMReadOnlyAccess'));
     taskExecutionRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('ElasticLoadBalancingFullAccess'));
 
-    const taskDefinition = new ecs.Ec2TaskDefinition(this, 'TaskDef', {
-      taskRole: iam.Role.fromRoleArn(this, 'TaskRole',
-        cdk.Fn.conditionIf(defaultTaskRoleCondition.logicalId,
-          ecsTaskRole.roleArn,
-          taskRoleArn.valueAsString).toString()),
-      executionRole: iam.Role.fromRoleArn(this, 'TaskExecutionRole',
-        cdk.Fn.conditionIf(defaultTaskExecutionRoleCondition.logicalId,
-          taskExecutionRole.roleArn,
-          taskExecutionRoleArn.valueAsString).toString()),
+    // 1. ECS Task Definition
+    const taskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
+      executionRole: taskExecutionRole,
+      memoryLimitMiB: containerSize.valueAsNumber,
+      taskRole: ecsTaskRole,
     });
 
-    const container = taskDefinition.addContainer('app', {
+    // 1-1 Add Appplication Container to Task Definition
+    const appContainer = taskDefinition.addContainer('app', {
       containerName: `${serviceName.valueAsString}`,
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
-      memoryLimitMiB: containerSize.valueAsNumber,
-      logging: ecs.LogDrivers.awsLogs({
-        logGroup: new LogGroup(this, 'LogGroup', { 
-          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`, 
-          retention: 7, 
-          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+      /* logging: ecs.LogDrivers.awsLogs({
+        logRetention: 7,
         streamPrefix: 'ecs',
+      }), */
+      logging: ecs.LogDrivers.firelens({
+        options: {
+          Name: 'grafana-loki',
+          Url: 'http://10.1.3.63:3100/loki/api/v1/push',
+          Labels: '{job="firelens"}',
+          RemoveKeys: 'container_id,ecs_task_arn',
+          LabelKeys: 'container_name,ecs_task_definition,source,ecs_cluster',
+          LineFormat: 'key_value',
+        },
       }),
     });
 
-    container.addPortMappings({
+    // Note: Host port (80) must be left out or equal to container port -1.8881545897088675e+289 for network mode awsvpc
+    appContainer.addPortMappings({
       containerPort: containerPort.valueAsNumber,
       protocol: ecs.Protocol.TCP,
     });
 
-    //const containerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
+    // 1-2 OTEL Collector
+    const otelCollector = taskDefinition.addContainer('OtelCollectorSideCar', {
+      containerName: 'aws-otel-collector',
+      image: ecs.ContainerImage.fromRegistry('amazon/aws-otel-collector'),
+      cpu: 256,
+      essential: true,
+      command: [
+        '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
+      ],
+      /* logging: ecs.LogDrivers.firelens({
+        options: {
+          "Name": "grafana-loki",
+          "Url": "http://10.1.3.63:3100/loki/api/v1/push",
+          "Labels": "{job=\"firelens\"}",
+          "RemoveKeys": "container_id,ecs_task_arn",
+          "LabelKeys": "container_name,ecs_task_definition,source,ecs_cluster",
+          "LineFormat": "key_value"
+        },
+      }), */
+    });
 
-    //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
+    // 1-3 Loki
+    new ecs.FirelensLogRouter(this, 'MyFirelensLogRouter', {
+      firelensConfig: {
+        type: ecs.FirelensLogRouterType.FLUENTBIT,
+
+        // the properties below are optional
+        options: {
+          //configFileType: ecs.FirelensConfigFileType.S3,
+          //configFileValue: 'configFileValue',
+          enableECSLogMetadata: true,
+        },
+      },
+      image: ecs.ContainerImage.fromRegistry('grafana/fluent-bit-plugin-loki:main'),
+      taskDefinition: taskDefinition,
+
+      // the properties below are optional
+      containerName: 'log-router',
+      /* cpu: 123,
+      disableNetworking: false,
+      dnsSearchDomains: ['dnsSearchDomains'],
+      dnsServers: ['dnsServers'],
+      dockerLabels: {
+        dockerLabelsKey: 'dockerLabels',
+      },
+      dockerSecurityOptions: ['dockerSecurityOptions'],
+      entryPoint: ['entryPoint'],
+      environment: {
+        environmentKey: 'environment',
+      },
+ */
+      essential: true,
+      /* healthCheck: {
+        command: ['command'],
+
+        // the properties below are optional
+        interval: cdk.Duration.minutes(30),
+        retries: 123,
+        startPeriod: cdk.Duration.minutes(30),
+        timeout: cdk.Duration.minutes(30),
+      },
+      hostname: 'hostname',
+      inferenceAcceleratorResources: ['inferenceAcceleratorResources'],
+      linuxParameters: linuxParameters,
+      */
+      logging: ecs.LogDrivers.awsLogs({
+        logRetention: 7,
+        streamPrefix: 'ecs',
+      }),
+      memoryReservationMiB: 64,
+      /* portMappings: [{
+        containerPort: 123,
+
+        // the properties below are optional
+        hostPort: 123,
+        protocol: ecs.Protocol.TCP,
+      }],
+      privileged: false,
+      readonlyRootFilesystem: false,
+      secrets: {
+        secretsKey: secret,
+      },
+      startTimeout: cdk.Duration.minutes(30),
+      stopTimeout: cdk.Duration.minutes(30),
+      systemControls: [{
+        namespace: 'namespace',
+        value: 'value',
+      }],
+      user: 'user',
+      workingDirectory: 'workingDirectory',
+      */
+    });
+
+
+    appContainer.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
+
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
+    // Note: Unable to determine ARN separator for SSM parameter since the parameter name is an unresolved token. Use "fromAttributes" and specify "simpleName" explicitly
     const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: 'namespaceName' }).stringValue,
@@ -314,32 +391,29 @@ export class EcsEc2Product extends servicecatalog.ProductStack {
       defaultCloudMapNamespace: namespace,
     });
 
-    /* const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
+    const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
       securityGroupName: `${projectName.valueAsString}-sg-${environment.valueAsString}-${serviceName.valueAsString}`,
       description: `Access to the container ${serviceName.valueAsString} instance`,
       vpc: vpc,
-    }); */
+    });
 
-    const svc = new ecs.Ec2Service(this, 'EC2Service', {
+
+    const svc = new ecs.FargateService(this, 'FargateService', {
       serviceName: `${serviceName.valueAsString}-${environment.valueAsString}`,
       cluster: cluster,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       desiredCount: desireCount.valueAsNumber,
-      taskDefinition: taskDefinition,
-      enableECSManagedTags: true,
-      //vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
-      //securityGroups: [defaultContainerSg, serviceSg],
-      //enableExecuteCommand: true,
+      taskDefinition,
+      securityGroups: [defaultContainerSg, serviceSg],
       cloudMapOptions: {
         // Create A records - useful for AWSVPC network mode.
-        // Create SRV records - useful for bridge networking
-        dnsRecordType: servicediscovery.DnsRecordType.SRV,
-        // Targets port TCP port 7600 `specificContainer`
-        container: container,
-        containerPort: containerPort.valueAsNumber,
+        name: `${serviceName.valueAsString}`,
+        dnsRecordType: servicediscovery.DnsRecordType.A,
+        cloudMapNamespace: namespace,
       },
       capacityProviderStrategies: [
         {
-          capacityProvider: `${projectName.valueAsString}-ecs-${environment.valueAsString}-capacity-provider`,
+          capacityProvider: 'FARGATE_SPOT',
           weight: 1,
         },
       ],

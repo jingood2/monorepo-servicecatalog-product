@@ -94,6 +94,8 @@ export class CIConstruct extends Construct {
       artifactBucket: artifactS3,
     });
 
+    artifactS3.grantReadWrite(githubPipeline.role);
+
     githubPipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
     githubPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
