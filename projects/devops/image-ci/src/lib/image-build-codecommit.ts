@@ -126,6 +126,8 @@ export class ImageBuildCodecommit extends servicecatalog.ProductStack {
     const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
       repositoryName: serviceName.valueAsString,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [{ maxImageCount: 10 }],
     });
 
     const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));

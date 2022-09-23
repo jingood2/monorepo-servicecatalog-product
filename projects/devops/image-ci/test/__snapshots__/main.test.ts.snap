@@ -22,19 +22,7 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/33a18d7c2afc9c9ebf4d4edd08cfb332a204b56ae437611dc8b8b4bfb4bf3431.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/4abad50a238128d23a4815d5226939445e4a7d8b8e857e969ca21de5a196beda.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/bcc09ddefb54370c72d719d3b7f9fe0e3d2fbb141f560e9fee42de30065325c8.json",
-=======
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/930d13ae10a4adf85218511ba87f0f60673eee67e03ace029e9d293c1c8d8507.json",
->>>>>>> cf3afb2a720a7ff94bde7aaa28a71888c0b846c3
->>>>>>> 764a2734a836af96c6483521b8944accb5f81533
->>>>>>> c5c9cd52287dc962a3a7d12e8cb42f40eb7db15d
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/a95936c572a5563fca48e4b6007e09dfc97ae1d30eda80bce7d627c33277ff1e.json",
               },
             },
             "Name": "v1",
@@ -44,55 +32,27 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/40f722724f3665b3152189661d9354a29a58b396ca9ee49f65f764697b117243.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/daeab22e24d7028688f2cf047e462368107bcf71456775d28279cf6508c51b50.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/abb830047424c1126e40d01faaa0d0b9ff464477ff2f81e4be32523af4cdcaa9.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/ff43f8cf79b93d746cfad31dfa79703975afcf1bc3a02f2da5df9ddbbda307b6.json",
-=======
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/8c1daa2920ebefdd077dedeb323a3edb51d1ac0246efeb64f9a01db78e73e829.json",
->>>>>>> 5631ec19c1b774a75184646a7fb22a3ca70f7aff
->>>>>>> cf3afb2a720a7ff94bde7aaa28a71888c0b846c3
->>>>>>> 764a2734a836af96c6483521b8944accb5f81533
->>>>>>> c5c9cd52287dc962a3a7d12e8cb42f40eb7db15d
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/40f5efe788a984f904738ad178ae80e501017b98be6824e618d2cde01f0cb07e.json",
               },
             },
             "Name": "v2",
           },
           {
-            "Description": "ECS CICD Pieline with CodeCommit",
+            "Description": "ECS CICD Pieline with S3",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/a11ddabfd9a39706f7735174f314762293b28cef4554db1090f0c53786e45a77.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/129da692bc5ea755602f214cb3dc8d0e02d5a9344ce12bdc4d23346b75aaf0c3.json",
-=======
-<<<<<<< HEAD
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/5693b45ef3f1366cd96b4ebd4f54fa3e9b38f44df16e7a6778210bee03f949dc.json",
-=======
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/9dcfde33a29aa31fde57eea37425935481e1299142cc621c506089ed8ba12568.json",
->>>>>>> cf3afb2a720a7ff94bde7aaa28a71888c0b846c3
->>>>>>> 764a2734a836af96c6483521b8944accb5f81533
->>>>>>> c5c9cd52287dc962a3a7d12e8cb42f40eb7db15d
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/91c4cd948073c7e0f9b9f374e4b55bc81a9857a19abe9ec2d62ef56965a44075.json",
               },
             },
             "Name": "v3",
           },
           {
-            "Description": "All-in-one CICD Pieline V4",
+            "Description": "Github CICD",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/82f1260e9f5749f472207afc3f8e027f81030634d6e293e91d7e75bf8f6f6960.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/8136be43f832c20324a3fd65a2d3eeb747d41e95db52862715df7e8d1aa1b951.json",
               },
             },
             "Name": "v4",
@@ -102,10 +62,30 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/83f9e15bc6c5ba5a456a668a3c4523aefb4b08dc16bb872e5dd32e541a219fda.yaml",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/aa92bcbc508cab8247687910f892d3503127fc91d2289e3b4130d9e34a48316e.yaml",
               },
             },
             "Name": "v5",
+          },
+          {
+            "Description": "Github Docker Compose CICD",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/8136be43f832c20324a3fd65a2d3eeb747d41e95db52862715df7e8d1aa1b951.json",
+              },
+            },
+            "Name": "v6",
+          },
+          {
+            "Description": "Github Docker Compose CD",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/6779feec304d10fdb12f4ea9bf9159feb7feff592c7249f0a50285036b8fd21f.json",
+              },
+            },
+            "Name": "v7",
           },
         ],
       },

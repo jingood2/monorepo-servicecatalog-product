@@ -127,17 +127,17 @@ export class DockerComposeECSCICD extends servicecatalog.ProductStack {
       description: 'external alb arn',
     });
 
-    const ci = new CIConstruct(this, 'CD',{
-        repoName: repoName.valueAsString, 
-        repoOwner: repoOwner.valueAsString,
-        repoBranch: repoBranch.valueAsString,
-        secretKey: secretKey.valueAsString,
-        serviceName: serviceName.valueAsString,
-        containerPort: containerPort.valueAsNumber,
-        sourceArtifact: sourceArtifact.valueAsString,
-        buildType: 'DOCKER',
-        envType: envType.valueAsString,
-      }
+    const ci = new CIConstruct(this, 'CD', {
+      repoName: repoName.valueAsString,
+      repoOwner: repoOwner.valueAsString,
+      repoBranch: repoBranch.valueAsString,
+      secretKey: secretKey.valueAsString,
+      serviceName: serviceName.valueAsString,
+      containerPort: containerPort.valueAsNumber,
+      sourceArtifact: sourceArtifact.valueAsString,
+      buildType: 'DOCKER',
+      envType: envType.valueAsString,
+    },
     );
 
     new ComposeToCfn(this, 'DockerComposeToCICD', {
@@ -153,7 +153,7 @@ export class DockerComposeECSCICD extends servicecatalog.ProductStack {
       vpcId: vpcId.valueAsString,
       existingAlbArn: albArn.valueAsString,
       sourceOutput: ci.sourceOutput,
-      ecrRepoUri: ci.ecrRepoUri
+      ecrRepoUri: ci.ecrRepoUri,
     });
 
   }

@@ -2,11 +2,11 @@ import path from 'path';
 import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
+import { ComposeToCfnCD } from './lib/compose-to-cfn-cd';
 import { GithubCICDProduct } from './lib/github-cicd-product';
 import { ImageBuildCodecommit } from './lib/image-build-codecommit';
 import { ImageBuildGithub } from './lib/image-build-github';
 import { ImageBuildS3 } from './lib/image-build-s3';
-import { ComposeToCfnCD } from './lib/compose-to-cfn-cd';
 
 
 export class MyStack extends Stack {
@@ -34,7 +34,7 @@ export class MyStack extends Stack {
         },
         {
           productVersionName: 'v3',
-          description: 'ECS CICD Pieline with CodeCommit',
+          description: 'ECS CICD Pieline with S3',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new ImageBuildS3(this, 'CIS3Product', {})),
         },
@@ -77,13 +77,14 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'image-ci', { 
-  env: devEnv, stackName: 
+new MyStack(app, 'image-ci', {
+  env: devEnv,
+  stackName:
   `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
   synthesizer: new DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
- });
+});
 // new MyStack(app, 'ecs-cicd-prod', { env: prodEnv });
 
 app.synth();

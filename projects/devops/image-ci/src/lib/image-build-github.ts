@@ -115,7 +115,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
     const sourceArtifact = new cdk.CfnParameter(this, 'S3BucketSourceArtifacts', {
       type: 'String',
       description: 'S3 Bucket Name for Source and Build Artifact',
-      default: 'acme-servicecatalog-cicd-bucket',
+      default: 'awstf-servicecatalog-cicd-bucket',
     });
 
     const buildType = new cdk.CfnParameter(this, 'PackagingType', {
@@ -151,6 +151,8 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
     const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
       repositoryName: serviceName.valueAsString,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [{ maxImageCount: 10 }],
     });
 
     const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
