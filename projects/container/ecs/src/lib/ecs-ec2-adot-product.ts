@@ -303,7 +303,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     const otelCollector = taskDefinition.addContainer('OtelCollectorSideCar', {
       containerName: 'aws-otel-collector',
       image: ecs.ContainerImage.fromRegistry('amazon/aws-otel-collector'),
-      cpu: 256,
+      memoryLimitMiB: 64,
       essential: true,
       /* command: [
         '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
