@@ -128,7 +128,15 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
         'cloudwatch:PutMetricAlarm',
         'ecs:DescribeServices',
         'ecs:UpdateService',
-        'ec2:*'
+        'ec2:*',
+        'xray:*',
+        'cloudwatch:*',
+        'xray:*',
+        'logs:*',
+        'ssm:*',
+        's3:*',
+        'sqs:*',
+        'sns:*',
       ],
     }));
 
