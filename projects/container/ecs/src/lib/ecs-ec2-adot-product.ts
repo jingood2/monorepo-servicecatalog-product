@@ -308,6 +308,9 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       /* command: [
         '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
       ], */
+      environment: {
+        AWS_REGION: 'ap-northeast-2',
+      },
       command: commands.valueAsList,
       logging: ecs.LogDrivers.awsLogs({
         logGroup: new LogGroup(this, 'LogGroupOtel', { 
@@ -316,6 +319,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
           removalPolicy: cdk.RemovalPolicy.DESTROY}),
         streamPrefix: 'ecs',
       }),
+
     });
 
     container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
