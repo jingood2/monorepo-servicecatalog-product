@@ -1,0 +1,736 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Shared resources required by all Amazon EKS Quick Start stacks in this region. (qs-1r0qgtna3)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Quick Start configuration
+        Parameters:
+          - RandomStr
+          - QSS3BucketName
+          - QSS3KeyPrefix
+    ParameterLabels:
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      RandomStr:
+        default: Random string
+Parameters:
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: quickstart-amazon-eks/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  RandomStr:
+    Type: String
+    Description: Enter a random string here when performing stack updates. Doing this
+      ensures that all lambda function and resource type source code is updated from s3.
+    Default: ""
+Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Mappings:
+  Config:
+    Prefix: { Value: 'eks-quickstart' }
+Resources:
+  LambdaZipsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+  CopyZipsRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles: [!Sub ['${Prefix}-CopyZips', {Prefix: !FindInMap [Config, Prefix, Value]}]]
+      PolicyName: !Sub ['${Prefix}-lambda-zip-bucket-access-${AWS::Region}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:PutObject
+          - s3:DeleteObject
+          Resource: !Sub 'arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/*'
+  DeleteBucketContentsRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles: [!Sub ['${Prefix}-DeleteBucketContents', {Prefix: !FindInMap [Config, Prefix, Value]}]]
+      PolicyName: !Sub ['${Prefix}-delete-bucket-contents-${AWS::Region}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: [
+            "s3:GetObjectAcl",
+            "s3:GetObject",
+            "s3:DeleteObjectVersion",
+            "s3:ListBucketVersions",
+            "s3:GetObjectVersionAcl",
+            "s3:ListBucket",
+            "s3:GetBucketVersioning",
+            "s3:DeleteObject",
+            "s3:GetBucketAcl",
+            "s3:GetBucketLocation",
+            "s3:GetObjectVersion"
+          ]
+          Resource:
+          - !Sub 'arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/*'
+          - !Sub 'arn:${AWS::Partition}:s3:::${LambdaZipsBucket}'
+  CopyZipsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: CopyZipsRolePolicy
+    Properties:
+      FunctionName: !Sub ['${Prefix}-CopyZips', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: Copies objects from a source S3 bucket to a destination
+      Handler: index.handler
+      Runtime: python3.7
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-CopyZips", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Timeout: 900
+      Code:
+        ZipFile: |
+          import cfnresponse
+          import logging
+          import boto3
+          logger = logging.getLogger(__name__)
+          logger.setLevel(logging.DEBUG)
+          def copy_objects(source_bucket, dest_bucket, prefix, objects):
+              s3 = boto3.client('s3')
+              for o in objects:
+                  key = prefix + o
+                  copy_source = {'Bucket': source_bucket, 'Key': key}
+                  logger.info(f'copy_source: {copy_source}\ndest_bucket: {dest_bucket}\nkey: {key}')
+                  s3.copy_object(CopySource=copy_source, Bucket=dest_bucket, Key=key)
+          def delete_objects(bucket, prefix, objects):
+              s3 = boto3.client('s3')
+              objects = {'Objects': [{'Key': prefix + o} for o in objects]}
+              try:
+                  logger.debug(f'deleting objects: {objects["Objects"]}')
+                  resp = s3.delete_objects(Bucket=bucket, Delete=objects)
+                  logger.debug(f'delete_objects response: {resp}')
+              except s3.exceptions.NoSuchBucket:
+                  pass
+          def handler(event, context):
+              logger.debug(event)
+              status = cfnresponse.SUCCESS
+              try:
+                  if event['RequestType'] == 'Delete':
+                      delete_objects(event['ResourceProperties']['DestBucket'], event['ResourceProperties']['Prefix'],
+                                     event['ResourceProperties']['Objects'])
+                  elif event['RequestType'] == 'Update':
+                      delete_objects(event['OldResourceProperties']['DestBucket'], event['OldResourceProperties']['Prefix'],
+                                     event['OldResourceProperties']['Objects'])
+                  if event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+                      copy_objects(event['ResourceProperties']['SourceBucket'], event['ResourceProperties']['DestBucket'],
+                                   event['ResourceProperties']['Prefix'], event['ResourceProperties']['Objects'])
+              except Exception:
+                  logger.error('Unhandled exception', exc_info=True)
+                  status = cfnresponse.FAILED
+              finally:
+                  cfnresponse.send(event, context, status, {}, event.get('PhysicalResourceId', context.log_stream_name))
+  CopyZips:
+    Type: Custom::CopyZips
+    Properties:
+      ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
+      DestBucket: !Ref LambdaZipsBucket
+      SourceBucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Prefix: !Ref 'QSS3KeyPrefix'
+      Version: "1.0.0"
+      RandomStr: !Ref RandomStr
+      Objects:
+        - functions/packages/DeleteBucketContents/lambda.zip
+        - functions/packages/CleanupLoadBalancers/lambda.zip
+        - functions/packages/CleanupSecurityGroupDependencies/lambda.zip
+        - functions/packages/CleanupLambdas/lambda.zip
+        - functions/packages/kubectlLayer/lambda.zip
+        - functions/packages/crhelperLayer/lambda.zip
+        - functions/packages/GetCallerArn/lambda.zip
+        - functions/packages/registerType/lambda.zip
+        - functions/packages/registerCustomResource/lambda.zip
+        - functions/packages/EksClusterResource/awsqs-eks-cluster.zip
+        - functions/packages/HelmReleaseResource/awsqs-kubernetes-helm.zip
+        - functions/packages/awscliLayer/lambda.zip
+        - functions/packages/FargateProfile/lambda.zip
+        - functions/packages/kubernetesResources/awsqs_kubernetes_get.zip
+        - functions/packages/kubernetesResources/awsqs_kubernetes_get_vpc.zip
+        - functions/packages/kubernetesResources/awsqs_kubernetes_apply.zip
+        - functions/packages/kubernetesResources/awsqs_kubernetes_apply_vpc.zip
+        - functions/packages/KubeManifest/lambda.zip
+        - functions/packages/KubeGet/lambda.zip
+        - functions/packages/ResourceReader/lambda.zip
+  ArtifactCopyPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LambdaZipsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Allow CloudFormation to copy artifacts from the bucket
+            Effect: Allow
+            Principal:
+              Service: "cloudformation.amazonaws.com"
+            Action:
+              - s3:ListBucket
+              - s3:GetObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${LambdaZipsBucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}functions/packages/EksClusterResource/awsqs-eks-cluster.zip"
+              - !Sub "arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}functions/packages/HelmReleaseResource/awsqs-kubernetes-helm.zip"
+              - !Sub "arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}functions/packages/kubernetesResources/awsqs_kubernetes_get.zip"
+              - !Sub "arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}functions/packages/kubernetesResources/awsqs_kubernetes_apply.zip"
+  KubectlLayer:
+    DependsOn: CopyZips
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ['${Prefix}-Kubectl', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: !Sub "kubectl layer - ${RandomStr}"
+      Content:
+        S3Bucket: !Ref LambdaZipsBucket
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/kubectlLayer/lambda.zip'
+  AwsCliLayer:
+    DependsOn: CopyZips
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ['${Prefix}-AwsCli', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: !Sub "aws cli layer - ${RandomStr}"
+      Content:
+        S3Bucket: !Ref LambdaZipsBucket
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/awscliLayer/lambda.zip'
+  CrhelperLayer:
+    DependsOn: CopyZips
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ['${Prefix}-Crhelper', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: !Sub "crhelper layer - ${RandomStr}"
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+      Content:
+        S3Bucket: !Ref LambdaZipsBucket
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/crhelperLayer/lambda.zip'
+  CleanupLoadBalancersLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ['${Prefix}-CleanupLoadBalancers', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-CleanupLoadBalancers", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref CrhelperLayer]
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/CleanupLoadBalancers/lambda.zip'
+  CleanupLambdasLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ['${Prefix}-CleanupLambdas', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-CleanupLambdas", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref CrhelperLayer]
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/CleanupLambdas/lambda.zip'
+  RegisterTypeFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ['${Prefix}-RegisterType', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-RegisterType", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Layers: [!Ref CrhelperLayer]
+      Runtime: python3.7
+      Timeout: 900
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/registerType/lambda.zip'
+  RegisterCustomResourceFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ['${Prefix}-RegisterCustomResource', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-RegisterCustomResource", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Layers: [!Ref CrhelperLayer]
+      Runtime: python3.7
+      Timeout: 900
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/registerCustomResource/lambda.zip'
+  RegisterEksClusterType:
+    DependsOn: ArtifactCopyPolicy
+    Type: Custom::RegisterType
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: cfn resource type schema's do not support resource constraints
+    Properties:
+      ServiceToken: !GetAtt RegisterTypeFunction.Arn
+      Version: "3.1.4"
+      RandomStr: !Ref RandomStr
+      TypeName: "AWSQS::EKS::Cluster"
+      SchemaHandlerPackage: !Sub ["s3://${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}/${QSS3KeyPrefix}functions/packages/EksClusterResource/awsqs-eks-cluster.zip", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      IamPolicy:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+            - "sts:GetCallerIdentity"
+            - "eks:CreateCluster"
+            - "eks:DeleteCluster"
+            - "eks:DescribeCluster"
+            - "eks:ListTagsForResource"
+            - "eks:UpdateClusterVersion"
+            - "eks:UpdateClusterConfig"
+            - "eks:TagResource"
+            - "eks:UntagResource"
+            - "iam:PassRole"
+            - "sts:AssumeRole"
+            - "lambda:UpdateFunctionConfiguration"
+            - "lambda:DeleteFunction"
+            - "lambda:GetFunction"
+            - "lambda:InvokeFunction"
+            - "lambda:CreateFunction"
+            - "lambda:UpdateFunctionCode"
+            - "ec2:DescribeVpcs"
+            - "ec2:DescribeSubnets"
+            - "ec2:DescribeSecurityGroups"
+            - "kms:CreateGrant"
+            - "kms:DescribeKey"
+            - "logs:CreateLogGroup"
+            - "logs:CreateLogStream"
+            - "logs:DescribeLogGroups"
+            - "logs:DescribeLogStreams"
+            - "logs:PutLogEvents"
+            - "cloudwatch:ListMetrics"
+            - "cloudwatch:PutMetricData"
+          Resource: "*"
+  RegisterHelmType:
+    DependsOn: ArtifactCopyPolicy
+    Type: Custom::RegisterType
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: cfn resource type schema's do not support resource constraints
+    Properties:
+      ServiceToken: !GetAtt RegisterTypeFunction.Arn
+      TypeName: "AWSQS::Kubernetes::Helm"
+      Version: "3.1.2"
+      RandomStr: !Ref RandomStr
+      SchemaHandlerPackage: !Sub ["s3://${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}/${QSS3KeyPrefix}functions/packages/HelmReleaseResource/awsqs-kubernetes-helm.zip", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      IamPolicy:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+            - "secretsmanager:GetSecretValue"  # required for deploying helm charts into non-EKS kubernetes clusters
+            - "kms:Decrypt"
+            - "eks:DescribeCluster"
+            - "s3:GetObject"
+            - "sts:AssumeRole"
+            - "iam:PassRole"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:CreateNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DescribeNetworkInterfaces"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DeleteNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DescribeVpcs"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DescribeSubnets"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DescribeRouteTables"  # required for EKS clusters with Public Endpoint disabled
+            - "ec2:DescribeSecurityGroups"  # required for EKS clusters with Public Endpoint disabled
+            - "logs:CreateLogGroup"  # required for EKS clusters with Public Endpoint disabled
+            - "logs:CreateLogStream"  # required for EKS clusters with Public Endpoint disabled
+            - "logs:PutLogEvents"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:UpdateFunctionConfiguration"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:DeleteFunction"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:GetFunction"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:InvokeFunction"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:CreateFunction"  # required for EKS clusters with Public Endpoint disabled
+            - "lambda:UpdateFunctionCode"  # required for EKS clusters with Public Endpoint disabled
+            - "cloudformation:ListExports"  # required for fetching contract test inputs
+            - "ecr:GetAuthorizationToken" # required for fetching charts from ECR
+            - "ecr:BatchCheckLayerAvailability" # required for fetching charts from ECR
+            - "ecr:GetDownloadUrlForLayer" # required for fetching charts from ECR
+            - "ecr:BatchGetImage" # required for fetching charts from ECR
+          Resource: "*"
+  RegisterKubeGetType:
+    DependsOn: ArtifactCopyPolicy
+    Type: Custom::RegisterType
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: cfn resource type schema's do not support resource constraints
+    Properties:
+      ServiceToken: !GetAtt RegisterTypeFunction.Arn
+      TypeName: "AWSQS::Kubernetes::Get"
+      Version: "3.1.3"
+      RandomStr: !Ref RandomStr
+      SchemaHandlerPackage: !Sub ["s3://${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}/${QSS3KeyPrefix}functions/packages/kubernetesResources/awsqs_kubernetes_get.zip", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      IamPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - "secretsmanager:GetSecretValue"  # required for deploying helm charts into non-EKS kubernetes clusters
+              - "kms:Decrypt"
+              - "eks:DescribeCluster"
+              - "s3:GetObject"
+              - "sts:AssumeRole"
+              - "sts:GetCallerIdentity"
+              - "iam:PassRole"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:CreateNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeNetworkInterfaces"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DeleteNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeVpcs"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeSubnets"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeRouteTables"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeSecurityGroups"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogGroup"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogStream"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:PutLogEvents"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:UpdateFunctionConfiguration"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:DeleteFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:GetFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:InvokeFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:CreateFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:UpdateFunctionCode"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogGroup"  # required if this role is also used for Resource type logging
+              - "logs:CreateLogStream"  # required if this role is also used for Resource type logging
+              - "logs:DescribeLogGroups"  # required if this role is also used for Resource type logging
+              - "logs:DescribeLogStreams"  # required if this role is also used for Resource type logging
+              - "logs:PutLogEvents"  # required if this role is also used for Resource type logging
+              - "cloudwatch:ListMetrics"  # required if this role is also used for Resource type logging
+              - "cloudwatch:PutMetricData"  # required if this role is also used for Resource type logging
+              - "ssm:PutParameter"  # ssm parameters are used by the ::Get resource to track requests
+              - "ssm:GetParameter"  # ssm parameters are used by the ::Get resource to track requests
+              - "ssm:DeleteParameter"  # ssm parameters are used by the ::Get resource to track requests
+            Resource: "*"
+  RegisterKubeApplyType:
+    DependsOn: ArtifactCopyPolicy
+    Type: Custom::RegisterType
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: cfn resource type schema's do not support resource constraints
+    Properties:
+      ServiceToken: !GetAtt RegisterTypeFunction.Arn
+      TypeName: "AWSQS::Kubernetes::Resource"
+      Version: "3.1.4"
+      RandomStr: !Ref RandomStr
+      SchemaHandlerPackage: !Sub ["s3://${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}/${QSS3KeyPrefix}functions/packages/kubernetesResources/awsqs_kubernetes_apply.zip", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      IamPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - "secretsmanager:GetSecretValue"  # required for deploying helm charts into non-EKS kubernetes clusters
+              - "kms:Decrypt"
+              - "eks:DescribeCluster"
+              - "s3:GetObject"
+              - "sts:AssumeRole"
+              - "iam:PassRole"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:CreateNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeNetworkInterfaces"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DeleteNetworkInterface"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeVpcs"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeSubnets"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeRouteTables"  # required for EKS clusters with Public Endpoint disabled
+              - "ec2:DescribeSecurityGroups"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogGroup"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogStream"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:PutLogEvents"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:UpdateFunctionConfiguration"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:DeleteFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:GetFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:InvokeFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:CreateFunction"  # required for EKS clusters with Public Endpoint disabled
+              - "lambda:UpdateFunctionCode"  # required for EKS clusters with Public Endpoint disabled
+              - "logs:CreateLogGroup"  # required if this role is also used for Resource type logging
+              - "logs:CreateLogStream"  # required if this role is also used for Resource type logging
+              - "logs:DescribeLogGroups"  # required if this role is also used for Resource type logging
+              - "logs:DescribeLogStreams"  # required if this role is also used for Resource type logging
+              - "logs:PutLogEvents"  # required if this role is also used for Resource type logging
+              - "cloudwatch:ListMetrics"  # required if this role is also used for Resource type logging
+              - "cloudwatch:PutMetricData"  # required if this role is also used for Resource type logging
+            Resource: "*"
+  CleanupSecurityGroupDependenciesLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub ['${Prefix}-CleanupSecurityGroupDependencies', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-CleanupSecurityGroupDependencies", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Layers: [!Ref CrhelperLayer]
+      Runtime: python3.7
+      Timeout: 900
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/CleanupSecurityGroupDependencies/lambda.zip'
+  DeleteBucketContentsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ['${Prefix}-DeleteBucketContents', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-DeleteBucketContents", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref 'CrhelperLayer']
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteBucketContents/lambda.zip'
+  GetCallerArnLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ['${Prefix}-GetCallerArn', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-GetCallerArn", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref 'CrhelperLayer']
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/GetCallerArn/lambda.zip'
+  NodeSGFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ['${Prefix}-NodeSG', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: Fetches the Security Group ID for a given EKS Managed Node Group
+      Handler: index.handler
+      Runtime: python3.7
+      Role:  !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-NodeSG", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Timeout: 900
+      Layers: [!Ref 'CrhelperLayer']
+      Code:
+        ZipFile: |
+          import logging
+          import boto3
+          from crhelper import CfnResource
+
+          logger = logging.getLogger(__name__)
+          helper = CfnResource(json_logging=True, log_level='DEBUG')
+
+          try:
+              eks_client = boto3.client('eks')
+          except Exception as init_exception:
+              helper.init_failure(init_exception)
+
+          @helper.create
+          @helper.update
+          def create(event, _):
+              response = eks_client.describe_nodegroup(
+                  clusterName=event['ResourceProperties']['ClusterName'],
+                  nodegroupName=event['ResourceProperties']['NodeGroupName']
+              )
+              return response['nodegroup']['resources']['remoteAccessSecurityGroup']
+
+          def handler(event, context):
+              helper(event, context)
+  FargateProfileLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ['${Prefix}-FargateProfile', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 512
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-FargateProfile", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref 'CrhelperLayer']
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/FargateProfile/lambda.zip'
+  ResourceReaderFunction:
+    DependsOn: CopyZips
+    Type: AWS::Lambda::Function
+    Properties:
+      MemorySize: 512
+      FunctionName: !Sub ['${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: Performs an AWS CLI command and returns the json result. Used to get the state of existing resources.
+      Handler: lambda.handler
+      Runtime: python3.7
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-ResourceReader", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Timeout: 900
+      Tags: [{Key: RandomStr, Value: !Ref RandomStr}]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/ResourceReader/lambda.zip'
+  ParameterResolverFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: 'QuickStart-ParameterResolver'
+      Code:
+        ZipFile: |
+          import traceback
+          import json
+          import re
+          import boto3
+          from functools import partial
+
+
+          def template_iterator(obj, params, ssm, prefix):
+              if isinstance(obj, dict):
+                  for k in obj:
+                      obj[k] = template_iterator(obj[k], params, ssm, prefix)
+              elif isinstance(obj, list):
+                  for i, v in enumerate(obj):
+                      obj[i] = template_iterator(v, params, ssm, prefix)
+              elif isinstance(obj, str):
+                  func = partial(resolver, ssm, prefix, params['params'])
+                  obj = re.sub(r'~~[\w/<>-]+~~', func, obj)
+              return obj
+
+
+          def resolver(ssm, prefix, params, match):
+              default = None
+              param = match.group()[2:-2]
+              if param.startswith('%'):
+                  return match.group()
+              if '|' in param:
+                  default = ''.join(param.split('|')[1:])
+                  param = param.split('|')[0]
+              func = partial(param_resolve, params)
+              param = re.sub(r'<\w+>', func, param)
+              try:
+                  resp = ssm.get_parameter(Name=prefix + param)
+                  return json.loads(resp['Parameter']['Value'])['Value']
+              except ssm.exceptions.ParameterNotFound:
+                  if default is None:
+                      raise Exception(f"Parameter {param} not found")
+                  return default
+
+
+          def param_resolve(params, match):
+              return params[match.group()[1:-1]]
+
+
+          def handler(event, _c):
+              print(json.dumps(event))
+              macro_response = {
+                  "requestId": event["requestId"],
+                  "status": "success"
+              }
+              try:
+                  ssm = boto3.client('ssm', region_name=event["region"])
+                  params = {
+                      "params": event["templateParameterValues"],
+                      "template": event["fragment"],
+                      "account_id": event["accountId"],
+                      "region": event["region"]
+                  }
+                  response = event["fragment"]
+                  prefix = params['template'].get('Mappings',{}).get('Config',{}).get('ParameterPrefix',{}).get('Value',"")
+                  macro_response["fragment"] = template_iterator(response, params, ssm, prefix)
+              except Exception as e:
+                  traceback.print_exc()
+                  macro_response["status"] = "failure"
+                  macro_response["errorMessage"] = str(e)
+              print(json.dumps(macro_response))
+              return macro_response
+      Handler: index.handler
+      Runtime: python3.7
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-ParameterResolver", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Timeout: 900
+  ParameterResolverFunctionPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt ParameterResolverFunction.Arn
+      Principal: 'cloudformation.amazonaws.com'
+  ParameterResolver:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: 'QuickStartParameterResolver'
+      Description: !Sub "Resolves ssm parameters in templates ${RandomStr}"
+      FunctionName: !GetAtt ParameterResolverFunction.Arn
+  CloudformationVPCRoleCreationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ['${Prefix}-CloudformationVPCRoleCreation', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Description: Creates the CloudformationVPCRoleCreation if it does not yet exist
+      Handler: index.handler
+      Runtime: python3.7
+      Role: !Sub ["arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${Prefix}-CloudformationVPCRoleCreation", {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Timeout: 900
+      Code:
+        ZipFile: |
+          import cfnresponse
+          import logging
+          import boto3
+          from time import sleep
+          logger = logging.getLogger(__name__)
+          logger.setLevel(logging.DEBUG)
+          ASSUME_ROLE_POLICY="""{
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }"""
+          def handler(event, context):
+              logger.debug(event)
+              status = cfnresponse.SUCCESS
+              try:
+                  if event['RequestType'] == 'Create':
+                      iam = boto3.client('iam')
+                      partition = event['ResourceProperties']['Partition']
+                      try:
+                          iam.create_role(
+                              RoleName='CloudFormation-Kubernetes-VPC',
+                              AssumeRolePolicyDocument=ASSUME_ROLE_POLICY
+                          )
+                      except iam.exceptions.EntityAlreadyExistsException as e:
+                          logger.warning(e)
+                      while True:
+                          try:
+                              iam.attach_role_policy(
+                                  RoleName='CloudFormation-Kubernetes-VPC',
+                                  PolicyArn=f'arn:{partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+                              )
+                              iam.attach_role_policy(
+                                  RoleName='CloudFormation-Kubernetes-VPC',
+                                  PolicyArn=f'arn:{partition}:iam::aws:policy/service-role/AWSLambdaENIManagementAccess'
+                              )
+                              break
+                          except iam.exceptions.NoSuchEntityException as e:
+                              logger.warning(e)
+                              sleep(30)
+              except Exception:
+                  logger.error('Unhandled exception', exc_info=True)
+                  status = cfnresponse.FAILED
+              finally:
+                  cfnresponse.send(event, context, status, {}, event.get('PhysicalResourceId', context.log_stream_name))

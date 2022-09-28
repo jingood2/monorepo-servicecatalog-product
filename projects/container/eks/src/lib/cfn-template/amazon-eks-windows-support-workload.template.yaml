@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "deploy a workload to the cluster to prepare the cluster for running Windows workloads (qs-1r15gqig4)"
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
+Parameters:
+  ClusterName:
+    Type: String
+  ClusterKubeServerEndpoint:
+    Type: String
+  ClusterCACert:
+    Type: String
+  OIDCProvider:
+    Type: String
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    Type: String
+  QSS3BucketRegion:
+    Type: String
+Resources:
+  # This resource creates a Service Account that has no permissions associated with it.
+  # It will be used to authorize our pod to run 'kubectl' commands
+  ServiceAccount:
+    Type: "Custom::KubeManifest"
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest
+      Manifest:
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: internal-kubectl
+          namespace: default
+          annotations:
+            eks.amazonaws.com/role-arn: !GetAtt S3Role.Arn
+  # Creates role binding to give our service account admin access
+  ServiceClusterRoleBinding:
+    Type: "Custom::KubeManifest"
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest
+      Manifest:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: internal-kubectl-admin
+          namespace: default
+        subjects:
+          - kind: ServiceAccount
+            name: internal-kubectl
+            namespace: default
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+  # Role used by the service account to pull from S3 Bucket
+  S3Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub
+      - |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProvider}"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProvider}:sub": "system:serviceaccount:${NameSpace}:${ResourceName}"
+                }
+              }
+            }
+          ]
+        }
+      - NameSpace: default
+        ResourceName: internal-kubectl
+      Path: "/"
+      Policies:
+      - PolicyName: QSBucketAccess
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action: s3:GetObject
+              Resource: !Sub "arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+  # This Job is used to setup the Windows VPC Webhook and Resource Controller
+  JobResource:
+    Type: "Custom::KubeManifest"
+    Version: '1.0'
+    Properties:
+      # The lambda function that executes the manifest against the cluster. This is created in one of the parent stacks
+      ServiceToken: !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:EKS-QuickStart-KubeManifest-${ClusterName}"
+      ClusterName: !Ref ClusterName
+      # Kubernetes manifest
+      Manifest:
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: windows-prep
+        spec:
+          template:
+            spec:
+              serviceAccountName: internal-kubectl
+              containers:
+              - name: windows-prep-container
+                image: amazonlinux:2
+                command: ["/bin/bash","-c"]
+                args: 
+                  - !Sub >
+                    sleep 10;
+                    yum install -y awscli;
+                    export AWS_REGION=${AWS::Region};
+                    echo ${!S3_SCRIPT_URL};
+                    aws s3 cp --region ${QSS3BucketRegion} ${!S3_SCRIPT_URL} ./windows-setup.sh;
+                    chmod +x ./windows-setup.sh;
+                    ./windows-setup.sh
+                env:
+                  - name: K8S_ENDPOINT
+                    value: !Ref ClusterKubeServerEndpoint
+                  - name: K8S_CA_DATA
+                    value: !Ref ClusterCACert
+                  - name: K8S_CLUSTER_NAME
+                    value: !Ref ClusterName
+                  - name: S3_SCRIPT_URL
+                    value: !Sub 's3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/windows-setup.sh'
+              restartPolicy: OnFailure
+          backoffLimit: 4

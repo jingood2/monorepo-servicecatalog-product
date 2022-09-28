@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploys Lambda functions required for the AWS EKS Quick Start (qs-1p7nknoh4)
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
+Parameters:
+  QSS3BucketName:
+    Type: String
+  QSS3KeyPrefix:
+    Type: String
+  KubernetesAdminRoleArn:
+    Type: String
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  ControlPlaneSecurityGroup:
+    Type: String
+  EKSSubnetIds:
+    Type: List<String>
+  EKSClusterName:
+    Type: String
+  HttpProxy:
+    Type: String
+    Default: ""
+Mappings:
+  Config:
+    Prefix: { Value: 'eks-quickstart' }
+Conditions:
+  NoProxy: !Equals [!Ref HttpProxy, '']
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Resources:
+  CopyZips:
+    Type: Custom::CopyZips
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-CopyZips', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      DestBucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      SourceBucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Prefix: !Ref 'QSS3KeyPrefix'
+      Objects:
+        - functions/packages/kubernetesResources/awsqs_kubernetes_get_vpc.zip
+        - functions/packages/kubernetesResources/awsqs_kubernetes_apply_vpc.zip
+        - functions/packages/KubeManifest/lambda.zip
+        - functions/packages/KubeGet/lambda.zip
+  LambdaSGCleanup:
+    Type: Custom::LambdaSGCleanup
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-CleanupSecurityGroupDependencies', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Region: !Ref "AWS::Region"
+      SecurityGroups:
+        - !Ref EKSLambdaSecurityGroup
+  EKSLambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for lambda to communicate with cluster API
+      VpcId: !Ref VPCID
+  ClusterControlPlaneSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow lambda to communicate with the cluster API Server
+      GroupId: !Ref ControlPlaneSecurityGroup
+      SourceSecurityGroupId: !Ref EKSLambdaSecurityGroup
+      IpProtocol: tcp
+      ToPort: 443
+      FromPort: 443
+  GetVpcCidr:
+    Type: Custom::CliQuery
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      AwsCliCommand: !Sub "ec2 describe-vpcs --vpc-id ${VPCID} --query 'Vpcs[0].{CidrBlock:CidrBlock}'"
+      IdField: 'CidrBlock'
+  GetKubectlLayerArn:
+    Type: Custom::CliQuery
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      AwsCliCommand: !Sub
+      - |
+        lambda list-layer-versions --layer-name ${Prefix}-Kubectl --query 'max_by(LayerVersions, &Version)'
+      - Prefix: !FindInMap [Config, Prefix, Value]
+      IdField: 'LayerVersionArn'
+  GetCrhelperLayerArn:
+    Type: Custom::CliQuery
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      AwsCliCommand: !Sub
+      - |
+        lambda list-layer-versions --layer-name ${Prefix}-Crhelper --query 'max_by(LayerVersions, &Version)'
+      - Prefix: !FindInMap [Config, Prefix, Value]
+      IdField: 'LayerVersionArn'
+  GetAwsCliLayerArn:
+    Type: Custom::CliQuery
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      AwsCliCommand: !Sub
+      - |
+        lambda list-layer-versions --layer-name ${Prefix}-AwsCli --query 'max_by(LayerVersions, &Version)'
+      - Prefix: !FindInMap [Config, Prefix, Value]
+      IdField: 'LayerVersionArn'
+  KubeResourceLambda:
+    DependsOn: [LambdaSGCleanup, CopyZips]
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'awsqs-kubernetes-resource-proxy-${EKSClusterName}'
+      Handler: awsqs_kubernetes_resource.utils.proxy_wrap
+      MemorySize: 256
+      Role: !Ref KubernetesAdminRoleArn
+      Runtime: python3.7
+      Timeout: 900
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/kubernetesResources/awsqs_kubernetes_apply_vpc.zip'
+      Environment:
+        Variables:
+          KUBECONFIG: /tmp/.kube/config
+          HTTPS_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          HTTP_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          NO_PROXY: !Sub '${GetVpcCidr},localhost,127.0.0.1,169.254.169.254,.internal'
+      VpcConfig:
+        SecurityGroupIds: [!Ref EKSLambdaSecurityGroup]
+        SubnetIds: !Ref EKSSubnetIds
+  LegacyKubeManifestLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: CopyZips
+    Properties:
+      FunctionName: !Sub "EKS-QuickStart-KubeManifest-${EKSClusterName}"
+      Handler: lambda_function.lambda_handler
+      MemorySize: 256
+      Role: !Ref KubernetesAdminRoleArn
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref GetKubectlLayerArn, !Ref GetCrhelperLayerArn, !Ref GetAwsCliLayerArn]
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/KubeManifest/lambda.zip'
+      Environment:
+        Variables:
+          KUBECONFIG: /tmp/.kube/config
+          HTTPS_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          HTTP_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          NO_PROXY: !Sub '${GetVpcCidr},localhost,127.0.0.1,169.254.169.254,.internal'
+      VpcConfig:
+        SecurityGroupIds: [!Ref ControlPlaneSecurityGroup]
+        SubnetIds: !Ref EKSSubnetIds
+  LegacyKubeGetLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: CopyZips
+    Properties:
+      FunctionName: !Sub "EKS-QuickStart-KubeGet-${EKSClusterName}"
+      Handler: lambda_function.lambda_handler
+      MemorySize: 256
+      Role: !Ref KubernetesAdminRoleArn
+      Runtime: python3.7
+      Timeout: 900
+      Layers: [!Ref GetKubectlLayerArn, !Ref GetCrhelperLayerArn, !Ref GetAwsCliLayerArn]
+      Environment:
+        Variables:
+          KUBECONFIG: /tmp/.kube/config
+          HTTPS_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          HTTP_PROXY: !If [NoProxy, !Ref 'AWS::NoValue', !Ref HttpProxy]
+          NO_PROXY: !Sub '${GetVpcCidr},localhost,127.0.0.1,169.254.169.254,.internal'
+      Code:
+        S3Bucket: !Sub ['${Prefix}-lambdazips-${AWS::Region}-${AWS::AccountId}', {Prefix: !FindInMap [Config, Prefix, Value]}]
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/KubeGet/lambda.zip'
+      VpcConfig:
+        SecurityGroupIds: [!Ref ControlPlaneSecurityGroup]
+        SubnetIds: !Ref EKSSubnetIds

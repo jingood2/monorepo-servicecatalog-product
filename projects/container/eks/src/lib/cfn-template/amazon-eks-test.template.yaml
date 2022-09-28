@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Test suite for EKS Quick Start. (qs-1r0qgtna3)
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
+Parameters:
+  ClusterName:
+    Type: String
+  TestWindows:
+    Type: String
+  ManifestUrl:
+    Type: String
+Conditions:
+  EnableWindows: !Equals [!Ref TestWindows, 'Enabled']
+Resources:
+  TestKubeGet:
+    Type: "AWSQS::Kubernetes::Get"
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: kube-system
+      Name: cm/aws-auth
+      JsonPath: '{.data.mapRoles}'
+  TestKubeApplyFromS3:
+    Type: "AWSQS::Kubernetes::Resource"
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: default
+      Url: !Ref ManifestUrl
+  TestKubeApply:
+    Type: "AWSQS::Kubernetes::Resource"
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: default
+      Manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: linux-test-job
+        spec:
+          template:
+            spec:
+              nodeSelector:
+                kubernetes.io/os: linux
+                kubernetes.io/arch: amd64
+              containers:
+              - name: test-job
+                image: amazonlinux:2
+                command: ["/bin/bash", "-c", "yum install -y iputils; sleep 120; ping -c 1 aws.amazon.com"]
+              restartPolicy: OnFailure
+          backoffLimit: 4
+  TestApplyOnWindows:
+    Type: "AWSQS::Kubernetes::Resource"
+    Condition: EnableWindows
+    Properties:
+      ClusterName: !Ref ClusterName
+      Namespace: default
+      Manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: windows-test-job
+        spec:
+          template:
+            spec:
+              nodeSelector:
+                kubernetes.io/os: windows
+                kubernetes.io/arch: amd64
+              containers:
+              - name: windows-test-container
+                image: mcr.microsoft.com/windows/servercore:ltsc2019
+                command: ["powershell", "-command", "sleep 20; ping aws.amazon.com"]
+              restartPolicy: OnFailure
+          backoffLimit: 4
+Outputs:
+  TestKubeApplyResponse:
+    Value: !GetAtt TestKubeApply.Uid
+  TestKubeApplyId:
+    Value: !GetAtt TestKubeApply.ResourceVersion
+  TestKubeGetResponse:
+    Value: !GetAtt TestKubeGet.Response
+  TestKubeGetId:
+    Value: !GetAtt TestKubeGet.Id

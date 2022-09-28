@@ -1,0 +1,212 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Prepare an existing EKS cluster (qs-1p817r5f9)"
+Metadata:
+  QuickStartDocumentation:
+    EntrypointName: "Prepare an existing EKS cluster"
+    Order: Index c
+  LintSpellExclude: ['http://10.101.0.100:3128/', Security Group, Subnet IDs, 'No', vpc, '(Optional)', 'IDs']
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: EKS cluster details
+        Parameters:
+          - KubeClusterName
+          - VPCID
+          - K8sSubnetIds
+          - HttpProxy
+          - ControlPlaneSecurityGroup
+          - PerAccountSharedResources
+          - PerRegionSharedResources
+      - Label:
+          default: AWS Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - QSS3BucketRegion
+    ParameterLabels:
+      KubeClusterName:
+        default: EKS cluster name
+      ControlPlaneSecurityGroup:
+        default: EKS security group
+      K8sSubnetIds:
+        default: EKS subnet IDs
+      PerAccountSharedResources:
+        default: Deploy account-level shared resources
+      PerRegionSharedResources:
+        default: Deploy Region-level shared resources
+      VPCID:
+        default: VPC ID
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket Region
+      HttpProxy:
+        default: HTTP proxy
+Parameters:
+  KubeClusterName:
+    Type: String
+    Description: Name of the EKS cluster to enable for AWS CloudFormation.
+  K8sSubnetIds:
+    Type: String
+    Description: '(Optional) Comma-separated list of subnet IDs associated with the EKS cluster. There must be routes to the Kubernetes, AWS CloudFormation, and EKS endpoints. Leave this blank for publicly accessible clusters.'
+    Default: ""
+  ControlPlaneSecurityGroup:
+    Type: String
+    Default: ""
+    Description: '(Optional) Security group ID attached to the EKS cluster. This must allow egress traffic to the Kubernetes, AWS CloudFormation, and EKS endpoints. Leave this blank for publicly accessible clusters.'
+  PerAccountSharedResources:
+    Type: String
+    AllowedValues: ['AutoDetect', 'Yes', 'No']
+    Default: 'AutoDetect'
+    Description: Choose "No" if you already deployed the EKS account shared resources in this AWS account.
+  PerRegionSharedResources:
+    Type: String
+    AllowedValues: ['AutoDetect', 'Yes', 'No']
+    Default: 'AutoDetect'
+    Description: Choose "No" if you already deployed the EKS shared resources stack in your Region.
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+    Description: ID of the VPC that contains your EKS cluster (e.g., vpc-0343606e).
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), periods (.) and forward slash (/).
+    Default: quickstart-amazon-eks/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), periods (.) and
+      forward slash (/).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
+  HttpProxy:
+    Type: String
+    Default: ""
+    Description: "(Optional) HTTP(S) proxy configuration. If you provide a value, all worker nodes and pod egress traffic uses this proxy (e.g., http://10.101.0.100:3128/)."
+Conditions:
+  DetectSharedStacks: !And
+    - !Equals [!Ref PerAccountSharedResources, 'AutoDetect']
+    - !Equals [!Ref PerRegionSharedResources, 'AutoDetect']
+  CreatePerAccountSharedResources: !Equals [!Ref PerAccountSharedResources, 'Yes']
+  CreatePerRegionSharedResources: !Equals [!Ref PerRegionSharedResources, 'Yes']
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+Mappings:
+  Config:
+    Prefix: { Value: 'eks-quickstart' }
+    Bucket:
+      Bucket: 'aws-quickstart'
+      Key: 'quickstart-amazon-eks/functions/packages/'
+Resources:
+  CloudFormationKubernetesVPCRoleExists:
+    Metadata:
+      DependsOn:
+        - !If [CreatePerRegionSharedResources, !Ref RegionalSharedResources, !Ref 'AWS::NoValue']
+        - !If [CreatePerAccountSharedResources, !Ref AccountSharedResources, !Ref 'AWS::NoValue']
+        - !If [DetectSharedStacks, !Ref AutoDetectSharedResources, !Ref 'AWS::NoValue']
+    Type: Custom::CliQuery
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-ResourceReader', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      AwsCliCommand: "iam list-roles --query 'Roles[?RoleName==`CloudFormation-Kubernetes-VPC`].RoleName | {RoleName: [0]}'"
+      IdField: 'RoleName'
+  AutoDetectSharedResources:
+    Type: AWS::CloudFormation::Stack
+    Condition: DetectSharedStacks
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-prerequisites.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        Version: "1.0.0"
+        AccountTemplateUri: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-per-account-resources.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        RegionalTemplateUri: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-per-region-resources.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+  AccountSharedResources:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreatePerAccountSharedResources
+    DeletionPolicy: Retain
+    Metadata: { cfn-lint: { config: { ignore_checks: [W3011] } } }
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-per-account-resources.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Tags: [{Key: !FindInMap [Config, Prefix, Value], Value: AccountSharedResources}]
+  RegionalSharedResources:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreatePerRegionSharedResources
+    DeletionPolicy: Retain
+    Metadata:
+      cfn-lint: { config: { ignore_checks: [W3011] } }
+      DependsOn: !If [CreatePerAccountSharedResources, !Ref AccountSharedResources, !Ref 'AWS::NoValue']
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-per-region-resources.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+      Tags: [{Key: !FindInMap [Config, Prefix, Value], Value: RegionalSharedResources}]
+  IamStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-iam.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        QSS3BucketName: !Ref QSS3BucketName
+        CreateBastionRole: "Disabled"
+        BastionIAMRoleName: ""
+        CloudFormationKubernetesVPCRoleExists: !Ref CloudFormationKubernetesVPCRoleExists
+  FunctionStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/amazon-eks-functions.template.yaml'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        KubernetesAdminRoleArn: !GetAtt IamStack.Outputs.KubernetesAdminRoleArn
+        ControlPlaneSecurityGroup: !Ref ControlPlaneSecurityGroup
+        VPCID: !Ref VPCID
+        EKSSubnetIds: !Ref K8sSubnetIds
+        EKSClusterName: !Ref KubeClusterName
+        HttpProxy: !Ref HttpProxy
+Outputs:
+  EKSAdminRoleArn:
+    Value: !GetAtt IamStack.Outputs.KubernetesAdminRoleArn
+  HelmRoleArn:
+    Value: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/awsqs-kubernetes-helm"
+Rules:
+  AutoDetectSharedParams:
+    RuleCondition: !Or
+      - !Equals [!Ref PerRegionSharedResources, 'AutoDetect']
+      - !Equals [!Ref PerAccountSharedResources, 'AutoDetect']
+    Assertions:
+      - Assert: !And
+          - !Equals [!Ref PerRegionSharedResources, 'AutoDetect']
+          - !Equals [!Ref PerAccountSharedResources, 'AutoDetect']
+        AssertDescription: "AutDetect must be set/unset for both PerRegionSharedResources and PerAccountSharedResources"
