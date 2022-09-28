@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Deploys IAM roles and policies required for the AWS EKS Quick Start (qs-1p7nknohl)
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
+Parameters:
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: 'Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).'
+    Default: aws-quickstart
+    Description: 'S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).'
+    Type: String
+  CreateBastionRole:
+    Type: String
+    Default: "Enabled"
+    AllowedValues: ["Enabled", "Disabled"]
+  BastionIAMRoleName:
+    Type: String
+    Default: ""
+  CloudFormationKubernetesVPCRoleExists:
+    Type: String
+    Default: ""
+Conditions:
+  EnableBastionRole: !Equals [!Ref CreateBastionRole, "Enabled"]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  CreateCloudFormationKubernetesVPCRole: !Not [!Equals [!Ref CloudFormationKubernetesVPCRoleExists, 'CloudFormation-Kubernetes-VPC']]
+Mappings:
+  Config:
+    Prefix: { Value: 'eks-quickstart' }
+Resources:
+  KubernetesAdminRole:
+    Type: "AWS::IAM::Role"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: resources are created after stack is created by k8s/helm/eks resource types, and as such are unkown at role cretion time
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: eksStackPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "eks:DescribeFargateProfile"
+                  - "eks:ListTagsForResource"
+                  - "eks:ListUpdates"
+                  - "eks:DisassociateIdentityProviderConfig"
+                  - "eks:DescribeCluster"
+                  - "eks:CreateAddon"
+                  - "eks:DeleteAddon"
+                  - "eks:UntagResource"
+                  - "eks:ListClusters"
+                  - "eks:UpdateClusterVersion"
+                  - "eks:AssociateEncryptionConfig"
+                  - "eks:UpdateNodegroupConfig"
+                  - "eks:DeleteCluster"
+                  - "eks:DeleteFargateProfile"
+                  - "eks:UpdateClusterConfig"
+                  - "eks:DescribeAddonVersions"
+                  - "eks:DescribeUpdate"
+                  - "eks:CreateCluster"
+                  - "eks:DescribeIdentityProviderConfig"
+                  - "eks:ListAddons"
+                  - "eks:DescribeAddon"
+                  - "eks:UpdateNodegroupVersion"
+                  - "eks:AccessKubernetesApi"
+                  - "eks:AssociateIdentityProviderConfig"
+                  - "eks:DeleteNodegroup"
+                  - "eks:CreateFargateProfile"
+                  - "eks:UpdateAddon"
+                  - "eks:TagResource"
+                  - "eks:ListNodegroups"
+                  - "eks:ListIdentityProviderConfigs"
+                  - "eks:CreateNodegroup"
+                  - "eks:ListFargateProfiles"
+                  - "eks:DescribeNodegroup"
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeVpcs
+                  - lambda:InvokeFunction
+                  - s3:GetObject
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                Resource:  "*"
+              - Effect: Allow
+                Action:
+                  - events:PutRule
+                  - events:DeleteRule
+                  - events:PutTargets
+                  - events:RemoveTargets
+                Resource:  "*"
+  BastionRole:
+    Condition: EnableBastionRole
+    Type: "AWS::IAM::Role"
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: "resource does not exist at time of policy creation, so it's address is unkown"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub "ec2.${AWS::URLSuffix}"
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: QSBucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub
+                  - "arn:${AWS::Partition}:s3:::${BucketName}/*"
+                  - BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:GetLogEvents
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutRetentionPolicy
+                  - logs:PutMetricFilter
+                  - logs:CreateLogGroup
+                Resource: !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*"
+              - Effect: Allow
+                Action:
+                  - ec2:AssociateAddress
+                  - ec2:DescribeAddresses
+                  - eks:ListClusters
+                Resource: "*"
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonEC2RoleforSSM'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/CloudWatchAgentServerPolicy'
+  CloudFormationKubernetesVPCRole:
+    Type: Custom::CreateCloudFormationKubernetesVPCRole
+    Condition: CreateCloudFormationKubernetesVPCRole
+    Properties:
+      ServiceToken: !Sub ['arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${Prefix}-CloudformationVPCRoleCreation', {Prefix: !FindInMap [Config, Prefix, Value]}]
+      Partition: !Sub '${AWS::Partition}'
+Outputs:
+  KubernetesAdminRoleArn:
+    Value: !GetAtt KubernetesAdminRole.Arn
+  BastionRole:
+    Value: !If [EnableBastionRole, !Ref BastionRole, !Ref BastionIAMRoleName]

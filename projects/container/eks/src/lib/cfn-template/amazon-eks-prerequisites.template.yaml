@@ -1,0 +1,175 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Checks for Shared resources required by all Amazon EKS Quick Start stacks. (qs-1r0qgtna3)
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks: [W9002, W9003, W9004, W9006]
+Parameters:
+  RegionalTemplateUri:
+    Type: String
+  AccountTemplateUri:
+    Type: String
+  Version:
+    Type: String
+Mappings:
+  Config:
+    Prefix: { Value: 'eks-quickstart' }
+Resources:
+  PreReqsRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks: [EIAMPolicyWildcardResource, EIAMPolicyActionWildcard]
+          ignore_reasons:
+            EIAMPolicyWildcardResource: 'this role is used to launch cfn stacks containing iam roles and lambda functions. At this time it is unclear which permissions these resource types require'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: 'deploy-prereqs'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - 'lambda:*'
+                - 'iam:*'
+                - 's3:*'
+                - 'cloudformation:DescribeStacks'
+                - 'cloudformation:ListStacks'
+                - 'cloudformation:CreateStack'
+                - 'cloudformation:UpdateStack'
+                - 'ec2:DescribeRegions'
+                Resource: '*'
+  PreReqsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Checks whether the per-region and per-account EKS Quick Start stacks are present and up to date.
+      Handler: index.handler
+      Runtime: python3.7
+      Role: !GetAtt PreReqsRole.Arn
+      Timeout: 900
+      Code:
+        ZipFile: |
+          import cfnresponse
+          import boto3
+          import traceback
+          import json
+          from botocore.config import Config
+          from uuid import uuid4
+          from random import randint
+          from time import sleep
+          SX = "SharedResources"
+          C = Config(retries={'max_attempts': 10, 'mode': 'standard'})
+          BC = boto3.client
+          CFN = 'cloudformation'
+          def waiter(c, o, s):
+              print(f"waiter({o}, {s}) started")
+              retries = 50
+              while True:
+                  retries -= 1
+                  status = c.describe_stacks(StackName=s)['Stacks'][0]['StackStatus']
+                  if status in ["CREATE_COMPLETE", "UPDATE_COMPLETE"]:
+                      break
+                  if status.endswith("FAILED") or status in ["DELETE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"] or retries == 0:
+                      raise RuntimeError(f"Stack operation failed: {o} {status} {s}")
+                  sleep(randint(1000, 1500) / 100)
+              print(f"waiter({o}, {s}) done")
+          def get_stacks(key, val, region=None):
+              cfn = BC(CFN, region_name=region, config=C)
+              stacks = []
+              for p in cfn.get_paginator('describe_stacks').paginate():
+                  stacks += p['Stacks']
+              s = [s for s in stacks if {'Key': key, 'Value': val} in s['Tags']]
+              if not len(s):
+                  return None
+              stack_id = s[0]['StackId']
+              status = s[0]['StackStatus']
+              if status.endswith('_IN_PROGRESS'):
+                  op = status.split('_')[0].lower()
+                  waiter(cfn, op, stack_id)
+                  if op == 'delete':
+                      return None
+              return stack_id
+          def put_stack(name, region, template_url, parameters, key):
+              print(f"put_stack({name}, {region}, {template_url}, {parameters}, {key})")
+              o_region = region
+              sleep(randint(0, 6000) / 100)  # jitter to reduce the chance of concurrent queries racing
+              if name == f'Account{SX}':
+                  for r in [r['RegionName'] for r in BC('ec2').describe_regions()['Regions']]:
+                      acc_stack = get_stacks(key, name, r)
+                      if acc_stack:
+                          region = r
+                          break
+              stack_id = get_stacks(key, name, region)
+              client = BC(CFN, region_name=region)
+              args = {
+                  "StackName": stack_id if stack_id else f"{key}-{name}",
+                  "TemplateURL": template_url,
+                  "Parameters": [{"ParameterKey": k, "ParameterValue": v} for k, v in parameters.items()],
+                  "Capabilities": ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'],
+                  "OnFailure": "DELETE",
+                  "Tags": [{"Key": key, "Value": name}]
+              }
+              method = client.create_stack
+              wait = 'create'
+              if stack_id:
+                  method = client.update_stack
+                  wait = 'update'
+                  del args['OnFailure']
+              try:
+                  stack_id = method(**args)['StackId']
+              except Exception as e:
+                  traceback.print_exc()
+                  if f"No updates are to be performed" in str(e):
+                      return
+                  raise
+              waiter(client, wait, stack_id)
+          def handler(event, context):
+              print(json.dumps(event))
+              s = cfnresponse.SUCCESS
+              r = " "
+              p = event.get('PhysicalResourceId', context.log_stream_name)
+              props = event['ResourceProperties']
+              key = props['Key']
+              acc_uri = props['AccountTemplateUri']
+              bucket = acc_uri.split('https://')[1].split('.')[0]
+              prefix = '/'.join(acc_uri.split('/')[3:-2]) + '/'
+              try:
+                  if event['RequestType'] != 'Delete':
+                      retries = 10
+                      while True:
+                          retries -= 1
+                          try:
+                              put_stack(f'Account{SX}', None, acc_uri, {}, key)
+                              put_stack(f'Regional{SX}', None, props['RegionalTemplateUri'],
+                                        {"QSS3BucketName": bucket, "QSS3KeyPrefix": prefix, "RandomStr": uuid4().hex}, key)
+                              break
+                          except Exception:
+                              traceback.print_exc()
+                              if retries > 0:
+                                  sleep(randint(0, 3000) / 100)
+                              else:
+                                  raise
+              except Exception as e:
+                  s = cfnresponse.FAILED
+                  r = f"Exception: {e}"
+                  traceback.print_exc()
+              finally:
+                  cfnresponse.send(event, context, s, {}, p, reason=r)
+  PreReqs:
+    Type: Custom::PreReqs
+    Properties:
+      ServiceToken: !GetAtt 'PreReqsFunction.Arn'
+      AccountTemplateUri: !Ref AccountTemplateUri
+      RegionalTemplateUri: !Ref RegionalTemplateUri
+      Version: !Ref Version
+      Key: !FindInMap [Config, Prefix, Value]
