@@ -42,6 +42,7 @@ phases:
         fi 
       - |
         if [ "$TARGET_TYPE" = "eks" ]; then 
+          # ToDo: get EKS menifest from S3
           sed -i.bak 's#AWS_ECR_URI#'"$AWS_ECR_URI"'#' ./EKS/deploy.yaml
           sed -i.bak 's#DATE_STRING#'"$DATE"'#' ./EKS/deploy.yaml
           kubectl apply -f ./EKS/deploy.yaml

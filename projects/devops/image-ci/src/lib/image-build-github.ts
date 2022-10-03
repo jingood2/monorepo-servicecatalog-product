@@ -198,6 +198,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       artifactBucket: artifactS3,
     });
 
+
     pipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
     pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
@@ -245,7 +246,9 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*'],
+        'cloudformation:*',
+        'eks:*'
+      ],
     }));
 
     const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
