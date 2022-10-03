@@ -67,9 +67,7 @@ export class CDConstruct extends Construct {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*',
-        'eks:*'
-      ],
+        'cloudformation:*']
     }));
 
     if (props.approvalStage === 'true') {

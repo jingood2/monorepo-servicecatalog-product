@@ -224,9 +224,7 @@ export class ImageBuildS3 extends servicecatalog.ProductStack {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*',
-        'eks:*'
-      ],
+        'cloudformation:*']
     }));
 
     const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
