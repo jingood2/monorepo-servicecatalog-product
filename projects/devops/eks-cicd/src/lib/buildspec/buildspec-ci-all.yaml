@@ -1,0 +1,99 @@
+version: 0.2
+
+env:
+  exported-variables:
+    - IMAGE_TAG
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - echo $AWS_DEFAULT_REGION
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $CODEBUILD_SOURCE_VERSION
+      - echo $AWS_ACCOUNT_ID
+      - echo $SERVICE_NAME
+      - echo $ARTIFACT_BUCKET
+      - echo $BUILD_TYPE
+      - echo $TARGET_TYPE
+      - aws --version
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+      - |
+        if [ "$BUILD_TYPE" = "DOCKER" ]; then
+          aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+        fi
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo $BUILD_TYPE
+      - |
+        if [ "$BUILD_TYPE" = "GRADLE" ]; then 
+          java --version ;
+          chmod +x gradlew ;
+          ./gradlew clean build ;
+        fi
+      - |
+        if [ "$BUILD_TYPE" = "MAVEN" ]; then 
+          which mvn;
+          chmod +x mvnw ;
+          ./mvnw package;
+        fi
+      - |
+        if [ "$BUILD_TYPE" = "NPM" ]; then 
+          echo Installing source NPM dependencies...;
+          npm install -y -g --unsafe-perm ;
+        fi
+      - |
+        if [ "$BUILD_TYPE" = "DOCKER" ]; then 
+          echo Building the Docker image...
+          docker build -t $REPOSITORY_URI:latest .
+
+          echo Tagging Docker image...
+          docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+
+          echo Pushing the Docker images...
+          docker push $REPOSITORY_URI:latest
+          docker push $REPOSITORY_URI:$IMAGE_TAG
+        fi
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo $BUILD_TYPE
+      - |
+        if [ "$BUILD_TYPE" = "GRADLE" ]; then 
+          mv build/libs/*.jar app.jar
+          mv .ebextentions .ebextentions
+          echo Writing Procfile for Beanstlak...
+          zip -r $IMAGE_TAG.zip app.jar .ebextentions
+          aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip
+          aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip
+        fi
+      - |
+        if [ "$BUILD_TYPE" = "MAVEN" ]; then 
+          mv target/*.jar app.jar
+          mv .ebextentions .ebextentions
+          echo Writing Procfile for Beanstlak...
+          zip -r $IMAGE_TAG.zip app.jar .ebextentions
+          aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip
+          aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip
+        fi
+
+      - |
+        if [ "$BUILD_TYPE" = "DOCKER" ]; then 
+          if [ "$TARGET_TYPE" = "eks" ]; then 
+            echo Writing image definitions file for EKS...
+            mv ./k8s/* ./k8s
+            zip -r $IMAGE_TAG.zip ./k8s
+            aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip
+            aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip
+          fi 
+
+          if [ "$TARGET_TYPE" = "lambda" ]; then 
+            echo Writing image definitions file for LAMBDA...
+          fi 
+        fi
+artifacts:
+  files:
+    - '**/*'
+  name: $IMAGE_TAG
