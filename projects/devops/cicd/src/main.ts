@@ -1,7 +1,7 @@
+import path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import path from 'path';
 import { ContainerCodecommitCICDProduct } from './lib/container-codecommit-cicd';
 import { ContainerGithubCICDProduct } from './lib/container-github-cicd';
 //import { ContainerCICDProduct } from './lib/container-codecommit-cicd';

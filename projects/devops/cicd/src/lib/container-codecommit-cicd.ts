@@ -261,11 +261,26 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
     githubPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
     githubPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] }); */
 
+    const codePipelineRole = new iam.Role(this, 'CodePipelineRole', {
+      assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
+      roleName: cdk.PhysicalName.GENERATE_IF_NEEDED,
+      inlinePolicies: {
+        rootPermissions: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              resources: [`${artifactS3.bucketArn}/*`],
+              actions: ['s3:GetObject', 's3:List*', 's3:GetObjectVersion'],
+            }),
+          ],
+        }),
+      },
+    });
 
     // Codecommit Pipeline
     const codecommitPipeline = new codepipeline.Pipeline(this, 'CodecommitPipeline', {
       pipelineName: `${serviceName.valueAsString}`,
       artifactBucket: artifactS3,
+      role: codePipelineRole.withoutPolicyUpdates(),
     });
 
     codecommitPipeline.addStage({ stageName: 'Source' }).addAction(codeCommitSourceAction);
