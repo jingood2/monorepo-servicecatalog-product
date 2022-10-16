@@ -1,54 +1,65 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 
 import { Construct } from 'constructs/lib/construct';
+import yaml from 'yaml';
 
-import * as yaml from 'yaml';
 
-
-export interface CIConstructProps {
-  serviceName: string;
-  servicePort: number;
+export interface StackNameProps extends cdk.StackProps {
   repoName: string;
   repoOwner: string;
   repoBranch: string;
-  githubTokenSecretId: string;
+  secretKey: string;
+  serviceName: string;
+  containerPort: number;
+  sourceArtifact: string;
   buildType: string;
   envType: string;
 }
 
 export class CIConstruct extends Construct {
   public readonly pipeline: codepipeline.Pipeline;
+  public readonly imageTag: string;
+  public readonly sourceOutput: codepipeline.Artifact;
   public readonly buildOutput: codepipeline.Artifact;
-  public readonly IMAGE_TAG: string;
+  public readonly ecrRepoUri: string;
+  public readonly codebuildAction: codepipeline_actions.CodeBuildAction;
 
-  constructor(scope: Construct, id: string, props: CIConstructProps) {
+  constructor(scope: Construct, id: string, props: StackNameProps) {
     super(scope, id);
 
+    // Prerequisites CodePipeline
     const sourceOutput = new codepipeline.Artifact('Source');
-    this.buildOutput = new codepipeline.Artifact('Build');
+    const buildOutput = new codepipeline.Artifact('Build');
 
-    const ecrRepository = new ecr.Repository(this, 'ECRRepository', {
+
+    const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
       repositoryName: props.serviceName,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    const artfactS3 = new s3.Bucket(this, 'S3BucketsApp', {
-      bucketName: `${props.serviceName}-codepipeline-artifact`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: false,
+    // SourceAction
+    // 1.1 Github Source Action
+    const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
+      actionName: 'GITHUB',
+      owner: props.repoOwner,
+      repo: props.repoName,
+      branch: props.repoBranch,
+      oauthToken: cdk.SecretValue.secretsManager(props.secretKey),
+      output: sourceOutput,
     });
 
+
+    // Configure Build Action
     const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
 
-    const buildProject = new codebuild.PipelineProject(this, 'CIBuildProject', {
+    const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
       environment: {
         buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3, // for arm64/v8 cpu platform
@@ -56,72 +67,65 @@ export class CIConstruct extends Construct {
       },
       environmentVariables: {
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
-        SERVICE_NAME: { value: props.serviceName },
-        SERVICE_PORT: { value: props.servicePort },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+        CONTAINER_PORT: { value: props.containerPort },
         BUILD_TYPE: { value: props.buildType },
         TARGET_TYPE: { value: props.envType },
-        ARTIFACT_BUCKET: { value: artfactS3.bucketName },
-        //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
-        //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+        SERVICE_NAME: { value: props.serviceName },
       },
-    // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
-    //cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
+      // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
+      cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
     });
 
     ecrRepository.grantPullPush(buildProject.grantPrincipal);
 
-    const sourceAction = this.selectSourceAction( 'GITHUB',
-      props.repoName, props.repoBranch, sourceOutput, props.repoOwner, props.githubTokenSecretId);
-
     const buildAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'Build',
       input: sourceOutput,
-      outputs: [this.buildOutput],
+      outputs: [buildOutput],
       project: buildProject,
     });
 
-    // artifactBucket/pipelineName/IMAGE_TAG/Dockerrun.aws.json
-    const githubPipeline = new codepipeline.Pipeline(this, 'GitHubSourcePipeline', {
+    this.codebuildAction = buildAction;
+
+    const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', props.sourceArtifact);
+
+    // 1.1 Github Pipeline
+    const githubPipeline = new codepipeline.Pipeline(this, 'GitHub', {
       pipelineName: `${props.serviceName}`,
-      artifactBucket: artfactS3,
+      artifactBucket: artifactS3,
     });
 
-    // Source Stage
-    const sourceStage = githubPipeline.addStage({ stageName: 'Source' });
-    sourceStage.addAction(sourceAction);
+    artifactS3.grantReadWrite(githubPipeline.role);
 
-    // Build Stage
-    const buildStage = githubPipeline.addStage({ stageName: 'Build' });
-    buildStage.addAction(buildAction);
+    githubPipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
+    githubPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
-    this.IMAGE_TAG = buildAction.variable('IMAGE_TAG');
     this.pipeline = githubPipeline;
+    this.imageTag = buildAction.variable('IMAGE_TAG');
+    this.sourceOutput = sourceOutput;
+    this.buildOutput = buildOutput;
+    this.ecrRepoUri = ecrRepository.repositoryUri;
 
-  }
-
-  private selectSourceAction(provider: string, repoName: string, branch: string,
-    sourceOutput: codepipeline.Artifact, owner?: string, secretId?: string): codepipeline_actions.Action {
-
-    console.log('Provider:' + provider);
-
-    if (provider === 'GITHUB') {
-      return new codepipeline_actions.GitHubSourceAction({
-        actionName: 'GITHUB',
-        owner: owner ?? '',
-        repo: repoName,
-        branch: branch,
-        oauthToken: cdk.SecretValue.secretsManager(secretId ?? ''),
-        output: sourceOutput,
-      } );
-    } 
-
-    return new codepipeline_actions.CodeCommitSourceAction({
-      actionName: 'CODECOMMIT',
-      repository: codecommit.Repository.fromRepositoryName(this, 'GitRepository', repoName),
-      branch: branch,
-      output: sourceOutput,
+    /* // 1.2 CodeCommit Pipeline
+    const codecommitPipeline = new codepipeline.Pipeline(this, 'CodeCommit', {
+      pipelineName: `${props.serviceName}-pipeline`,
+      artifactBucket: artifactS3,
     });
+    codecommitPipeline.addStage({ stageName: 'SOURCE' }).addAction(CodeCommitSourceAction);
+    codecommitPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
+    (codecommitPipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsCodecommitCondition;
+
+
+    // 1.3 S3 Pipeline
+    const s3Pipeline = new codepipeline.Pipeline(this, 'S3', {
+      pipelineName: `${props.serviceName}-pipeline`,
+      artifactBucket: artifactS3,
+    });
+    s3Pipeline.addStage({ stageName: 'SOURCE' }).addAction(S3SourceAction);
+    s3Pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
+    (s3Pipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsS3Condition; */
+
   }
 }

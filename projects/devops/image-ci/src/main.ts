@@ -7,6 +7,7 @@ import { GithubCICDProduct } from './lib/github-cicd-product';
 import { ImageBuildCodecommit } from './lib/image-build-codecommit';
 import { ImageBuildGithub } from './lib/image-build-github';
 import { ImageBuildS3 } from './lib/image-build-s3';
+import { ImageBuildEksGithub } from './lib/image-build-eks-github';
 
 
 export class MyStack extends Stack {
@@ -62,6 +63,12 @@ export class MyStack extends Stack {
           description: 'Github Docker Compose CD',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new ComposeToCfnCD(this, 'GithubDockerComposeCDProduct', {})),
+        },
+        {
+          productVersionName: 'v8',
+          description: 'EKS CICD Pieline with Github',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ImageBuildEksGithub(this, 'CIGithubEksProduct', {})),
         },
       ],
     });

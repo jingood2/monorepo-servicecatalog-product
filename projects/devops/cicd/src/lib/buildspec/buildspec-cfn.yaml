@@ -1,0 +1,24 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - mv /usr/local/bin/docker /usr/bin/docker
+      - curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo Creating Docker Compose Context
+      - curl "http://169.254.170.2${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}" > creds.json
+      - export AWS_ACCESS_KEY_ID=$(cat creds.json | jq -r .AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(cat creds.json | jq -r .SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(cat creds.json | jq -r .Token)
+      - docker context create ecs demoecs --from-env
+      - docker context use demoecs
+  build:
+    commands:
+      - echo Convert Compose File
+      - docker --debug compose convert > cloudformation.yml
+artifacts:
+  files:
+    - cloudformation.yml

@@ -97,11 +97,15 @@ phases:
             aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip
           fi 
 
-          if [ "$TARGET_TYPE" = "EKS" ]; then 
+          if [ "$TARGET_TYPE" = "eks" ]; then 
             echo Writing image definitions file for EKS...
+            mv ./k8s/* ./k8s
+            zip -r $IMAGE_TAG.zip ./k8s
+            aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip
+            aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip
           fi 
 
-          if [ "$TARGET_TYPE" = "LAMBDA" ]; then 
+          if [ "$TARGET_TYPE" = "lambda" ]; then 
             echo Writing image definitions file for LAMBDA...
           fi 
         fi

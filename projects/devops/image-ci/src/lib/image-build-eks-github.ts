@@ -1,9 +1,17 @@
+import fs from 'fs';
+import path from 'path';
 import * as cdk from 'aws-cdk-lib';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+//import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 
 import { Construct } from 'constructs/lib/construct';
+import yaml from 'yaml';
 import { CDConstruct } from './cd-construct';
-import { CIConstruct } from './ci-construct';
 //import { CDConstruct } from './cd-construct';
 
 
@@ -11,7 +19,7 @@ export interface StackNameProps extends cdk.StackProps {
 
 }
 
-export class GithubCICDProduct extends servicecatalog.ProductStack {
+export class ImageBuildEksGithub extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: StackNameProps) {
     super(scope, id);
 
@@ -108,7 +116,7 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
     const sourceArtifact = new cdk.CfnParameter(this, 'S3BucketSourceArtifacts', {
       type: 'String',
       description: 'S3 Bucket Name for Source and Build Artifact',
-      default: 'acme-servicecatalog-cicd-bucket',
+      default: 'awstf-servicecatalog-cicd-bucket',
     });
 
     const buildType = new cdk.CfnParameter(this, 'PackagingType', {
@@ -125,34 +133,90 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
-    const ci = new CIConstruct(this, 'CI', {
-      repoName: repoName.valueAsString,
-      repoOwner: repoOwner.valueAsString,
-      repoBranch: repoBranch.valueAsString,
-      secretKey: secretKey.valueAsString,
-      serviceName: serviceName.valueAsString,
-      containerPort: containerPort.valueAsNumber,
-      sourceArtifact: sourceArtifact.valueAsString,
-      buildType: buildType.valueAsString,
-      envType: envType.valueAsString,
-    },
-    );
+    // Prerequisites CodePipeline
+    const sourceOutput = new codepipeline.Artifact('Source');
+    const buildOutput = new codepipeline.Artifact('Build');
 
+
+    // 1. Define Pipeline Source Action
+    // Source Action
+    const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
+      actionName: 'GITHUB',
+      owner: repoOwner.valueAsString,
+      repo: repoName.valueAsString,
+      branch: repoBranch.valueAsString,
+      oauthToken: cdk.SecretValue.secretsManager(secretKey.valueAsString),
+      output: sourceOutput,
+    });
+
+    const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
+      repositoryName: serviceName.valueAsString,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      imageScanOnPush: true,
+      lifecycleRules: [{ maxImageCount: 10 }],
+    });
+
+    const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
+
+    const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
+      buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3, // for arm64/v8 cpu platform
+        privileged: true,
+      },
+      environmentVariables: {
+        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+        REPOSITORY_URI: { value: ecrRepository.repositoryUri },
+        AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
+        AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
+        CONTAINER_PORT: { value: containerPort.valueAsString },
+        BUILD_TYPE: { value: buildType.valueAsString },
+        TARGET_TYPE: { value: envType.valueAsString },
+        SERVICE_NAME: { value: serviceName.valueAsString },
+        ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
+      },
+      // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
+      cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
+    });
+
+    ecrRepository.grantPullPush(buildProject.grantPrincipal);
+
+    const buildAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'Build',
+      input: sourceOutput,
+      outputs: [buildOutput],
+      project: buildProject,
+      environmentVariables: {
+        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+      },
+    });
+
+    const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
+
+    // 1.1 Github Pipeline
+    const pipeline = new codepipeline.Pipeline(this, 'GitHubPipeline', {
+      pipelineName: `${serviceName.valueAsString}`,
+      artifactBucket: artifactS3,
+    });
+
+
+    pipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
+    pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
     new CDConstruct(this, 'CD', {
-      codebuildAction: ci.codebuildAction,
-      imageTag: ci.codebuildAction.variable('IMAGE_TAG'),
+      codebuildAction: buildAction,
+      imageTag: buildAction.variable('IMAGE_TAG'),
       projectName: projectName.valueAsString,
       environment: environment.valueAsString,
       serviceName: serviceName.valueAsString,
       ecrRepoName: serviceName.valueAsString,
-      ecrRepoUrl: ci.ecrRepoUri, 
+      ecrRepoUrl: ecrRepository.repositoryUri, 
       containerPort: containerPort.valueAsNumber, // only use beanstalk
       deployTargetType: envType.valueAsString,
       approvalStage: 'true',
-      pipeline: ci.pipeline,
+      pipeline: pipeline,
       sourceArtifact: sourceArtifact.valueAsString,
-      buildOutput: ci.buildOutput,
+      buildOutput: buildOutput,
     });
 
     /* const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
@@ -185,7 +249,7 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*'],
+        'cloudformation:*']
     }));
 
     const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });

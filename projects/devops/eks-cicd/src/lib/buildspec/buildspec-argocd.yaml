@@ -64,7 +64,7 @@ phases:
             argocd proj create $PROJECT_NAME -d https://kubernetes.default.svc,$PROJECT_NAME-$ENVIRONMENT -s https://github.com/$REPO_OWNER/$REPO_NAME.git --upsert
             argocd app create $SERVICE_NAME --repo https://github.com/$REPO_OWNER/$REPO_NAME.git --path ./dist/$ENVIRONMENT --dest-server https://kubernetes.default.svc --dest-namespace $PROJECT_NAME-$ENVIRONMENT
 
-            if ["$ENABLE_AUTOSYNC" = 'true' ]; then
+            if [ "$ENABLE_AUTOSYNC" = 'true' ]; then
               argocd app sync $SERVICE_NAME
             fi
           fi 
