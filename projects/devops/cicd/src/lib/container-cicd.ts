@@ -1,16 +1,17 @@
-import fs from 'fs';
-import path from 'path';
 import * as cdk from 'aws-cdk-lib';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
-
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import { Construct } from 'constructs/lib/construct';
+import fs from 'fs';
 import yaml from 'yaml';
+import path from 'path';
+
 //import { CDConstruct } from './cd-construct';
 
 
@@ -18,7 +19,7 @@ export interface StackNameProps extends cdk.StackProps {
 
 }
 
-export class ImageBuildGithub extends servicecatalog.ProductStack {
+export class ContainerCICDProduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: StackNameProps) {
     super(scope, id);
 
@@ -27,19 +28,23 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         ParameterGroups: [
           {
             Label: {
-              default: 'Git Repository Common Information',
+              default: 'Environment Information',
+            },
+            Parameters: [
+              'ProjectName',
+              'ServiceName',
+              'DeployStage1',
+              'DeployStage2',
+            ],
+          },
+          {
+            Label: {
+              default: 'Git Repository Information',
             },
             Parameters: [
               'SourceProviderType',
               'RepoName',
               'RepoBranch',
-            ],
-          },
-          {
-            Label: {
-              default: 'GitHub Information',
-            },
-            Parameters: [
               'RepoOwner',
               'GithubSecretTokenId',
             ],
@@ -49,24 +54,29 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
               default: 'Configuration for Codebuild',
             },
             Parameters: [
-              'ServiceName',
+              'BuildType',
               'sourceArtifact',
-              'ecsCluster',
-              'vpcId',
-              'albArn',
             ],
           },
+          {
+            Label: {
+              default: 'Deploy Information'
+            },
+            Parameters: [
+              'DeployTargetType'
+            ]
+          }
         ],
       },
     };
 
     // Define Parameters
-    /* const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
       type: 'String',
       description: 'Source Provider Type',
       default: 'GITHUB',
-      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET', 'S3', 'GENERAL'],
-    }); */
+      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET' ],
+    });
 
     // Informations of Tag Convention
     const projectName = new cdk.CfnParameter(this, 'ProjectName', {
@@ -75,10 +85,17 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       default: 'acme',
     });
 
-    const environment = new cdk.CfnParameter(this, 'Environment', {
-      description: 'The name of the Environment',
+    const stage1 = new cdk.CfnParameter(this, 'DeployStage1', {
+      description: 'Deploy Stage1 Environment',
       type: 'String',
       default: 'dev',
+      allowedValues: ['dmz', 'dev', 'shared', 'prod'],
+    });
+
+    const stage2 = new cdk.CfnParameter(this, 'DeployStage2', {
+      description: 'Deploy Stage1 Environment',
+      type: 'String',
+      default: 'prod',
       allowedValues: ['dmz', 'dev', 'shared', 'prod'],
     });
 
@@ -88,7 +105,7 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
     });
 
     const repoOwner= new cdk.CfnParameter(this, 'RepoOwner', {
-      default: 'main',
+      default: 'myowner',
     });
 
     const repoBranch = new cdk.CfnParameter(this, 'RepoBranch', {
@@ -115,32 +132,40 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
     const sourceArtifact = new cdk.CfnParameter(this, 'S3BucketSourceArtifacts', {
       type: 'String',
       description: 'S3 Bucket Name for Source and Build Artifact',
-      default: 'awstf-servicecatalog-cicd-bucket',
+      default: 'acme-servicecatalog-cicd-bucket',
     });
 
-    const buildType = new cdk.CfnParameter(this, 'PackagingType', {
+    const buildType = new cdk.CfnParameter(this, 'BuildType', {
       type: 'String',
       description: 'Source Packaging Tool',
       default: 'DOCKER',
       allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON', 'DOCKER'],
     });
 
-    const envType = new cdk.CfnParameter(this, 'EnvType', {
+    const envType = new cdk.CfnParameter(this, 'DeployTargetType', {
       type: 'String',
       description: 'Source Packaging Tool',
       default: 'beanstalk',
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
+
+    const enableGithubCondition = new cdk.CfnCondition(this, 'EnableGithubCondition', {
+      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'github'),
+    });
+
+    const enableCodecommitCondition = new cdk.CfnCondition(this, 'EnableCodecommitCondition', {
+      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'codecommit'),
+    });
+
     // Prerequisites CodePipeline
     const sourceOutput = new codepipeline.Artifact('Source');
     const buildOutput = new codepipeline.Artifact('Build');
 
-
-    // 1. Define Pipeline Source Action
-    // Source Action
+    // 1. SourceAction
+    // 1.1 Github 
     const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
-      actionName: 'GITHUB',
+      actionName: 'Github',
       owner: repoOwner.valueAsString,
       repo: repoName.valueAsString,
       branch: repoBranch.valueAsString,
@@ -148,13 +173,22 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       output: sourceOutput,
     });
 
-    const ecrRepository = new ecr.Repository(this, 'ECRRepositoryName', {
+    // 1.2 Codecommit
+    const codeCommitSourceAction = new codepipeline_actions.CodeCommitSourceAction({
+      actionName: 'Codecommit',
+      repository: codecommit.Repository.fromRepositoryName(this, 'GitRepository', repoName.valueAsString),
+      branch: repoBranch.valueAsString,
+      output: sourceOutput,
+    });
+
+    const ecrRepository = new ecr.Repository(this, 'ECRRepo', {
       repositoryName: serviceName.valueAsString,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       imageScanOnPush: true,
       lifecycleRules: [{ maxImageCount: 10 }],
     });
 
+    // Build Project
     const buildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-ci-all.yaml'), 'utf8'));
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
@@ -177,9 +211,9 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       // Note: Invalid cache type: local caching is not supported for projects with environment type ARM_CONTAINER and compute type BUILD_GENERAL1_LARGE
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
     });
-
     ecrRepository.grantPullPush(buildProject.grantPrincipal);
 
+    // Build Action
     const buildAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'Build',
       input: sourceOutput,
@@ -190,31 +224,77 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       },
     });
 
+    // Approval Action
+    const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
+
+    // Deploy Dev Action
+    const deployDevAction = this.createDeployAction(
+      serviceName.valueAsString,
+      projectName.valueAsString,
+      stage1.valueAsString,
+      sourceArtifact.valueAsString,
+      envType.valueAsString,
+      buildAction,
+      buildOutput
+    );
+
+    const deployProdAction = this.createDeployAction(
+      serviceName.valueAsString,
+      projectName.valueAsString,
+      stage2.valueAsString,
+      sourceArtifact.valueAsString,
+      envType.valueAsString,
+      buildAction,
+      buildOutput
+    );
+
+
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
 
-    // 1.1 Github Pipeline
-    const pipeline = new codepipeline.Pipeline(this, 'GitHubPipeline', {
+    // Github Pipeline
+    const githubPipeline = new codepipeline.Pipeline(this, 'GitHubPipeline', {
       pipelineName: `${serviceName.valueAsString}`,
       artifactBucket: artifactS3,
     });
 
+    githubPipeline.addStage({ stageName: 'Source' }).addAction(githubSourceAction);
+    githubPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
+    githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction]});
+    githubPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
+    githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployProdAction]});
 
-    pipeline.addStage({ stageName: 'SOURCE' }).addAction(githubSourceAction);
-    pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
 
-    /* new CDConstruct(this, 'CD', {
-      imageTag: githubSourceAction.variables.commitId,
-      projectName: projectName.valueAsString,
-      environment: environment.valueAsString,
-      serviceName: serviceName.valueAsString,
-      ecrRepoName: serviceName.valueAsString,
-      containerPort: containerPort.valueAsNumber, // only use beanstalk
-      deployTargetType: envType.valueAsString,
-      approvalStage: 'true',
-      pipeline: pipeline,
-      sourceArtifact: sourceArtifact.valueAsString,
-      buildOutput: buildOutput,
-    }); */
+    // Codecommit Pipeline
+    const codecommitPipeline = new codepipeline.Pipeline(this, 'CodecommitPipeline', {
+      pipelineName: `${serviceName.valueAsString}`,
+      artifactBucket: artifactS3,
+    });
+
+    codecommitPipeline.addStage({ stageName: 'Source' }).addAction(codeCommitSourceAction);
+    codecommitPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
+    codecommitPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction]});
+    codecommitPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
+    codecommitPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployProdAction]});
+
+    // BitBucket Pipeline
+
+    // Jenkins
+
+    ( githubPipeline.node.defaultChild as codepipeline.CfnPipeline ).cfnOptions.condition = enableGithubCondition;
+    ( codecommitPipeline.node.defaultChild as codepipeline.CfnPipeline).cfnOptions.condition = enableCodecommitCondition;
+
+
+  }
+
+  private createDeployAction(
+    serviceName: string,
+    projectName: string,
+    stage: string,
+    artifact: string,
+    deployTarget: string,
+    buildAction: codepipeline_actions.CodeBuildAction,
+    buildOutput: codepipeline.Artifact, 
+  ) : codepipeline_actions.CodeBuildAction {
 
     const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
 
@@ -226,13 +306,13 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
       },
       environmentVariables: {
         //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
-        SERVICE_NAME: { value: serviceName.valueAsString },
-        ENVIRONMENT: { value: environment.valueAsString },
-        DEPLOY_ENV_NAME: { value: `${projectName.valueAsString}-${envType.valueAsString}-${environment.valueAsString}` },
+        SERVICE_NAME: { value: serviceName },
+        ENVIRONMENT: { value: stage },
+        DEPLOY_ENV_NAME: { value: `${projectName}-${deployTarget}-${stage}` },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
-        ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
-        TARGET_TYPE: { value: envType.valueAsString },
+        ARTIFACT_BUCKET: { value: artifact },
+        TARGET_TYPE: { value: deployTarget },
       },
     });
 
@@ -249,9 +329,6 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         'cloudformation:*']
     }));
 
-    const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
-    pipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
-
     const deployAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'Deploy',
       input: buildOutput,
@@ -260,8 +337,8 @@ export class ImageBuildGithub extends servicecatalog.ProductStack {
         IMAGE_TAG: { value: buildAction.variable('IMAGE_TAG') },
       },
     });
-    pipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] });
 
+    return deployAction;
 
   }
 }

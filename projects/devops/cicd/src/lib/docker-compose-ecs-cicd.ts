@@ -2,8 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 
 import { Construct } from 'constructs/lib/construct';
-import { CDConstruct } from './cd-construct';
 import { CIConstruct } from './ci-construct';
+import { ComposeToCfn } from './compose-to-cfn';
 //import { CDConstruct } from './cd-construct';
 
 
@@ -11,7 +11,7 @@ export interface StackNameProps extends cdk.StackProps {
 
 }
 
-export class GithubCICDProduct extends servicecatalog.ProductStack {
+export class DockerComposeECSCICD extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: StackNameProps) {
     super(scope, id);
 
@@ -44,7 +44,6 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
             Parameters: [
               'ServiceName',
               'sourceArtifact',
-              'ecsCluster',
               'vpcId',
               'albArn',
             ],
@@ -111,13 +110,6 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       default: 'acme-servicecatalog-cicd-bucket',
     });
 
-    const buildType = new cdk.CfnParameter(this, 'PackagingType', {
-      type: 'String',
-      description: 'Source Packaging Tool',
-      default: 'DOCKER',
-      allowedValues: ['MAVEN', 'GRADLE', 'NPM', 'PYTHON', 'DOCKER'],
-    });
-
     const envType = new cdk.CfnParameter(this, 'EnvType', {
       type: 'String',
       description: 'Source Packaging Tool',
@@ -125,7 +117,17 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       allowedValues: ['ecs', 'fargate', 'eks', 'beanstalk', 'lambda'],
     });
 
-    const ci = new CIConstruct(this, 'CI', {
+    const vpcId = new cdk.CfnParameter(this, 'VpcId', {
+      type: 'AWS::EC2::VPC::Id',
+      description: 'VPC ID for ECS Cluster',
+    });
+
+    const albArn = new cdk.CfnParameter(this, 'AlbArn', {
+      type: 'String',
+      description: 'external alb arn',
+    });
+
+    const ci = new CIConstruct(this, 'CD', {
       repoName: repoName.valueAsString,
       repoOwner: repoOwner.valueAsString,
       repoBranch: repoBranch.valueAsString,
@@ -133,74 +135,26 @@ export class GithubCICDProduct extends servicecatalog.ProductStack {
       serviceName: serviceName.valueAsString,
       containerPort: containerPort.valueAsNumber,
       sourceArtifact: sourceArtifact.valueAsString,
-      buildType: buildType.valueAsString,
+      buildType: 'DOCKER',
       envType: envType.valueAsString,
     },
     );
 
-
-    new CDConstruct(this, 'CD', {
-      codebuildAction: ci.codebuildAction,
-      imageTag: ci.codebuildAction.variable('IMAGE_TAG'),
+    new ComposeToCfn(this, 'DockerComposeToCICD', {
+      imageTag: ci.imageTag,
       projectName: projectName.valueAsString,
       environment: environment.valueAsString,
       serviceName: serviceName.valueAsString,
       ecrRepoName: serviceName.valueAsString,
-      ecrRepoUrl: ci.ecrRepoUri, 
       containerPort: containerPort.valueAsNumber, // only use beanstalk
       deployTargetType: envType.valueAsString,
-      approvalStage: 'true',
       pipeline: ci.pipeline,
       sourceArtifact: sourceArtifact.valueAsString,
-      buildOutput: ci.buildOutput,
+      vpcId: vpcId.valueAsString,
+      existingAlbArn: albArn.valueAsString,
+      sourceOutput: ci.sourceOutput,
+      ecrRepoUri: ci.ecrRepoUri,
     });
-
-    /* const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
-
-    const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
-      buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
-        privileged: true,
-      },
-      environmentVariables: {
-        //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
-        SERVICE_NAME: { value: serviceName.valueAsString },
-        ENVIRONMENT: { value: environment.valueAsString },
-        DEPLOY_ENV_NAME: { value: `${projectName.valueAsString}-${envType.valueAsString}-${environment.valueAsString}` },
-        AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
-        AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
-        ARTIFACT_BUCKET: { value: sourceArtifact.valueAsString },
-        TARGET_TYPE: { value: envType.valueAsString },
-      },
-    });
-
-    deployProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
-      resources: ['*'],
-      actions: ['elasticbeanstalk:*',
-        'autoscaling:*',
-        'elasticloadbalancing:*',
-        'ecs:*',
-        's3:*',
-        'ec2:*',
-        'cloudwatch:*',
-        'logs:*',
-        'cloudformation:*'],
-    }));
-
-    const approvalAction = new codepipeline_actions.ManualApprovalAction({ actionName: 'Approval' });
-    pipeline.addStage( { stageName: 'Approval', actions: [approvalAction] });
-
-    const deployAction = new codepipeline_actions.CodeBuildAction({
-      actionName: 'Deploy',
-      input: buildOutput,
-      project: deployProject,
-      environmentVariables: {
-        IMAGE_TAG: { value: buildAction.variable('IMAGE_TAG') },
-      },
-    });
-    pipeline.addStage( { stageName: 'DEPLOY', actions: [deployAction] }); */
-
 
   }
 }

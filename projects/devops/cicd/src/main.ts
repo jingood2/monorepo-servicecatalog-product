@@ -1,47 +1,29 @@
-//import * as path from 'path';
-import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
+import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { CICDProduct } from './lib/cicd-product';
-//import { SCCIProduct } from './lib/sc-ci-product';
+import { ContainerCICDProduct } from './lib/container-cicd';
 
-export class MyStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
+export class MyStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: cdk.StackProps = {}) {
     super(scope, id, props);
 
     // define resources here...
-
-    new servicecatalog.CloudFormationProduct(this, 'CICDPipeline', {
-      productName: 'cicd-pipeline-product',
+    // define resources here...
+    new servicecatalog.CloudFormationProduct(this, 'ContrainerCICD', {
+      productName: 'container-cicd-product',
       owner: 'jingood2@sk.com',
       distributor: 'SK Cloud Transformation Group',
-      description: 'SC Elastic Beanstalk Product',
+      description: 'Container CICD Product',
       productVersions: [
         {
           productVersionName: 'v1',
+          description: 'Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
-            new CICDProduct(this, 'CICDPipelineProduct', {})),
+            new ContainerCICDProduct(this, 'ContainerCICDProduct', {})),
         },
+        
       ],
     });
-
-    /*  // define resources here...
-    new servicecatalog.CloudFormationProduct(this, 'CIPipeline', {
-      description: 'new-ci-pipeline-product',
-      productName: 'new-ci-pipeline-product',
-      distributor: 'jingood2@sk.com',
-      owner: 'SK Cloud Transformation Group',
-      productVersions: [
-        {
-          productVersionName: 'v1',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
-            path.join(__dirname, './lib/cfn-template/ci-product.template.yml'),
-          ),
-        },
-      ],
-    }); */
-
-
   }
 }
 
@@ -51,16 +33,16 @@ const devEnv = {
   region: process.env.CDK_DEFAULT_REGION,
 };
 
-const app = new App();
+const app = new cdk.App();
 
-//new MyStack(app, 'cicd-dev', { env: devEnv });
-new MyStack(app, 'cicd', { 
-  env: devEnv, stackName: 
+new MyStack(app, 'cicd', {
+  env: devEnv,
+  stackName:
   `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
-  synthesizer: new DefaultStackSynthesizer({
+  synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
- });
+});
 // new MyStack(app, 'cicd-prod', { env: prodEnv });
 
 app.synth();

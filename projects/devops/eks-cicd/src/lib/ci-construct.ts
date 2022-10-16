@@ -12,12 +12,13 @@ import yaml from 'yaml';
 
 
 export interface StackNameProps extends cdk.StackProps {
+  projectName: string;
+  environment: string;
   repoName: string;
   repoOwner: string;
   repoBranch: string;
   secretKey: string;
   serviceName: string;
-  containerPort: number;
   sourceArtifact: string;
   buildType: string;
   envType: string;
@@ -69,7 +70,6 @@ export class CIConstruct extends Construct {
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
-        CONTAINER_PORT: { value: props.containerPort },
         BUILD_TYPE: { value: props.buildType },
         TARGET_TYPE: { value: props.envType },
         SERVICE_NAME: { value: props.serviceName },
@@ -93,7 +93,7 @@ export class CIConstruct extends Construct {
 
     // 1.1 Github Pipeline
     const githubPipeline = new codepipeline.Pipeline(this, 'GitHub', {
-      pipelineName: `${props.serviceName}`,
+      pipelineName: `${props.serviceName}-pipeline`,
       artifactBucket: artifactS3,
     });
 
@@ -107,25 +107,6 @@ export class CIConstruct extends Construct {
     this.sourceOutput = sourceOutput;
     this.buildOutput = buildOutput;
     this.ecrRepoUri = ecrRepository.repositoryUri;
-
-    /* // 1.2 CodeCommit Pipeline
-    const codecommitPipeline = new codepipeline.Pipeline(this, 'CodeCommit', {
-      pipelineName: `${props.serviceName}-pipeline`,
-      artifactBucket: artifactS3,
-    });
-    codecommitPipeline.addStage({ stageName: 'SOURCE' }).addAction(CodeCommitSourceAction);
-    codecommitPipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
-    (codecommitPipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsCodecommitCondition;
-
-
-    // 1.3 S3 Pipeline
-    const s3Pipeline = new codepipeline.Pipeline(this, 'S3', {
-      pipelineName: `${props.serviceName}-pipeline`,
-      artifactBucket: artifactS3,
-    });
-    s3Pipeline.addStage({ stageName: 'SOURCE' }).addAction(S3SourceAction);
-    s3Pipeline.addStage({ stageName: 'BUILD', actions: [buildAction] });
-    (s3Pipeline.node.defaultChild as CfnPipeline).cfnOptions.condition = IsS3Condition; */
 
   }
 }

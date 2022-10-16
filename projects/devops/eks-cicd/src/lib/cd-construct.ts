@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs/lib/construct';
@@ -11,17 +10,14 @@ import { Construct } from 'constructs/lib/construct';
 import * as yaml from 'yaml';
 
 export interface CDConstructProps {
-  imageTag: string;
-  pipeline: codepipeline.Pipeline;
-  ecrRepoName?: string;
+  codebuildAction: codepipeline_actions.CodeBuildAction;
+  projectName: string;
+  environment: string;
   serviceName: string;
-  containerPort: number; // only use beanstalk
-  deployEnvName: string;
+  gitOpsUrl: string;
   deployTargetType: string;
-  Environment: string;
-
   approvalStage: string;
-
+  pipeline: codepipeline.Pipeline;
   buildOutput: codepipeline.Artifact;
 }
 
@@ -29,21 +25,7 @@ export class CDConstruct extends Construct {
   constructor(scope: Construct, id: string, props: CDConstructProps) {
     super(scope, id);
 
-    /* const sourceOutput = new codepipeline.Artifact('Source');
-    const buildOutput = new codepipeline.Artifact('Build');
-
-
-    // CfnConditions
-    const isLatestTag = new cdk.CfnCondition(this, 'TargetImageTag', {
-      expression: cdk.Fn.conditionEquals(props.imageTag, 'latest'),
-    }); */
-
-    const service =  ecs.FargateService.fromFargateServiceArn(this, 'FargateService', 'FargateServiceArn');
-
-
-
-
-    const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec-cd.yaml'), 'utf8'));
+    const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
 
     const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
       buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
@@ -52,20 +34,16 @@ export class CDConstruct extends Construct {
         privileged: true,
       },
       environmentVariables: {
-        //REPOSITORY_URI: { value: ecrRepository.repositoryUri },
+        REPOSITORY_URI: { value: props.gitOpsUrl },
+        PROJECT_NAME: { value: props.projectName },
         SERVICE_NAME: { value: props.serviceName },
-        //CONTAINER_PORT: { value: CONTAINER_PORT.valueAsNumber },
-        DEPLOY_ENV_NAME: { value: props.deployEnvName },
+        ENVIRONMENT: { value: props.environment },
+        DEPLOY_ENV_NAME: { value: `${props.projectName}-${props.deployTargetType}-${props.environment}` },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
-        ARTIFACT_BUCKET: { value: `${props.serviceName}-codepipeline-artifact` },
-        IMAGE_TAG: { value: props.imageTag },
-        //S3_KEY: { value: objKey },
-        //TARGET_TYPE: { value: TARGET_TYPE.valueAsString },
         TARGET_TYPE: { value: props.deployTargetType },
-        //AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
-        //AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
       },
+      role: iam.Role.fromRoleArn(this, 'CodeBuildServiceRole', 'arn:aws:iam::484752921218:role/CodeBuildServiceRole'),
     });
 
     deployProject.role?.addToPrincipalPolicy(new iam.PolicyStatement({
@@ -78,7 +56,8 @@ export class CDConstruct extends Construct {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*'],
+        'cloudformation:*',
+        'eks:*'],
     }));
 
     if (props.approvalStage === 'true') {
@@ -90,6 +69,10 @@ export class CDConstruct extends Construct {
       actionName: 'Deploy',
       input: props.buildOutput,
       project: deployProject,
+
+      environmentVariables: {
+        IMAGE_TAG: { value: props.codebuildAction.variable('IMAGE_TAG') },
+      },
     });
     props.pipeline.addStage( { stageName: 'Deploy', actions: [deployAction] });
 

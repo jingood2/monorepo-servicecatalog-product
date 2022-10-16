@@ -29,6 +29,7 @@ export class CIConstruct extends Construct {
   public readonly sourceOutput: codepipeline.Artifact;
   public readonly buildOutput: codepipeline.Artifact;
   public readonly ecrRepoUri: string;
+  public readonly codebuildAction: codepipeline_actions.CodeBuildAction;
 
   constructor(scope: Construct, id: string, props: StackNameProps) {
     super(scope, id);
@@ -85,6 +86,8 @@ export class CIConstruct extends Construct {
       outputs: [buildOutput],
       project: buildProject,
     });
+
+    this.codebuildAction = buildAction;
 
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', props.sourceArtifact);
 
