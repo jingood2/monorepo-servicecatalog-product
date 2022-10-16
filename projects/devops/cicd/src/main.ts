@@ -21,7 +21,7 @@ export class MyStack extends cdk.Stack {
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new ContainerCICDProduct(this, 'ContainerCICDProduct', {})),
         },
-        
+
       ],
     });
   }

@@ -1,20 +1,17 @@
-import * as cdk from 'aws-cdk-lib';
-import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
-import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import { Construct } from 'constructs/lib/construct';
 import fs from 'fs';
-import yaml from 'yaml';
 import path from 'path';
-<<<<<<< HEAD
+import * as cdk from 'aws-cdk-lib';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
+import { Construct } from 'constructs/lib/construct';
 import * as randomstring from 'randomstring';
-=======
->>>>>>> 41b3ed81d55ac5bc72db55c30cf7f4ce34b51964
+import yaml from 'yaml';
 
 //import { CDConstruct } from './cd-construct';
 
@@ -64,12 +61,12 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
           },
           {
             Label: {
-              default: 'Deploy Information'
+              default: 'Deploy Information',
             },
             Parameters: [
-              'DeployTargetType'
-            ]
-          }
+              'DeployTargetType',
+            ],
+          },
         ],
       },
     };
@@ -79,7 +76,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
       type: 'String',
       description: 'Source Provider Type',
       default: 'GITHUB',
-      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET' ],
+      allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET'],
     });
 
     // Informations of Tag Convention
@@ -167,7 +164,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     const buildOutput = new codepipeline.Artifact('Build');
 
     // 1. SourceAction
-    // 1.1 Github 
+    // 1.1 Github
     const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
       actionName: 'Github',
       owner: repoOwner.valueAsString,
@@ -239,7 +236,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
       sourceArtifact.valueAsString,
       envType.valueAsString,
       buildAction,
-      buildOutput
+      buildOutput,
     );
 
     const deployProdAction = this.createDeployAction(
@@ -249,7 +246,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
       sourceArtifact.valueAsString,
       envType.valueAsString,
       buildAction,
-      buildOutput
+      buildOutput,
     );
 
 
@@ -263,9 +260,9 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
 
     githubPipeline.addStage({ stageName: 'Source' }).addAction(githubSourceAction);
     githubPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
-    githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction]});
+    githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction] });
     githubPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
-    githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployProdAction]});
+    githubPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] });
 
 
     // Codecommit Pipeline
@@ -276,9 +273,9 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
 
     codecommitPipeline.addStage({ stageName: 'Source' }).addAction(codeCommitSourceAction);
     codecommitPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
-    codecommitPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction]});
+    codecommitPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction] });
     codecommitPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
-    codecommitPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployProdAction]});
+    codecommitPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] });
 
     // BitBucket Pipeline
 
@@ -297,7 +294,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     artifact: string,
     deployTarget: string,
     buildAction: codepipeline_actions.CodeBuildAction,
-    buildOutput: codepipeline.Artifact, 
+    buildOutput: codepipeline.Artifact,
   ) : codepipeline_actions.CodeBuildAction {
 
     const randomString = randomstring.generate(5);
@@ -332,7 +329,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
         'ec2:*',
         'cloudwatch:*',
         'logs:*',
-        'cloudformation:*']
+        'cloudformation:*'],
     }));
 
     const deployAction = new codepipeline_actions.CodeBuildAction({

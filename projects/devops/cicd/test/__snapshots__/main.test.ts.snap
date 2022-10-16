@@ -1,0 +1,63 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ContrainerCICDD02143D9": {
+      "Properties": {
+        "Description": "Container CICD Product",
+        "Distributor": "SK Cloud Transformation Group",
+        "Name": "container-cicd-product",
+        "Owner": "jingood2@sk.com",
+        "ProvisioningArtifactParameters": [
+          {
+            "Description": "Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c0ce0e648f3c63508f5122b4d4c52077341d842a57811693b538cbf7568f0c3f.json",
+              },
+            },
+            "Name": "v1",
+          },
+        ],
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
