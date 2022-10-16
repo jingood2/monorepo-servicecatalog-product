@@ -2,7 +2,7 @@ import path from 'path';
 import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { ComposeToCfnCD } from './lib/compose-to-cfn-cd';
+//import { ComposeToCfnCD } from './lib/compose-to-cfn-cd';
 import { GithubCICDProduct } from './lib/github-cicd-product';
 import { ImageBuildCodecommit } from './lib/image-build-codecommit';
 import { ImageBuildGithub } from './lib/image-build-github';
