@@ -10,14 +10,14 @@ import { Construct } from 'constructs/lib/construct';
 import * as yaml from 'yaml';
 
 export interface CDConstructProps {
-  codebuildAction: codepipeline_actions.CodeBuildAction, 
+  codebuildAction: codepipeline_actions.CodeBuildAction;
   imageTag: string;
   projectName: string;
   environment: string;
   serviceName: string;
   ecrRepoName?: string;
   containerPort?: number; // only use beanstalk
-  ecrRepoUrl: string, 
+  ecrRepoUrl: string;
   //deployEnvName: string;
   deployTargetType: string;
   approvalStage: string;
@@ -39,7 +39,7 @@ export class CDConstruct extends Construct {
         privileged: true,
       },
       environmentVariables: {
-        REPOSITORY_URI: { value: props.ecrRepoUrl},
+        REPOSITORY_URI: { value: props.ecrRepoUrl },
         SERVICE_NAME: { value: props.serviceName },
         ENVIRONMENT: { value: props.environment },
         DEPLOY_ENV_NAME: { value: `${props.projectName}-${props.deployTargetType}-${props.environment}` },
@@ -47,7 +47,7 @@ export class CDConstruct extends Construct {
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
         ARTIFACT_BUCKET: { value: props.sourceArtifact },
         TARGET_TYPE: { value: props.deployTargetType },
-        CONTAINER_PORT: { value: props.containerPort }
+        CONTAINER_PORT: { value: props.containerPort },
       },
       role: iam.Role.fromRoleArn(this, 'CodeBuildServiceRole', 'arn:aws:iam::484752921218:role/CodeBuildServiceRole'),
     });
@@ -63,8 +63,7 @@ export class CDConstruct extends Construct {
         'cloudwatch:*',
         'logs:*',
         'cloudformation:*',
-        'eks:*'
-      ]
+        'eks:*'],
     }));
 
     if (props.approvalStage === 'true') {
@@ -78,7 +77,7 @@ export class CDConstruct extends Construct {
       project: deployProject,
 
       environmentVariables: {
-        IMAGE_TAG: { value: props.codebuildAction.variable('IMAGE_TAG')},
+        IMAGE_TAG: { value: props.codebuildAction.variable('IMAGE_TAG') },
       },
     });
     props.pipeline.addStage( { stageName: 'Deploy', actions: [deployAction] });
