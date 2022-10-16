@@ -18,24 +18,34 @@ exports[`Snapshot 1`] = `
         "Owner": "jingood2@sk.com",
         "ProvisioningArtifactParameters": [
           {
-            "Description": "ECS CICD Pieline with Github",
+            "Description": "Create Github CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/92df9b57062266e6c727d4cce76ebfb1f9b4b99db84f829f34b5a6e660407c66.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/1a43a2c176c5764a0b5a12173a7f2509785b928e1249f9ba827659b07f1fc0f8.json",
               },
             },
             "Name": "v1",
+          },
+          {
+            "Description": "Create Codecommit CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c6fdac21caed1b018a7ba3e30794e4a99fe256c276d864a81b44cec685d66fc4.json",
+              },
+            },
+            "Name": "v2",
           },
           {
             "Description": "Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c8c9691ec64b7cc790f83bc3fa639c5c63ad3615cad011326a5d82ac633c85c5.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/3798a63bde55dbe664e772809d3ffbbf453fd4fc590737901764ebf02280dbf9.yaml",
               },
             },
-            "Name": "v2",
+            "Name": "v3",
           },
         ],
       },

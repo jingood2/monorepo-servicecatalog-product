@@ -344,7 +344,7 @@ Resources:
       EncryptionKey: alias/aws/s3
     Metadata:
       'aws:cdk:path': cicd-product/CIGithubProduct/BuildProject/Resource
-  DeployPloject6A0siRole99B3A3CB:
+  DeployPloject4UG2hRole9FE7E547:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -355,8 +355,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-6A0si/Role/Resource
-  DeployPloject6A0siRoleDefaultPolicyAB79EE3F:
+      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-4UG2h/Role/Resource
+  DeployPloject4UG2hRoleDefaultPolicyFBDD1B0D:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -376,7 +376,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPloject6A0si8B9EAFA9
+                  - !Ref DeployPloject4UG2h30F4E0FA
               - !Join 
                 - ''
                 - - 'arn:'
@@ -386,7 +386,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPloject6A0si8B9EAFA9
+                  - !Ref DeployPloject4UG2h30F4E0FA
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -404,7 +404,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPloject6A0si8B9EAFA9
+                - !Ref DeployPloject4UG2h30F4E0FA
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -438,13 +438,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPloject6A0siRoleDefaultPolicyAB79EE3F
+      PolicyName: DeployPloject4UG2hRoleDefaultPolicyFBDD1B0D
       Roles:
-        - !Ref DeployPloject6A0siRole99B3A3CB
+        - !Ref DeployPloject4UG2hRole9FE7E547
     Metadata:
       'aws:cdk:path': >-
-        cicd-product/CIGithubProduct/DeployPloject-6A0si/Role/DefaultPolicy/Resource
-  DeployPloject6A0si8B9EAFA9:
+        cicd-product/CIGithubProduct/DeployPloject-4UG2h/Role/DefaultPolicy/Resource
+  DeployPloject4UG2h30F4E0FA:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -484,7 +484,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPloject6A0siRole99B3A3CB
+        - DeployPloject4UG2hRole9FE7E547
         - Arn
       Source:
         BuildSpec: |-
@@ -530,8 +530,8 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-6A0si/Resource
-  DeployPlojectETWhTRoleF6051D69:
+      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-4UG2h/Resource
+  DeployPloject8v4zZRole989C0349:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -542,8 +542,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-ETWhT/Role/Resource
-  DeployPlojectETWhTRoleDefaultPolicyE69D6254:
+      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Role/Resource
+  DeployPloject8v4zZRoleDefaultPolicy4F1E3279:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -563,7 +563,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectETWhT83814A23
+                  - !Ref DeployPloject8v4zZBC2756AA
               - !Join 
                 - ''
                 - - 'arn:'
@@ -573,7 +573,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectETWhT83814A23
+                  - !Ref DeployPloject8v4zZBC2756AA
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -591,7 +591,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPlojectETWhT83814A23
+                - !Ref DeployPloject8v4zZBC2756AA
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -625,13 +625,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPlojectETWhTRoleDefaultPolicyE69D6254
+      PolicyName: DeployPloject8v4zZRoleDefaultPolicy4F1E3279
       Roles:
-        - !Ref DeployPlojectETWhTRoleF6051D69
+        - !Ref DeployPloject8v4zZRole989C0349
     Metadata:
       'aws:cdk:path': >-
-        cicd-product/CIGithubProduct/DeployPloject-ETWhT/Role/DefaultPolicy/Resource
-  DeployPlojectETWhT83814A23:
+        cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Role/DefaultPolicy/Resource
+  DeployPloject8v4zZBC2756AA:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -671,7 +671,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPlojectETWhTRoleF6051D69
+        - DeployPloject8v4zZRole989C0349
         - Arn
       Source:
         BuildSpec: |-
@@ -717,8 +717,8 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-ETWhT/Resource
-  GitHubPipelineRoleB9AFBEB2:
+      'aws:cdk:path': cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Resource
+  CodePipelineRoleB31C27BE:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -728,70 +728,30 @@ Resources:
             Principal:
               Service: codepipeline.amazonaws.com
         Version: 2012-10-17
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - 's3:GetObject'
+                  - 's3:List*'
+                  - 's3:GetObjectVersion'
+                Effect: Allow
+                Resource: !Join 
+                  - ''
+                  - - 'arn:'
+                    - !Ref 'AWS::Partition'
+                    - ':s3:::'
+                    - !Ref S3BucketSourceArtifacts
+                    - /*
+            Version: 2012-10-17
+          PolicyName: rootPermissions
     Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/GitHubPipeline/Role/Resource
-  GitHubPipelineRoleDefaultPolicyDC5A4395:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Action:
-              - 's3:GetObject*'
-              - 's3:GetBucket*'
-              - 's3:List*'
-              - 's3:DeleteObject*'
-              - 's3:PutObject'
-              - 's3:PutObjectLegalHold'
-              - 's3:PutObjectRetention'
-              - 's3:PutObjectTagging'
-              - 's3:PutObjectVersionTagging'
-              - 's3:Abort*'
-            Effect: Allow
-            Resource:
-              - !Join 
-                - ''
-                - - 'arn:'
-                  - !Ref 'AWS::Partition'
-                  - ':s3:::'
-                  - !Ref S3BucketSourceArtifacts
-              - !Join 
-                - ''
-                - - 'arn:'
-                  - !Ref 'AWS::Partition'
-                  - ':s3:::'
-                  - !Ref S3BucketSourceArtifacts
-                  - /*
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Resource: !GetAtt 
-              - GitHubPipelineImageBuildCodePipelineActionRoleBC32B61F
-              - Arn
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Resource: !GetAtt 
-              - GitHubPipelineDeployOnDevDeployCodePipelineActionRoleBE3FDF11
-              - Arn
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Resource: !GetAtt 
-              - GitHubPipelineApprovalCodePipelineActionRoleADCADD05
-              - Arn
-          - Action: 'sts:AssumeRole'
-            Effect: Allow
-            Resource: !GetAtt 
-              - GitHubPipelineDeployOnProdDeployCodePipelineActionRoleB56DA98C
-              - Arn
-        Version: 2012-10-17
-      PolicyName: GitHubPipelineRoleDefaultPolicyDC5A4395
-      Roles:
-        - !Ref GitHubPipelineRoleB9AFBEB2
-    Metadata:
-      'aws:cdk:path': cicd-product/CIGithubProduct/GitHubPipeline/Role/DefaultPolicy/Resource
+      'aws:cdk:path': cicd-product/CIGithubProduct/CodePipelineRole/Resource
   GitHubPipeline7B79E906:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       RoleArn: !GetAtt 
-        - GitHubPipelineRoleB9AFBEB2
+        - CodePipelineRoleB31C27BE
         - Arn
       Stages:
         - Actions:
@@ -844,7 +804,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPloject6A0si8B9EAFA9
+                ProjectName: !Ref DeployPloject4UG2h30F4E0FA
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -874,7 +834,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPlojectETWhT83814A23
+                ProjectName: !Ref DeployPloject8v4zZBC2756AA
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -890,8 +850,7 @@ Resources:
         Type: S3
       Name: !Ref ServiceName
     DependsOn:
-      - GitHubPipelineRoleDefaultPolicyDC5A4395
-      - GitHubPipelineRoleB9AFBEB2
+      - CodePipelineRoleB31C27BE
     Metadata:
       'aws:cdk:path': cicd-product/CIGithubProduct/GitHubPipeline/Resource
   GitHubPipelineSourceGithubWebhookResource97724FA2:
@@ -983,7 +942,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPloject6A0si8B9EAFA9
+              - DeployPloject4UG2h30F4E0FA
               - Arn
         Version: 2012-10-17
       PolicyName: >-
@@ -1042,7 +1001,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPlojectETWhT83814A23
+              - DeployPloject8v4zZBC2756AA
               - Arn
         Version: 2012-10-17
       PolicyName: >-
@@ -1056,7 +1015,7 @@ Resources:
     Type: 'AWS::CDK::Metadata'
     Properties:
       Analytics: >-
-        v2:deflate64:H4sIAAAAAAAA/02QQU7EMAxFz8I+NRTQHGDmAtWwYIlSx4DbNK4SZxCqcncy6UjD6n/L/z9ZfobXAzw92J/UoZs7zyNsdfjYEsULI6FV6+ULhiguo76pxdkQRtjOtEpilfhrTp/hPhWD4mjM7B1sA6/kOVCtT4R6Td5sMWyXShFPrX/VQTxjw+2umPQCx4wz6dEmauD1RryzW/6ff6fxW2QupS1stAspxf3IJDliS50kOFaWUEyoWJjS46U/QN/Xb0yJuYs5KC8E513/AOJsaH8pAQAA
+        v2:deflate64:H4sIAAAAAAAA/02QS27DMAxEz9K9zNRtkAMkFzCcRZeFTDEtbVk09ElRGLp7FDlAspohOPMI8AP2B3h/03+hQTM1lgdYy/C9BvJXRkIdtZUf6LyYhPEcNU6K0MPa0yKBo/h/dbq455QViqEhsTWwdryQZUelPhLGe/Jhs2I9F4pYqv27dmIZK25zWYVPOCacKB51oApeHsQnu+Zf/BcNvyJTznWhvZ4pklc9BUket2sv/iTOcGRxWbnChzHsru0B2ra8ZQzMjU8u8kzQb3oDpGyULjIBAAA=
     Metadata:
       'aws:cdk:path': cicd-product/CIGithubProduct/CDKMetadata/Default
     Condition: CDKMetadataAvailable
