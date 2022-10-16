@@ -434,8 +434,6 @@
     "@jest/types" "^29.2.0"
     "@types/node" "*"
     jest-mock "^29.2.0"
-<<<<<<< HEAD
-
 "@jest/expect-utils@^29.2.0":
   version "29.2.0"
   resolved "https://registry.yarnpkg.com/@jest/expect-utils/-/expect-utils-29.2.0.tgz#3c0c472115d98211e7e0a0a8fa00719bf081987f"
@@ -456,29 +454,6 @@
   resolved "https://registry.yarnpkg.com/@jest/fake-timers/-/fake-timers-29.2.0.tgz#e43635c1bd73b23886e80ca12307092ef2ee1929"
   integrity sha512-mX0V0uQsgeSLTt0yTqanAhhpeUKMGd2uq+PSLAfO40h72bvfNNQ7pIEl9vIwNMFxRih1ENveEjSBsLjxGGDPSw==
   dependencies:
-=======
-
-"@jest/expect-utils@^29.2.0":
-  version "29.2.0"
-  resolved "https://registry.yarnpkg.com/@jest/expect-utils/-/expect-utils-29.2.0.tgz#3c0c472115d98211e7e0a0a8fa00719bf081987f"
-  integrity sha512-nz2IDF7nb1qmj9hx8Ja3MFab2q9Ml8QbOaaeJNyX5JQJHU8QUvEDiMctmhGEkk3Kzr8w8vAqz4hPk/ogJSrUhg==
-  dependencies:
-    jest-get-type "^29.2.0"
-
-"@jest/expect@^29.2.0":
-  version "29.2.0"
-  resolved "https://registry.yarnpkg.com/@jest/expect/-/expect-29.2.0.tgz#25316d2ae930e7bb9df96cce7521053d377c4c0d"
-  integrity sha512-+3lxcYL9e0xPJGOR33utxxejn+Mulz40kY0oy0FVsmIESW87NZDJ7B1ovaIqeX0xIgPX4laS5SGlqD2uSoBMcw==
-  dependencies:
-    expect "^29.2.0"
-    jest-snapshot "^29.2.0"
-
-"@jest/fake-timers@^29.2.0":
-  version "29.2.0"
-  resolved "https://registry.yarnpkg.com/@jest/fake-timers/-/fake-timers-29.2.0.tgz#e43635c1bd73b23886e80ca12307092ef2ee1929"
-  integrity sha512-mX0V0uQsgeSLTt0yTqanAhhpeUKMGd2uq+PSLAfO40h72bvfNNQ7pIEl9vIwNMFxRih1ENveEjSBsLjxGGDPSw==
-  dependencies:
->>>>>>> 41b3ed81d55ac5bc72db55c30cf7f4ce34b51964
     "@jest/types" "^29.2.0"
     "@sinonjs/fake-timers" "^9.1.2"
     "@types/node" "*"
