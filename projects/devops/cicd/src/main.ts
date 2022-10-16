@@ -58,7 +58,7 @@ const devEnv = {
 
 const app = new cdk.App();
 
-new MyStack(app, 'cicd-product', {
+new MyStack(app, 'container-cicd', {
   env: devEnv,
   stackName:
   `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
