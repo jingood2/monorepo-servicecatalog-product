@@ -152,11 +152,11 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
 
 
     const enableGithubCondition = new cdk.CfnCondition(this, 'EnableGithubCondition', {
-      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'github'),
+      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'GITHUB'),
     });
 
     const enableCodecommitCondition = new cdk.CfnCondition(this, 'EnableCodecommitCondition', {
-      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'codecommit'),
+      expression: cdk.Fn.conditionEquals(provider.valueAsString, 'CODECOMMIT'),
     });
 
     // Prerequisites CodePipeline
