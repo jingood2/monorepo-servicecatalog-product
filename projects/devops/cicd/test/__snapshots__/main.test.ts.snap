@@ -18,14 +18,24 @@ exports[`Snapshot 1`] = `
         "Owner": "jingood2@sk.com",
         "ProvisioningArtifactParameters": [
           {
+            "Description": "ECS CICD Pieline with Github",
+            "DisableTemplateValidation": false,
+            "Info": {
+              "LoadTemplateFromURL": {
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/92df9b57062266e6c727d4cce76ebfb1f9b4b99db84f829f34b5a6e660407c66.json",
+              },
+            },
+            "Name": "v1",
+          },
+          {
             "Description": "Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk",
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c0ce0e648f3c63508f5122b4d4c52077341d842a57811693b538cbf7568f0c3f.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c8c9691ec64b7cc790f83bc3fa639c5c63ad3615cad011326a5d82ac633c85c5.json",
               },
             },
-            "Name": "v1",
+            "Name": "v2",
           },
         ],
       },

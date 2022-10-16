@@ -20,7 +20,7 @@ export interface StackNameProps extends cdk.StackProps {
 
 }
 
-export class ContainerCICDProduct extends servicecatalog.ProductStack {
+export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack {
   constructor(scope: Construct, id: string, _props: StackNameProps) {
     super(scope, id);
 
@@ -43,11 +43,8 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
               default: 'Git Repository Information',
             },
             Parameters: [
-              'SourceProviderType',
               'RepoName',
               'RepoBranch',
-              'RepoOwner',
-              'GithubSecretTokenId',
             ],
           },
           {
@@ -56,7 +53,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
             },
             Parameters: [
               'BuildType',
-              'sourceArtifact',
+              'S3BucketSourceArtifacts',
             ],
           },
           {
@@ -72,12 +69,12 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     };
 
     // Define Parameters
-    const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
+    /* const provider = new cdk.CfnParameter(this, 'SourceProviderType', {
       type: 'String',
       description: 'Source Provider Type',
       default: 'GITHUB',
       allowedValues: ['GITHUB', 'CODECOMMIT', 'JENKINS', 'BITBUCKET'],
-    });
+    }); */
 
     // Informations of Tag Convention
     const projectName = new cdk.CfnParameter(this, 'ProjectName', {
@@ -105,18 +102,18 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
       description: 'Git Repository or S3 Bucket Name',
     });
 
-    const repoOwner= new cdk.CfnParameter(this, 'RepoOwner', {
-      default: 'myowner',
-    });
-
     const repoBranch = new cdk.CfnParameter(this, 'RepoBranch', {
       default: 'main',
+    });
+
+    /* const repoOwner= new cdk.CfnParameter(this, 'RepoOwner', {
+      default: 'myowner',
     });
 
     const secretKey = new cdk.CfnParameter(this, 'Github Secret Token Id', {
       type: 'String',
       description: '(Github Only Use)Secret Token Id for Github',
-    });
+    }); */
 
     const serviceName = new cdk.CfnParameter(this, 'ServiceName', {
       type: 'String',
@@ -151,13 +148,13 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     });
 
 
-    const enableGithubCondition = new cdk.CfnCondition(this, 'EnableGithubCondition', {
+    /* const enableGithubCondition = new cdk.CfnCondition(this, 'EnableGithubCondition', {
       expression: cdk.Fn.conditionEquals(provider.valueAsString, 'GITHUB'),
     });
 
     const enableCodecommitCondition = new cdk.CfnCondition(this, 'EnableCodecommitCondition', {
       expression: cdk.Fn.conditionEquals(provider.valueAsString, 'CODECOMMIT'),
-    });
+    }); */
 
     // Prerequisites CodePipeline
     const sourceOutput = new codepipeline.Artifact('Source');
@@ -165,14 +162,14 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
 
     // 1. SourceAction
     // 1.1 Github
-    const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
+    /* const githubSourceAction = new codepipeline_actions.GitHubSourceAction({
       actionName: 'Github',
       owner: repoOwner.valueAsString,
       repo: repoName.valueAsString,
       branch: repoBranch.valueAsString,
       oauthToken: cdk.SecretValue.secretsManager(secretKey.valueAsString),
       output: sourceOutput,
-    });
+    }); */
 
     // 1.2 Codecommit
     const codeCommitSourceAction = new codepipeline_actions.CodeCommitSourceAction({
@@ -199,7 +196,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
         privileged: true,
       },
       environmentVariables: {
-        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+        IMAGE_TAG: { value: codeCommitSourceAction.variables.commitId },
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
@@ -221,7 +218,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
       outputs: [buildOutput],
       project: buildProject,
       environmentVariables: {
-        IMAGE_TAG: { value: githubSourceAction.variables.commitId },
+        IMAGE_TAG: { value: codeCommitSourceAction.variables.commitId },
       },
     });
 
@@ -253,7 +250,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     const artifactS3 = s3.Bucket.fromBucketName(this, 'SourceS3', sourceArtifact.valueAsString);
 
     // Github Pipeline
-    const githubPipeline = new codepipeline.Pipeline(this, 'GitHubPipeline', {
+    /*  const githubPipeline = new codepipeline.Pipeline(this, 'GitHubPipeline', {
       pipelineName: `${serviceName.valueAsString}`,
       artifactBucket: artifactS3,
     });
@@ -262,7 +259,7 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     githubPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
     githubPipeline.addStage({ stageName: 'DeployOnDev', actions: [deployDevAction] });
     githubPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
-    githubPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] });
+    githubPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] }); */
 
 
     // Codecommit Pipeline
@@ -281,8 +278,10 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
 
     // Jenkins
 
+    /*
     ( githubPipeline.node.defaultChild as codepipeline.CfnPipeline ).cfnOptions.condition = enableGithubCondition;
     ( codecommitPipeline.node.defaultChild as codepipeline.CfnPipeline).cfnOptions.condition = enableCodecommitCondition;
+    */
 
 
   }

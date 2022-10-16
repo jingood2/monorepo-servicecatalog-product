@@ -1,7 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import { ContainerCICDProduct } from './lib/container-cicd';
+import path from 'path';
+import { ContainerCodecommitCICDProduct } from './lib/container-codecommit-cicd';
+import { ContainerGithubCICDProduct } from './lib/container-github-cicd';
+//import { ContainerCICDProduct } from './lib/container-codecommit-cicd';
 
 export class MyStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: cdk.StackProps = {}) {
@@ -15,11 +18,31 @@ export class MyStack extends cdk.Stack {
       distributor: 'SK Cloud Transformation Group',
       description: 'Container CICD Product',
       productVersions: [
-        {
+        /*  {
           productVersionName: 'v1',
           description: 'Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new ContainerCICDProduct(this, 'ContainerCICDProduct', {})),
+        },
+        */
+        {
+          productVersionName: 'v1',
+          description: 'Create Github CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ContainerGithubCICDProduct(this, 'CIGithubProduct', {})),
+        },
+        {
+          productVersionName: 'v2',
+          description: 'Create Codecommit CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ContainerCodecommitCICDProduct(this, 'CICodeCommitProduct', {})),
+        },
+        {
+          productVersionName: 'v3',
+          description: 'Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromAsset(
+            path.join(__dirname, './lib/cfn-template/all.yaml'),
+          ),
         },
 
       ],

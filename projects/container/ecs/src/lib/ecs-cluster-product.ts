@@ -189,23 +189,6 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     });
     cluster.addAsgCapacityProvider(capacityProvider);
 
-    new ssm.StringParameter(this, 'NamespaceId', {
-      parameterName: 'namespaceId',
-      stringValue: dnsNamespace.namespaceId,
-      simpleName: true,
-    });
-    new ssm.StringParameter(this, 'NamespaceArn', {
-      parameterName: 'namespaceArn',
-      //stringValue: `arn:aws:servicediscovery:ap-northeast-2:037729278610:namespace/ns-5b2c7dzqwccz47ey`,
-      stringValue: dnsNamespace.namespaceArn,
-      simpleName: true,
-    });
-    new ssm.StringParameter(this, 'NamespaceName', {
-      parameterName: 'namespaceName',
-      stringValue: dnsNamespace.namespaceName,
-      simpleName: true,
-    });
-
     // CDK Output
     new cdk.CfnOutput(this, 'ClusterName', {
       description: 'The name of the ECS cluster',
