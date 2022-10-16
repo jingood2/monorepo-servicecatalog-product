@@ -1,0 +1,900 @@
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Git Repository Common Information
+        Parameters:
+          - SourceProviderType
+          - RepoName
+          - RepoBranch
+      - Label:
+          default: GitHub Information
+        Parameters:
+          - RepoOwner
+          - GithubSecretTokenId
+      - Label:
+          default: Configuration for Codebuild
+        Parameters:
+          - ServiceName
+          - sourceArtifact
+          - ecsCluster
+          - vpcId
+          - albArn
+Parameters:
+  ProjectName:
+    Type: String
+    Default: acme
+    Description: The name of the Project Name
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dmz
+      - dev
+      - shared
+      - prod
+    Description: The name of the Environment
+  RepoName:
+    Type: String
+    Description: Git Repository or S3 Bucket Name
+  RepoOwner:
+    Type: String
+    Default: main
+  RepoBranch:
+    Type: String
+    Default: main
+  GithubSecretTokenId:
+    Type: String
+    Description: (Github Only Use)Secret Token Id for Github
+  ServiceName:
+    Type: String
+    Default: demoapp
+    Description: Service Name
+  ContainerPort:
+    Type: Number
+    Default: "80"
+    Description: Container Port
+  S3BucketSourceArtifacts:
+    Type: String
+    Default: acme-servicecatalog-cicd-bucket
+    Description: S3 Bucket Name for Source and Build Artifact
+  PackagingType:
+    Type: String
+    Default: DOCKER
+    AllowedValues:
+      - MAVEN
+      - GRADLE
+      - NPM
+      - PYTHON
+      - DOCKER
+    Description: Source Packaging Tool
+  EnvType:
+    Type: String
+    Default: beanstalk
+    AllowedValues:
+      - ecs
+      - fargate
+      - eks
+      - beanstalk
+      - lambda
+    Description: Source Packaging Tool
+Resources:
+  ECRRepositoryName60F06CDD:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName:
+        Ref: ServiceName
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/ECRRepositoryName/Resource
+  BuildProjectRoleAA92C755:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/BuildProject/Role/Resource
+  BuildProjectRoleDefaultPolicy3E9F248C:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: BuildProject097C5DB7
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: BuildProject097C5DB7
+                    - :*
+          - Action:
+              - codebuild:CreateReportGroup
+              - codebuild:CreateReport
+              - codebuild:UpdateReport
+              - codebuild:BatchPutTestCases
+              - codebuild:BatchPutCodeCoverages
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":codebuild:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - :report-group/
+                  - Ref: BuildProject097C5DB7
+                  - -*
+          - Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - ECRRepositoryName60F06CDD
+                - Arn
+          - Action: ecr:GetAuthorizationToken
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - ecr:PutImage
+              - ecr:InitiateLayerUpload
+              - ecr:UploadLayerPart
+              - ecr:CompleteLayerUpload
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - ECRRepositoryName60F06CDD
+                - Arn
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+        Version: 2012-10-17
+      PolicyName: BuildProjectRoleDefaultPolicy3E9F248C
+      Roles:
+        - Ref: BuildProjectRoleAA92C755
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/BuildProject/Role/DefaultPolicy/Resource
+  BuildProject097C5DB7:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: IMAGE_TAG
+            Type: PLAINTEXT
+            Value: "#{SOURCE_GITHUB_NS.CommitId}"
+          - Name: REPOSITORY_URI
+            Type: PLAINTEXT
+            Value:
+              Fn::Join:
+                - ""
+                - - Fn::Select:
+                      - 4
+                      - Fn::Split:
+                          - ":"
+                          - Fn::GetAtt:
+                              - ECRRepositoryName60F06CDD
+                              - Arn
+                  - .dkr.ecr.
+                  - Fn::Select:
+                      - 3
+                      - Fn::Split:
+                          - ":"
+                          - Fn::GetAtt:
+                              - ECRRepositoryName60F06CDD
+                              - Arn
+                  - .
+                  - Ref: AWS::URLSuffix
+                  - /
+                  - Ref: ECRRepositoryName60F06CDD
+          - Name: AWS_DEFAULT_REGION
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::AccountId
+          - Name: CONTAINER_PORT
+            Type: PLAINTEXT
+            Value:
+              Ref: ContainerPort
+          - Name: BUILD_TYPE
+            Type: PLAINTEXT
+            Value:
+              Ref: PackagingType
+          - Name: TARGET_TYPE
+            Type: PLAINTEXT
+            Value:
+              Ref: EnvType
+          - Name: SERVICE_NAME
+            Type: PLAINTEXT
+            Value:
+              Ref: ServiceName
+          - Name: ARTIFACT_BUCKET
+            Type: PLAINTEXT
+            Value:
+              Ref: S3BucketSourceArtifacts
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+      ServiceRole:
+        Fn::GetAtt:
+          - BuildProjectRoleAA92C755
+          - Arn
+      Source:
+        BuildSpec: >-
+          {
+            "version": 0.2,
+            "env": {
+              "exported-variables": [
+                "IMAGE_TAG"
+              ]
+            },
+            "phases": {
+              "pre_build": {
+                "commands": [
+                  "echo Logging in to Amazon ECR...",
+                  "echo $AWS_DEFAULT_REGION",
+                  "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
+                  "echo $CODEBUILD_SOURCE_VERSION",
+                  "echo $AWS_ACCOUNT_ID",
+                  "echo $SERVICE_NAME",
+                  "echo $CONTAINER_PORT",
+                  "echo $ARTIFACT_BUCKET",
+                  "echo $BUILD_TYPE",
+                  "echo $TARGET_TYPE",
+                  "aws --version",
+                  "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
+                  "IMAGE_TAG=${COMMIT_HASH:=latest}",
+                  "export MAVEN_OPTS=\"-Xmx1024m -XX:MaxPermSize=512m\"",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
+                ]
+              },
+              "build": {
+                "commands": [
+                  "echo Build started on `date`",
+                  "echo $BUILD_TYPE",
+                  "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  java --version ;\n  chmod +x gradlew ;\n  ./gradlew clean build ;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"MAVEN\" ]; then \n  which mvn;\n  chmod +x mvnw ;\n  ./mvnw package;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"NPM\" ]; then \n  echo Installing source NPM dependencies...;\n  npm install -y -g --unsafe-perm ;\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then \n  echo Building the Docker image...\n  docker build -t $REPOSITORY_URI:latest .\n\n  echo Tagging Docker image...\n  docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG\n\n  echo Pushing the Docker images...\n  docker push $REPOSITORY_URI:latest\n  docker push $REPOSITORY_URI:$IMAGE_TAG\nfi\n"
+                ]
+              },
+              "post_build": {
+                "commands": [
+                  "echo Build completed on `date`",
+                  "echo $BUILD_TYPE",
+                  "if [ \"$BUILD_TYPE\" = \"GRADLE\" ]; then \n  mv build/libs/*.jar app.jar\n  mv .ebextentions .ebextentions\n  echo Writing Procfile for Beanstlak...\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"MAVEN\" ]; then \n  mv target/*.jar app.jar\n  mv .ebextentions .ebextentions\n  echo Writing Procfile for Beanstlak...\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\nfi\n",
+                  "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then \n  if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n    echo Writing image definitions file for ECS...\n    printf '[{\"name\": \"%s\", \"imageUri\":\"%s\"}]' $SERVICE_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json\n    zip -r $IMAGE_TAG.zip imagedefinitions.json\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n    echo Writing Dockerrun.aws.json file for Beanstalk ...\n    printf '{ \"AWSEBDockerrunVersion\":\"1\",\"Image\": {\"Name\": \"%s\"}, \"Ports\":[{\"ContainerPort\": \"%s\"}] }' $REPOSITORY_URI:$IMAGE_TAG $CONTAINER_PORT > Dockerrun.aws.json\n    zip -r $IMAGE_TAG.zip Dockerrun.aws.json\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"EKS\" ]; then \n    echo Writing image definitions file for EKS...\n  fi \n\n  if [ \"$TARGET_TYPE\" = \"LAMBDA\" ]; then \n    echo Writing image definitions file for LAMBDA...\n  fi \nfi\n"
+                ]
+              }
+            },
+            "artifacts": {
+              "files": [
+                "**/*"
+              ],
+              "name": "$IMAGE_TAG"
+            }
+          }
+        Type: CODEPIPELINE
+      Cache:
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+        Type: LOCAL
+      EncryptionKey: alias/aws/s3
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/BuildProject/Resource
+  GitHubPipelineRoleB9AFBEB2:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/Role/Resource
+  GitHubPipelineRoleDefaultPolicyDC5A4395:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - GitHubPipelineBUILDBuildCodePipelineActionRoleAB114051
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - GitHubPipelineApprovalCodePipelineActionRoleADCADD05
+                - Arn
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - GitHubPipelineDEPLOYDeployCodePipelineActionRole7B3D9884
+                - Arn
+        Version: 2012-10-17
+      PolicyName: GitHubPipelineRoleDefaultPolicyDC5A4395
+      Roles:
+        - Ref: GitHubPipelineRoleB9AFBEB2
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/Role/DefaultPolicy/Resource
+  GitHubPipeline7B79E906:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn:
+        Fn::GetAtt:
+          - GitHubPipelineRoleB9AFBEB2
+          - Arn
+      Stages:
+        - Actions:
+            - ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: "1"
+              Configuration:
+                Owner:
+                  Ref: RepoOwner
+                Repo:
+                  Ref: RepoName
+                Branch:
+                  Ref: RepoBranch
+                OAuthToken:
+                  Fn::Join:
+                    - ""
+                    - - "{{resolve:secretsmanager:"
+                      - Ref: GithubSecretTokenId
+                      - :SecretString:::}}
+                PollForSourceChanges: false
+              Name: GITHUB
+              Namespace: SOURCE_GITHUB_NS
+              OutputArtifacts:
+                - Name: Source
+              RunOrder: 1
+          Name: SOURCE
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: BuildProject097C5DB7
+                EnvironmentVariables: '[{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{SOURCE_GITHUB_NS.CommitId}"}]'
+              InputArtifacts:
+                - Name: Source
+              Name: Build
+              Namespace: BUILD_Build_NS
+              OutputArtifacts:
+                - Name: Build
+              RoleArn:
+                Fn::GetAtt:
+                  - GitHubPipelineBUILDBuildCodePipelineActionRoleAB114051
+                  - Arn
+              RunOrder: 1
+          Name: BUILD
+        - Actions:
+            - ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: "1"
+              Name: Approval
+              RoleArn:
+                Fn::GetAtt:
+                  - GitHubPipelineApprovalCodePipelineActionRoleADCADD05
+                  - Arn
+              RunOrder: 1
+          Name: Approval
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName:
+                  Ref: CodeBuildDeployPlojectF23FECA7
+                EnvironmentVariables: '[{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{BUILD_Build_NS.IMAGE_TAG}"}]'
+              InputArtifacts:
+                - Name: Build
+              Name: Deploy
+              RoleArn:
+                Fn::GetAtt:
+                  - GitHubPipelineDEPLOYDeployCodePipelineActionRole7B3D9884
+                  - Arn
+              RunOrder: 1
+          Name: DEPLOY
+      ArtifactStore:
+        Location:
+          Ref: S3BucketSourceArtifacts
+        Type: S3
+      Name:
+        Ref: ServiceName
+    DependsOn:
+      - GitHubPipelineRoleDefaultPolicyDC5A4395
+      - GitHubPipelineRoleB9AFBEB2
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/Resource
+  GitHubPipelineSOURCEGITHUBWebhookResource97DA2522:
+    Type: AWS::CodePipeline::Webhook
+    Properties:
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken:
+          Fn::Join:
+            - ""
+            - - "{{resolve:secretsmanager:"
+              - Ref: GithubSecretTokenId
+              - :SecretString:::}}
+      Filters:
+        - JsonPath: $.ref
+          MatchEquals: refs/heads/{Branch}
+      TargetAction: GITHUB
+      TargetPipeline:
+        Ref: GitHubPipeline7B79E906
+      TargetPipelineVersion: 1
+      RegisterWithThirdParty: true
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/SOURCE/GITHUB/WebhookResource
+  GitHubPipelineBUILDBuildCodePipelineActionRoleAB114051:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/BUILD/Build/CodePipelineActionRole/Resource
+  GitHubPipelineBUILDBuildCodePipelineActionRoleDefaultPolicy3E10FB5C:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - BuildProject097C5DB7
+                - Arn
+        Version: 2012-10-17
+      PolicyName: GitHubPipelineBUILDBuildCodePipelineActionRoleDefaultPolicy3E10FB5C
+      Roles:
+        - Ref: GitHubPipelineBUILDBuildCodePipelineActionRoleAB114051
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/BUILD/Build/CodePipelineActionRole/DefaultPolicy/Resource
+  GitHubPipelineApprovalCodePipelineActionRoleADCADD05:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/Approval/Approval/CodePipelineActionRole/Resource
+  GitHubPipelineDEPLOYDeployCodePipelineActionRole7B3D9884:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":iam::"
+                    - Ref: AWS::AccountId
+                    - :root
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/DEPLOY/Deploy/CodePipelineActionRole/Resource
+  GitHubPipelineDEPLOYDeployCodePipelineActionRoleDefaultPolicy0B5DD745:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CodeBuildDeployPlojectF23FECA7
+                - Arn
+        Version: 2012-10-17
+      PolicyName: GitHubPipelineDEPLOYDeployCodePipelineActionRoleDefaultPolicy0B5DD745
+      Roles:
+        - Ref: GitHubPipelineDEPLOYDeployCodePipelineActionRole7B3D9884
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/GitHubPipeline/DEPLOY/Deploy/CodePipelineActionRole/DefaultPolicy/Resource
+  CodeBuildDeployPlojectRoleF0DE6E1C:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+        Version: 2012-10-17
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/CodeBuildDeployPloject/Role/Resource
+  CodeBuildDeployPlojectRoleDefaultPolicy56D21E97:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: CodeBuildDeployPlojectF23FECA7
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: CodeBuildDeployPlojectF23FECA7
+                    - :*
+          - Action:
+              - codebuild:CreateReportGroup
+              - codebuild:CreateReport
+              - codebuild:UpdateReport
+              - codebuild:BatchPutTestCases
+              - codebuild:BatchPutCodeCoverages
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":codebuild:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - :report-group/
+                  - Ref: CodeBuildDeployPlojectF23FECA7
+                  - -*
+          - Action:
+              - elasticbeanstalk:*
+              - autoscaling:*
+              - elasticloadbalancing:*
+              - ecs:*
+              - s3:*
+              - ec2:*
+              - cloudwatch:*
+              - logs:*
+              - cloudformation:*
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":s3:::"
+                    - Ref: S3BucketSourceArtifacts
+                    - /*
+        Version: 2012-10-17
+      PolicyName: CodeBuildDeployPlojectRoleDefaultPolicy56D21E97
+      Roles:
+        - Ref: CodeBuildDeployPlojectRoleF0DE6E1C
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/CodeBuildDeployPloject/Role/DefaultPolicy/Resource
+  CodeBuildDeployPlojectF23FECA7:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: SERVICE_NAME
+            Type: PLAINTEXT
+            Value:
+              Ref: ServiceName
+          - Name: ENVIRONMENT
+            Type: PLAINTEXT
+            Value:
+              Ref: Environment
+          - Name: DEPLOY_ENV_NAME
+            Type: PLAINTEXT
+            Value:
+              Fn::Join:
+                - ""
+                - - Ref: ProjectName
+                  - "-"
+                  - Ref: EnvType
+                  - "-"
+                  - Ref: Environment
+          - Name: AWS_DEFAULT_REGION
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Type: PLAINTEXT
+            Value:
+              Ref: AWS::AccountId
+          - Name: ARTIFACT_BUCKET
+            Type: PLAINTEXT
+            Value:
+              Ref: S3BucketSourceArtifacts
+          - Name: TARGET_TYPE
+            Type: PLAINTEXT
+            Value:
+              Ref: EnvType
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+      ServiceRole:
+        Fn::GetAtt:
+          - CodeBuildDeployPlojectRoleF0DE6E1C
+          - Arn
+      Source:
+        BuildSpec: >-
+          {
+            "version": 0.2,
+            "phases": {
+              "pre_build": {
+                "commands": [
+                  "echo deploy envorinment variables",
+                  "echo $AWS_DEFAULT_REGION",
+                  "echo $CODEBUILD_RESOLVED_SOURCE_VERSION",
+                  "echo $SERVICE_NAME",
+                  "echo $ENVIRONMENT",
+                  "echo $CODEBUILD_BUILD_NUMBER",
+                  "echo $AWS_ACCOUNT_ID",
+                  "echo $REPOSITORY_URI",
+                  "echo $TARGET_TYPE",
+                  "echo $ARTIFACT_BUCKET",
+                  "echo $IMAGE_TAG",
+                  "aws --version",
+                  "if [ \"TARGET_TYPE\" = \"EKS\"]; then\n  curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl\n  chmod +x ./kubectl\n  mv ./kubectl /usr/local/bin/kubectl\n  mkdir ~/.kube\n  aws eks --region ${AWS_DEFAULT_REGION} update-kubeconfig --name ${DEPLOY_ENV_NAME}\n  kubectl get po -n kube-system\nfi\n"
+                ]
+              },
+              "build": {
+                "commands": [
+                  "echo Skip Build on `date`"
+                ]
+              },
+              "post_build": {
+                "commands": [
+                  "echo Post Build started on `date`",
+                  "echo $TARGET_TYPE",
+                  "if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \"$SERVICE_NAME-$ENVIRONMENT\" --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" \n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"eks\" ]; then \n  sed -i.bak 's#AWS_ECR_URI#'\"$AWS_ECR_URI\"'#' ./EKS/deploy.yaml\n  sed -i.bak 's#DATE_STRING#'\"$DATE\"'#' ./EKS/deploy.yaml\n  kubectl apply -f ./EKS/deploy.yaml\n  kubectl apply -f ./EKS/svc.yaml\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"lambda\" ]; then \n  echo Nothing to do on LAMBDA \nfi \n"
+                ]
+              }
+            }
+          }
+        Type: CODEPIPELINE
+      Cache:
+        Type: NO_CACHE
+      EncryptionKey: alias/aws/s3
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/CodeBuildDeployPloject/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/02Q0U7DMAxFv4X31FBAfMD2A9X2wCNKHQNu07hKnE1TlX+nTSeNp3st33tk+RXeW3h5stfUoBsbzz0s6/C1JIoXRkKr1ssPdFFcRj2rxdEQRlhONEtilXgzx+/wmIpBcdRn9g6WjmfyHGitD4S6Je+2GLbTShFPtb9pJ56x4nZXTHqDQ8aR9GATVfB8Jz7YNf/Pf1L/KzKWUhc22omU4n5kkhyxpo4SHCtLKCasWBjS86X9gHb7xpCYm5iD8kRw2vUP/EFP2SkBAAA=
+    Metadata:
+      aws:cdk:path: image-ci/CIGithubProduct/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2

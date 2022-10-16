@@ -1,0 +1,141 @@
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: Environment Information
+        Parameters:
+          - ProjectName
+          - ServiceName
+          - DeployStage1
+          - DeployStage2
+      - Label:
+          default: Git Repository Information
+        Parameters:
+          - SourceProviderType
+          - RepoName
+          - RepoBranch
+          - RepoOwner
+          - GithubSecretTokenId
+      - Label:
+          default: Configuration for Codebuild
+        Parameters:
+          - BuildType
+          - S3BucketSourceArtifacts
+      - Label:
+          default: Deploy Information
+        Parameters:
+          - DeployTargetType
+Parameters:
+  ProjectName:
+    Type: String
+    Default: acme
+    Description: The name of the Project Name
+  DeployStage1:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dmz
+      - dev
+      - shared
+      - prod
+    Description: Deploy Stage1 Environment
+  DeployStage2:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dmz
+      - dev
+      - shared
+      - prod
+    Description: Deploy Stage1 Environment
+  RepoName:
+    Type: String
+    Description: Git Repository or S3 Bucket Name
+  RepoOwner:
+    Type: String
+    Default: myowner
+  RepoBranch:
+    Type: String
+    Default: main
+  GithubSecretTokenId:
+    Type: String
+    Description: (Github Only Use)Secret Token Id for Github
+  ServiceName:
+    Type: String
+    Default: demoapp
+    Description: Service Name
+  S3BucketSourceArtifacts:
+    Type: String
+    Default: acme-servicecatalog-cicd-bucket
+    Description: S3 Bucket Name for Source and Build Artifact
+  BuildType:
+    Type: String
+    Default: DOCKER
+    AllowedValues:
+      - MAVEN
+      - GRADLE
+      - NPM
+      - PYTHON
+      - DOCKER
+    Description: Source Packaging Tool
+  DeployTargetType:
+    Type: String
+    Default: beanstalk
+    AllowedValues:
+      - ecs
+      - fargate
+      - eks
+      - beanstalk
+      - lambda
+    Description: Source Packaging Tool
+  SourceProviderType:
+    Type: String
+    Default: GITHUB
+    AllowedValues:
+      - GITHUB
+      - CODECOMMIT
+      - JENKINS
+      - BITBUCKET
+    Description: Source Provider Type
+Conditions:
+  IsGithubCondition:
+    Fn::Equals:
+      - GITHUB
+      - Ref: SourceProviderType
+  IsCodecommitCondition:
+    Fn::Equals:
+      - CODECOMMIT
+      - Ref: SourceProviderType
+Resources:
+  GithubPipeline:
+    Condition: IsGithubCondition
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        ProjectName: !Ref ProjectName
+        ServiceName: !Ref ServiceName
+        DeployStage1: !Ref DeployStage1 
+        DeployStage2: !Ref DeployStage2
+        RepoName: !Ref RepoName 
+        RepoBranch: !Ref RepoBranch 
+        RepoOwner: !Ref RepoOwner
+        GithubSecretTokenId : !Ref GithubSecretTokenId 
+        BuildType: !Ref BuildType
+        S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
+        DeployTargetType: !Ref DeployTargetType
+      TemplateURL: https://awstf-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/cicd-github.yaml
+  CodeCommitPipeline:
+    Condition: IsCodecommitCondition
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        ProjectName: !Ref ProjectName
+        ServiceName: !Ref ServiceName
+        DeployStage1: !Ref DeployStage1 
+        DeployStage2: !Ref DeployStage2
+        RepoName: !Ref RepoName 
+        RepoBranch: !Ref RepoBranch 
+        BuildType: !Ref BuildType
+        S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
+        DeployTargetType: !Ref DeployTargetType
+      TemplateURL: https://awstf-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/cicd-codecommit.yaml
