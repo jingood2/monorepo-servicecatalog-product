@@ -44,10 +44,15 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@types/randomstring": "^1.1.8",
     "aws-cdk-lib": "^2.46.0",
     "constructs": "^10.0.5",
     "randomstring": "^1.2.2",
+=======
+    "aws-cdk-lib": "^2.46.0",
+    "constructs": "^10.0.5",
+>>>>>>> 41b3ed81d55ac5bc72db55c30cf7f4ce34b51964
     "yaml": "^2.1.3"
   },
   "license": "Apache-2.0",

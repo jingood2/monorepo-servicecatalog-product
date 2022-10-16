@@ -11,7 +11,10 @@ import { Construct } from 'constructs/lib/construct';
 import fs from 'fs';
 import yaml from 'yaml';
 import path from 'path';
+<<<<<<< HEAD
 import * as randomstring from 'randomstring';
+=======
+>>>>>>> 41b3ed81d55ac5bc72db55c30cf7f4ce34b51964
 
 //import { CDConstruct } from './cd-construct';
 
