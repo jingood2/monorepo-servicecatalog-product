@@ -90,6 +90,10 @@
       "type": "override"
     },
     {
+      "name": "@types/randomstring",
+      "type": "runtime"
+    },
+    {
       "name": "aws-cdk-lib",
       "version": "^2.46.0",
       "type": "runtime"
@@ -97,6 +101,10 @@
     {
       "name": "constructs",
       "version": "^10.0.5",
+      "type": "runtime"
+    },
+    {
+      "name": "randomstring",
       "type": "runtime"
     },
     {

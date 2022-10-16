@@ -11,6 +11,7 @@ import { Construct } from 'constructs/lib/construct';
 import fs from 'fs';
 import yaml from 'yaml';
 import path from 'path';
+import * as randomstring from 'randomstring';
 
 //import { CDConstruct } from './cd-construct';
 
@@ -296,9 +297,11 @@ export class ContainerCICDProduct extends servicecatalog.ProductStack {
     buildOutput: codepipeline.Artifact, 
   ) : codepipeline_actions.CodeBuildAction {
 
+    const randomString = randomstring.generate(5);
+
     const deployBuildSpec = yaml.parse(fs.readFileSync(path.join(__dirname, './buildspec/buildspec-cd.yaml'), 'utf8'));
 
-    const deployProject = new codebuild.PipelineProject(this, 'CodeBuildDeployPloject', {
+    const deployProject = new codebuild.PipelineProject(this, `DeployPloject-${randomString}`, {
       buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
       environment: {
         buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
