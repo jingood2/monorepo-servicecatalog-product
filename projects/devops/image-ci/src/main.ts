@@ -52,7 +52,7 @@ export class MyStack extends Stack {
             path.join(__dirname, './lib/cfn-template/all.yaml'),
           ),
         },
-        {
+        /* {
           productVersionName: 'v6',
           description: 'Github Docker Compose CICD',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
@@ -63,7 +63,7 @@ export class MyStack extends Stack {
           description: 'Github Docker Compose CD',
           cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
             new ComposeToCfnCD(this, 'GithubDockerComposeCDProduct', {})),
-        },
+        }, */
         {
           productVersionName: 'v8',
           description: 'EKS CICD Pieline with Github',
