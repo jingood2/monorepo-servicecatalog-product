@@ -5,7 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+//import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { Ec2Service } from 'aws-cdk-lib/aws-ecs';
 //import { AmiHardwareType } from 'aws-cdk-lib/aws-ecs';
