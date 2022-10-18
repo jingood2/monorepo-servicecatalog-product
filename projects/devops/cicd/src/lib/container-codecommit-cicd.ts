@@ -316,7 +316,8 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
     const deployProject = new codebuild.PipelineProject(this, `DeployPloject-${randomString}`, {
       buildSpec: codebuild.BuildSpec.fromObject(deployBuildSpec),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_4, // for arm64/v8 cpu platform
+        computeType: codebuild.ComputeType.MEDIUM,
         privileged: true,
       },
       environmentVariables: {

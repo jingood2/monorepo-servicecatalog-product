@@ -18,7 +18,7 @@ phases:
       - aws --version
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+      - export MAVEN_OPTS="-Xmx2048m -XX:MaxPermSize=128m"
       - |
         if [ "$BUILD_TYPE" = "DOCKER" ]; then
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
@@ -109,7 +109,7 @@ phases:
             echo Writing image definitions file for LAMBDA...
           fi 
         fi
-rtifacts:
+Artifacts:
   files:
     - '**/*'
   name: $IMAGE_TAG
