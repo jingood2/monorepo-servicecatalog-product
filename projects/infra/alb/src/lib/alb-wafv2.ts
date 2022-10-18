@@ -161,6 +161,7 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
     });
 
     const alb = new elbv2.CfnLoadBalancer(this, 'ApplicationLoadBalancer', /* all optional props */ {
+      name: `${projectName.valueAsString}-alb-${environment.valueAsString}-${scheme.valueAsString}`,
       ipAddressType: 'ipv4',
       loadBalancerAttributes: [{
         key: 'idle_timeout.timeout_seconds',
