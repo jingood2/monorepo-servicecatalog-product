@@ -81,8 +81,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
     const scheme = new cdk.CfnParameter(this, 'AlbScheme', {
       type: 'String',
       description: 'select ALB Scheme',
-      allowedValues: ['internal', 'internet-facing'],
-      default: 'internal',
+      allowedValues: ['int', 'ext'],
+      default: 'ext',
     });
 
     const certiArn = new cdk.CfnParameter(this, 'CertificateArn', {
