@@ -18,13 +18,6 @@ export class MyStack extends cdk.Stack {
       distributor: 'SK Cloud Transformation Group',
       description: 'Container CICD Product',
       productVersions: [
-        /*  {
-          productVersionName: 'v1',
-          description: 'Create CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',
-          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
-            new ContainerCICDProduct(this, 'ContainerCICDProduct', {})),
-        },
-        */
         {
           productVersionName: 'v1',
           description: 'Create Github CICD Pieline product that builds and deploys containers to ECS, EKS, Beanstalk',

@@ -109,7 +109,7 @@ phases:
             echo Writing image definitions file for LAMBDA...
           fi 
         fi
-artifacts:
+rtifacts:
   files:
     - '**/*'
   name: $IMAGE_TAG

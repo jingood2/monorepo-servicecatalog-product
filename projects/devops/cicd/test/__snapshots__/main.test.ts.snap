@@ -22,7 +22,7 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/1a43a2c176c5764a0b5a12173a7f2509785b928e1249f9ba827659b07f1fc0f8.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c12c87c30f901b3e31329f87983636adea47b321eebf1cbd9608c0f8863094f9.json",
               },
             },
             "Name": "v1",
@@ -32,7 +32,7 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/c6fdac21caed1b018a7ba3e30794e4a99fe256c276d864a81b44cec685d66fc4.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/63ce0bc9d27b0b2e5ea4c365c4bad8ace79286bae3609394b735aace3f4f617c.json",
               },
             },
             "Name": "v2",
