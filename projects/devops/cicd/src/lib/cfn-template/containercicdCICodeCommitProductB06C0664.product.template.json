@@ -119,7 +119,7 @@
     }
   },
   "Resources": {
-    "GitRepositorycicdproductCICodeCommitProductCodecommitPipeline9EC9130A0EventRuleEB614A32": {
+    "GitRepositorycontainercicdCICodeCommitProductCodecommitPipeline9B5F6D7D0EventRule455D050B": {
       "Type": "AWS::Events::Rule",
       "Properties": {
         "EventPattern": {
@@ -203,7 +203,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/GitRepository/cicdproductCICodeCommitProductCodecommitPipeline9EC9130A0EventRule/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/GitRepository/containercicdCICodeCommitProductCodecommitPipeline9B5F6D7D0EventRule/Resource"
       }
     },
     "ECRRepoC36DC9E6": {
@@ -222,7 +222,7 @@
       "UpdateReplacePolicy": "Retain",
       "DeletionPolicy": "Retain",
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/ECRRepo/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/ECRRepo/Resource"
       }
     },
     "BuildProjectRoleAA92C755": {
@@ -242,7 +242,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/BuildProject/Role/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Role/Resource"
       }
     },
     "BuildProjectRoleDefaultPolicy3E9F248C": {
@@ -434,7 +434,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/BuildProject/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Role/DefaultPolicy/Resource"
       }
     },
     "BuildProject097C5DB7": {
@@ -446,11 +446,6 @@
         "Environment": {
           "ComputeType": "BUILD_GENERAL1_SMALL",
           "EnvironmentVariables": [
-            {
-              "Name": "IMAGE_TAG",
-              "Type": "PLAINTEXT",
-              "Value": "#{Source_Codecommit_NS.CommitId}"
-            },
             {
               "Name": "REPOSITORY_URI",
               "Type": "PLAINTEXT",
@@ -577,10 +572,10 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/BuildProject/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Resource"
       }
     },
-    "DeployPlojectfFY6vRoleEFD1AEB2": {
+    "DeployPlojectQhWwHRoleF489C770": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -597,10 +592,10 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-fFY6v/Role/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-QhWwH/Role/Resource"
       }
     },
-    "DeployPlojectfFY6vRoleDefaultPolicy22005A84": {
+    "DeployPlojectQhWwHRoleDefaultPolicyEF8BD166": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "PolicyDocument": {
@@ -631,7 +626,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPlojectfFY6v42C88F47"
+                        "Ref": "DeployPlojectQhWwH872CBC53"
                       }
                     ]
                   ]
@@ -654,7 +649,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPlojectfFY6v42C88F47"
+                        "Ref": "DeployPlojectQhWwH872CBC53"
                       },
                       ":*"
                     ]
@@ -689,7 +684,7 @@
                     },
                     ":report-group/",
                     {
-                      "Ref": "DeployPlojectfFY6v42C88F47"
+                      "Ref": "DeployPlojectQhWwH872CBC53"
                     },
                     "-*"
                   ]
@@ -755,18 +750,18 @@
           ],
           "Version": "2012-10-17"
         },
-        "PolicyName": "DeployPlojectfFY6vRoleDefaultPolicy22005A84",
+        "PolicyName": "DeployPlojectQhWwHRoleDefaultPolicyEF8BD166",
         "Roles": [
           {
-            "Ref": "DeployPlojectfFY6vRoleEFD1AEB2"
+            "Ref": "DeployPlojectQhWwHRoleF489C770"
           }
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-fFY6v/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-QhWwH/Role/DefaultPolicy/Resource"
       }
     },
-    "DeployPlojectfFY6v42C88F47": {
+    "DeployPlojectQhWwH872CBC53": {
       "Type": "AWS::CodeBuild::Project",
       "Properties": {
         "Artifacts": {
@@ -847,7 +842,7 @@
         },
         "ServiceRole": {
           "Fn::GetAtt": [
-            "DeployPlojectfFY6vRoleEFD1AEB2",
+            "DeployPlojectQhWwHRoleF489C770",
             "Arn"
           ]
         },
@@ -861,10 +856,10 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-fFY6v/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-QhWwH/Resource"
       }
     },
-    "DeployPlojectP4U0tRole1A1473EE": {
+    "DeployPlojectjDXilRole1BB70EC9": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -881,10 +876,10 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-P4U0t/Role/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-jDXil/Role/Resource"
       }
     },
-    "DeployPlojectP4U0tRoleDefaultPolicyFD736ACE": {
+    "DeployPlojectjDXilRoleDefaultPolicyD1E21B52": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "PolicyDocument": {
@@ -915,7 +910,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPlojectP4U0tB4F0914F"
+                        "Ref": "DeployPlojectjDXilDA0D1B08"
                       }
                     ]
                   ]
@@ -938,7 +933,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPlojectP4U0tB4F0914F"
+                        "Ref": "DeployPlojectjDXilDA0D1B08"
                       },
                       ":*"
                     ]
@@ -973,7 +968,7 @@
                     },
                     ":report-group/",
                     {
-                      "Ref": "DeployPlojectP4U0tB4F0914F"
+                      "Ref": "DeployPlojectjDXilDA0D1B08"
                     },
                     "-*"
                   ]
@@ -1039,18 +1034,18 @@
           ],
           "Version": "2012-10-17"
         },
-        "PolicyName": "DeployPlojectP4U0tRoleDefaultPolicyFD736ACE",
+        "PolicyName": "DeployPlojectjDXilRoleDefaultPolicyD1E21B52",
         "Roles": [
           {
-            "Ref": "DeployPlojectP4U0tRole1A1473EE"
+            "Ref": "DeployPlojectjDXilRole1BB70EC9"
           }
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-P4U0t/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-jDXil/Role/DefaultPolicy/Resource"
       }
     },
-    "DeployPlojectP4U0tB4F0914F": {
+    "DeployPlojectjDXilDA0D1B08": {
       "Type": "AWS::CodeBuild::Project",
       "Properties": {
         "Artifacts": {
@@ -1131,7 +1126,7 @@
         },
         "ServiceRole": {
           "Fn::GetAtt": [
-            "DeployPlojectP4U0tRole1A1473EE",
+            "DeployPlojectjDXilRole1BB70EC9",
             "Arn"
           ]
         },
@@ -1145,7 +1140,7 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/DeployPloject-P4U0t/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-jDXil/Resource"
       }
     },
     "CodePipelineRoleB31C27BE": {
@@ -1174,22 +1169,7 @@
                     "s3:GetObjectVersion"
                   ],
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition"
-                        },
-                        ":s3:::",
-                        {
-                          "Ref": "S3BucketSourceArtifacts"
-                        },
-                        "/*"
-                      ]
-                    ]
-                  }
+                  "Resource": "*"
                 }
               ],
               "Version": "2012-10-17"
@@ -1199,7 +1179,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodePipelineRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodePipelineRole/Resource"
       }
     },
     "CodecommitPipeline6F1C2F07": {
@@ -1231,7 +1211,6 @@
                   "PollForSourceChanges": false
                 },
                 "Name": "Codecommit",
-                "Namespace": "Source_Codecommit_NS",
                 "OutputArtifacts": [
                   {
                     "Name": "Source"
@@ -1260,8 +1239,7 @@
                 "Configuration": {
                   "ProjectName": {
                     "Ref": "BuildProject097C5DB7"
-                  },
-                  "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{Source_Codecommit_NS.CommitId}\"}]"
+                  }
                 },
                 "InputArtifacts": [
                   {
@@ -1297,7 +1275,7 @@
                 },
                 "Configuration": {
                   "ProjectName": {
-                    "Ref": "DeployPlojectfFY6v42C88F47"
+                    "Ref": "DeployPlojectQhWwH872CBC53"
                   },
                   "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
                 },
@@ -1350,7 +1328,7 @@
                 },
                 "Configuration": {
                   "ProjectName": {
-                    "Ref": "DeployPlojectP4U0tB4F0914F"
+                    "Ref": "DeployPlojectjDXilDA0D1B08"
                   },
                   "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
                 },
@@ -1386,7 +1364,7 @@
         "CodePipelineRoleB31C27BE"
       ],
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Resource"
       }
     },
     "CodecommitPipelineSourceCodecommitCodePipelineActionRoleB2EC77E6": {
@@ -1421,7 +1399,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/Resource"
       }
     },
     "CodecommitPipelineSourceCodecommitCodePipelineActionRoleDefaultPolicy49F6D9EF": {
@@ -1521,7 +1499,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "CodecommitPipelineEventsRole576112C2": {
@@ -1541,7 +1519,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/EventsRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/EventsRole/Resource"
       }
     },
     "CodecommitPipelineEventsRoleDefaultPolicyDC8441E8": {
@@ -1587,7 +1565,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/EventsRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/EventsRole/DefaultPolicy/Resource"
       }
     },
     "CodecommitPipelineImageBuildCodePipelineActionRole8EA23282": {
@@ -1622,7 +1600,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/Resource"
       }
     },
     "CodecommitPipelineImageBuildCodePipelineActionRoleDefaultPolicy36EF983F": {
@@ -1655,7 +1633,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "CodecommitPipelineDeployOnDevDeployCodePipelineActionRole25F99104": {
@@ -1690,7 +1668,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/Resource"
       }
     },
     "CodecommitPipelineDeployOnDevDeployCodePipelineActionRoleDefaultPolicy5F9FE341": {
@@ -1707,7 +1685,7 @@
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "DeployPlojectfFY6v42C88F47",
+                  "DeployPlojectQhWwH872CBC53",
                   "Arn"
                 ]
               }
@@ -1723,7 +1701,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "CodecommitPipelineApprovalCodePipelineActionRole5DCB0411": {
@@ -1758,7 +1736,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/Approval/Approval/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Approval/Approval/CodePipelineActionRole/Resource"
       }
     },
     "CodecommitPipelineDeployOnProdDeployCodePipelineActionRole1EDECCE5": {
@@ -1793,7 +1771,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/Resource"
       }
     },
     "CodecommitPipelineDeployOnProdDeployCodePipelineActionRoleDefaultPolicyBA210243": {
@@ -1810,7 +1788,7 @@
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "DeployPlojectP4U0tB4F0914F",
+                  "DeployPlojectjDXilDA0D1B08",
                   "Arn"
                 ]
               }
@@ -1826,7 +1804,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "CDKMetadata": {
@@ -1835,7 +1813,7 @@
         "Analytics": "v2:deflate64:H4sIAAAAAAAA/02QUU7EMAxEz8J/aiigPcDuBapyAJR1DXKbxlXiFKEqdydNK+BrZuzRs+RneL3A04P9ig0OU+P4DlsJ71uksDISWrVOPqELMiTUN7U4GVrJa4StT47M7cPvmg1hKCNaJLJK+K6L35QNykD3xG6AreOFHHsq0JFQ9+Zps2E7F4qc4F07cYwVd7hs4gtcE06kVxupgpeT+Meu/dPnXJMNdialYHqKkgIeJ/75m/iBlcVn4wsUxvi4thdo2/KhMTI3IXnlmaA/9AdSJ0BSPQEAAA=="
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CICodeCommitProduct/CDKMetadata/Default"
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CDKMetadata/Default"
       },
       "Condition": "CDKMetadataAvailable"
     }

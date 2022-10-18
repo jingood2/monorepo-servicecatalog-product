@@ -145,7 +145,7 @@
       "UpdateReplacePolicy": "Retain",
       "DeletionPolicy": "Retain",
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/ECRRepo/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/ECRRepo/Resource"
       }
     },
     "BuildProjectRoleAA92C755": {
@@ -165,7 +165,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/BuildProject/Role/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/BuildProject/Role/Resource"
       }
     },
     "BuildProjectRoleDefaultPolicy3E9F248C": {
@@ -357,7 +357,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/BuildProject/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/BuildProject/Role/DefaultPolicy/Resource"
       }
     },
     "BuildProject097C5DB7": {
@@ -369,11 +369,6 @@
         "Environment": {
           "ComputeType": "BUILD_GENERAL1_SMALL",
           "EnvironmentVariables": [
-            {
-              "Name": "IMAGE_TAG",
-              "Type": "PLAINTEXT",
-              "Value": "#{Source_Github_NS.CommitId}"
-            },
             {
               "Name": "REPOSITORY_URI",
               "Type": "PLAINTEXT",
@@ -500,10 +495,10 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/BuildProject/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/BuildProject/Resource"
       }
     },
-    "DeployPloject4UG2hRole9FE7E547": {
+    "DeployPlojectjhK7rRole5FF222FF": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -520,10 +515,10 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-4UG2h/Role/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-jhK7r/Role/Resource"
       }
     },
-    "DeployPloject4UG2hRoleDefaultPolicyFBDD1B0D": {
+    "DeployPlojectjhK7rRoleDefaultPolicy7BF2B39F": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "PolicyDocument": {
@@ -554,7 +549,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPloject4UG2h30F4E0FA"
+                        "Ref": "DeployPlojectjhK7rC20DF789"
                       }
                     ]
                   ]
@@ -577,7 +572,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPloject4UG2h30F4E0FA"
+                        "Ref": "DeployPlojectjhK7rC20DF789"
                       },
                       ":*"
                     ]
@@ -612,7 +607,7 @@
                     },
                     ":report-group/",
                     {
-                      "Ref": "DeployPloject4UG2h30F4E0FA"
+                      "Ref": "DeployPlojectjhK7rC20DF789"
                     },
                     "-*"
                   ]
@@ -678,18 +673,18 @@
           ],
           "Version": "2012-10-17"
         },
-        "PolicyName": "DeployPloject4UG2hRoleDefaultPolicyFBDD1B0D",
+        "PolicyName": "DeployPlojectjhK7rRoleDefaultPolicy7BF2B39F",
         "Roles": [
           {
-            "Ref": "DeployPloject4UG2hRole9FE7E547"
+            "Ref": "DeployPlojectjhK7rRole5FF222FF"
           }
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-4UG2h/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-jhK7r/Role/DefaultPolicy/Resource"
       }
     },
-    "DeployPloject4UG2h30F4E0FA": {
+    "DeployPlojectjhK7rC20DF789": {
       "Type": "AWS::CodeBuild::Project",
       "Properties": {
         "Artifacts": {
@@ -770,7 +765,7 @@
         },
         "ServiceRole": {
           "Fn::GetAtt": [
-            "DeployPloject4UG2hRole9FE7E547",
+            "DeployPlojectjhK7rRole5FF222FF",
             "Arn"
           ]
         },
@@ -784,10 +779,10 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-4UG2h/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-jhK7r/Resource"
       }
     },
-    "DeployPloject8v4zZRole989C0349": {
+    "DeployPlojectB2rGZRole5163D3A9": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -804,10 +799,10 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Role/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-B2rGZ/Role/Resource"
       }
     },
-    "DeployPloject8v4zZRoleDefaultPolicy4F1E3279": {
+    "DeployPlojectB2rGZRoleDefaultPolicy5A2426A8": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "PolicyDocument": {
@@ -838,7 +833,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPloject8v4zZBC2756AA"
+                        "Ref": "DeployPlojectB2rGZ728B9195"
                       }
                     ]
                   ]
@@ -861,7 +856,7 @@
                       },
                       ":log-group:/aws/codebuild/",
                       {
-                        "Ref": "DeployPloject8v4zZBC2756AA"
+                        "Ref": "DeployPlojectB2rGZ728B9195"
                       },
                       ":*"
                     ]
@@ -896,7 +891,7 @@
                     },
                     ":report-group/",
                     {
-                      "Ref": "DeployPloject8v4zZBC2756AA"
+                      "Ref": "DeployPlojectB2rGZ728B9195"
                     },
                     "-*"
                   ]
@@ -962,18 +957,18 @@
           ],
           "Version": "2012-10-17"
         },
-        "PolicyName": "DeployPloject8v4zZRoleDefaultPolicy4F1E3279",
+        "PolicyName": "DeployPlojectB2rGZRoleDefaultPolicy5A2426A8",
         "Roles": [
           {
-            "Ref": "DeployPloject8v4zZRole989C0349"
+            "Ref": "DeployPlojectB2rGZRole5163D3A9"
           }
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Role/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-B2rGZ/Role/DefaultPolicy/Resource"
       }
     },
-    "DeployPloject8v4zZBC2756AA": {
+    "DeployPlojectB2rGZ728B9195": {
       "Type": "AWS::CodeBuild::Project",
       "Properties": {
         "Artifacts": {
@@ -1054,7 +1049,7 @@
         },
         "ServiceRole": {
           "Fn::GetAtt": [
-            "DeployPloject8v4zZRole989C0349",
+            "DeployPlojectB2rGZRole5163D3A9",
             "Arn"
           ]
         },
@@ -1068,7 +1063,7 @@
         "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/DeployPloject-8v4zZ/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/DeployPloject-B2rGZ/Resource"
       }
     },
     "CodePipelineRoleB31C27BE": {
@@ -1097,22 +1092,7 @@
                     "s3:GetObjectVersion"
                   ],
                   "Effect": "Allow",
-                  "Resource": {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition"
-                        },
-                        ":s3:::",
-                        {
-                          "Ref": "S3BucketSourceArtifacts"
-                        },
-                        "/*"
-                      ]
-                    ]
-                  }
+                  "Resource": "*"
                 }
               ],
               "Version": "2012-10-17"
@@ -1122,7 +1102,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/CodePipelineRole/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/CodePipelineRole/Resource"
       }
     },
     "GitHubPipeline7B79E906": {
@@ -1169,7 +1149,6 @@
                   "PollForSourceChanges": false
                 },
                 "Name": "Github",
-                "Namespace": "Source_Github_NS",
                 "OutputArtifacts": [
                   {
                     "Name": "Source"
@@ -1192,8 +1171,7 @@
                 "Configuration": {
                   "ProjectName": {
                     "Ref": "BuildProject097C5DB7"
-                  },
-                  "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{Source_Github_NS.CommitId}\"}]"
+                  }
                 },
                 "InputArtifacts": [
                   {
@@ -1229,7 +1207,7 @@
                 },
                 "Configuration": {
                   "ProjectName": {
-                    "Ref": "DeployPloject4UG2h30F4E0FA"
+                    "Ref": "DeployPlojectjhK7rC20DF789"
                   },
                   "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
                 },
@@ -1282,7 +1260,7 @@
                 },
                 "Configuration": {
                   "ProjectName": {
-                    "Ref": "DeployPloject8v4zZBC2756AA"
+                    "Ref": "DeployPlojectB2rGZ728B9195"
                   },
                   "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
                 },
@@ -1318,7 +1296,7 @@
         "CodePipelineRoleB31C27BE"
       ],
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/Resource"
       }
     },
     "GitHubPipelineSourceGithubWebhookResource97724FA2": {
@@ -1353,7 +1331,7 @@
         "RegisterWithThirdParty": true
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/Source/Github/WebhookResource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/Source/Github/WebhookResource"
       }
     },
     "GitHubPipelineImageBuildCodePipelineActionRoleBC32B61F": {
@@ -1388,7 +1366,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/ImageBuild/Build/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/ImageBuild/Build/CodePipelineActionRole/Resource"
       }
     },
     "GitHubPipelineImageBuildCodePipelineActionRoleDefaultPolicyB079F6A1": {
@@ -1421,7 +1399,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/ImageBuild/Build/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/ImageBuild/Build/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "GitHubPipelineDeployOnDevDeployCodePipelineActionRoleBE3FDF11": {
@@ -1456,7 +1434,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/DeployOnDev/Deploy/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/DeployOnDev/Deploy/CodePipelineActionRole/Resource"
       }
     },
     "GitHubPipelineDeployOnDevDeployCodePipelineActionRoleDefaultPolicy8D0AFB78": {
@@ -1473,7 +1451,7 @@
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "DeployPloject4UG2h30F4E0FA",
+                  "DeployPlojectjhK7rC20DF789",
                   "Arn"
                 ]
               }
@@ -1489,7 +1467,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/DeployOnDev/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/DeployOnDev/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "GitHubPipelineApprovalCodePipelineActionRoleADCADD05": {
@@ -1524,7 +1502,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/Approval/Approval/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/Approval/Approval/CodePipelineActionRole/Resource"
       }
     },
     "GitHubPipelineDeployOnProdDeployCodePipelineActionRoleB56DA98C": {
@@ -1559,7 +1537,7 @@
         }
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/DeployOnProd/Deploy/CodePipelineActionRole/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/DeployOnProd/Deploy/CodePipelineActionRole/Resource"
       }
     },
     "GitHubPipelineDeployOnProdDeployCodePipelineActionRoleDefaultPolicyF1B54969": {
@@ -1576,7 +1554,7 @@
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "DeployPloject8v4zZBC2756AA",
+                  "DeployPlojectB2rGZ728B9195",
                   "Arn"
                 ]
               }
@@ -1592,7 +1570,7 @@
         ]
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/GitHubPipeline/DeployOnProd/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/GitHubPipeline/DeployOnProd/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
       }
     },
     "CDKMetadata": {
@@ -1601,7 +1579,7 @@
         "Analytics": "v2:deflate64:H4sIAAAAAAAA/02QS27DMAxEz9K9zNRtkAMkFzCcRZeFTDEtbVk09ElRGLp7FDlAspohOPMI8AP2B3h/03+hQTM1lgdYy/C9BvJXRkIdtZUf6LyYhPEcNU6K0MPa0yKBo/h/dbq455QViqEhsTWwdryQZUelPhLGe/Jhs2I9F4pYqv27dmIZK25zWYVPOCacKB51oApeHsQnu+Zf/BcNvyJTznWhvZ4pklc9BUket2sv/iTOcGRxWbnChzHsru0B2ra8ZQzMjU8u8kzQb3oDpGyULjIBAAA="
       },
       "Metadata": {
-        "aws:cdk:path": "cicd-product/CIGithubProduct/CDKMetadata/Default"
+        "aws:cdk:path": "container-cicd/CIGithubProduct/CDKMetadata/Default"
       },
       "Condition": "CDKMetadataAvailable"
     }

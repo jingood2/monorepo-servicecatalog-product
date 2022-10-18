@@ -130,7 +130,7 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
     const sourceArtifact = new cdk.CfnParameter(this, 'S3BucketSourceArtifacts', {
       type: 'String',
       description: 'S3 Bucket Name for Source and Build Artifact',
-      default: 'acme-servicecatalog-cicd-bucket',
+      default: 'awstf-servicecatalog-cicd-bucket',
     });
 
     const buildType = new cdk.CfnParameter(this, 'BuildType', {
@@ -196,7 +196,6 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
         privileged: true,
       },
       environmentVariables: {
-        IMAGE_TAG: { value: codeCommitSourceAction.variables.commitId },
         REPOSITORY_URI: { value: ecrRepository.repositoryUri },
         AWS_DEFAULT_REGION: { value: cdk.Stack.of(this).region },
         AWS_ACCOUNT_ID: { value: cdk.Stack.of(this).account },
@@ -217,9 +216,6 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
       input: sourceOutput,
       outputs: [buildOutput],
       project: buildProject,
-      environmentVariables: {
-        IMAGE_TAG: { value: codeCommitSourceAction.variables.commitId },
-      },
     });
 
     // Approval Action
@@ -261,27 +257,29 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
     githubPipeline.addStage({ stageName: 'Approval', actions: [approvalAction] });
     githubPipeline.addStage({ stageName: 'DeployOnProd', actions: [deployProdAction] }); */
 
-    const codePipelineRole = new iam.Role(this, 'CodePipelineRole', {
+    /* const codePipelineRole = new iam.Role(this, 'CodePipelineRole', {
       assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
       roleName: cdk.PhysicalName.GENERATE_IF_NEEDED,
       inlinePolicies: {
         rootPermissions: new iam.PolicyDocument({
           statements: [
             new iam.PolicyStatement({
-              resources: [`${artifactS3.bucketArn}/*`],
+              resources: ['*'],
               actions: ['s3:GetObject', 's3:List*', 's3:GetObjectVersion'],
             }),
           ],
         }),
       },
-    });
+    }); */
 
     // Codecommit Pipeline
     const codecommitPipeline = new codepipeline.Pipeline(this, 'CodecommitPipeline', {
-      pipelineName: `${serviceName.valueAsString}`,
+      pipelineName: `${serviceName.valueAsString}-pipeline`,
       artifactBucket: artifactS3,
-      role: codePipelineRole.withoutPolicyUpdates(),
+      //role: codePipelineRole.withoutPolicyUpdates(),
     });
+
+    artifactS3.grantReadWrite(codecommitPipeline.role);
 
     codecommitPipeline.addStage({ stageName: 'Source' }).addAction(codeCommitSourceAction);
     codecommitPipeline.addStage({ stageName: 'ImageBuild', actions: [buildAction] });
