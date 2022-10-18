@@ -193,7 +193,8 @@ export class ContainerGithubCICDProduct extends servicecatalog.ProductStack {
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       buildSpec: codebuild.BuildSpec.fromObject(buildSpec),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3, // for arm64/v8 cpu platform
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_4, // for arm64/v8 cpu platform
+        computeType: codebuild.ComputeType.MEDIUM,
         privileged: true,
       },
       environmentVariables: {
