@@ -225,7 +225,7 @@ Resources:
       Artifacts:
         Type: CODEPIPELINE
       Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
+        ComputeType: BUILD_GENERAL1_MEDIUM
         EnvironmentVariables:
           - Name: REPOSITORY_URI
             Type: PLAINTEXT
@@ -271,7 +271,7 @@ Resources:
           - Name: ARTIFACT_BUCKET
             Type: PLAINTEXT
             Value: !Ref S3BucketSourceArtifacts
-        Image: 'aws/codebuild/amazonlinux2-x86_64-standard:3.0'
+        Image: 'aws/codebuild/amazonlinux2-x86_64-standard:4.0'
         ImagePullCredentialsType: CODEBUILD
         PrivilegedMode: true
         Type: LINUX_CONTAINER
@@ -302,7 +302,7 @@ Resources:
                   "aws --version",
                   "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)",
                   "IMAGE_TAG=${COMMIT_HASH:=latest}",
-                  "export MAVEN_OPTS=\"-Xmx1024m -XX:MaxPermSize=512m\"",
+                  "export MAVEN_OPTS=\"-Xmx2048m -XX:MaxPermSize=128m\"",
                   "if [ \"$BUILD_TYPE\" = \"DOCKER\" ]; then\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\nfi\n"
                 ]
               },
@@ -326,7 +326,7 @@ Resources:
                 ]
               }
             },
-            "rtifacts": {
+            "Artifacts": {
               "files": [
                 "**/*"
               ],
@@ -341,7 +341,7 @@ Resources:
       EncryptionKey: alias/aws/s3
     Metadata:
       'aws:cdk:path': container-cicd/CIGithubProduct/BuildProject/Resource
-  DeployPlojectw8mgKRole5A6F0B58:
+  DeployPlojectzMWBoRole5F060DB5:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -352,8 +352,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-w8mgK/Role/Resource
-  DeployPlojectw8mgKRoleDefaultPolicy496FE108:
+      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-zMWBo/Role/Resource
+  DeployPlojectzMWBoRoleDefaultPolicyFA6D7A6E:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -373,7 +373,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectw8mgKF6CF717D
+                  - !Ref DeployPlojectzMWBoDF0962C3
               - !Join 
                 - ''
                 - - 'arn:'
@@ -383,7 +383,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectw8mgKF6CF717D
+                  - !Ref DeployPlojectzMWBoDF0962C3
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -401,7 +401,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPlojectw8mgKF6CF717D
+                - !Ref DeployPlojectzMWBoDF0962C3
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -435,13 +435,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPlojectw8mgKRoleDefaultPolicy496FE108
+      PolicyName: DeployPlojectzMWBoRoleDefaultPolicyFA6D7A6E
       Roles:
-        - !Ref DeployPlojectw8mgKRole5A6F0B58
+        - !Ref DeployPlojectzMWBoRole5F060DB5
     Metadata:
       'aws:cdk:path': >-
-        container-cicd/CIGithubProduct/DeployPloject-w8mgK/Role/DefaultPolicy/Resource
-  DeployPlojectw8mgKF6CF717D:
+        container-cicd/CIGithubProduct/DeployPloject-zMWBo/Role/DefaultPolicy/Resource
+  DeployPlojectzMWBoDF0962C3:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -481,7 +481,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPlojectw8mgKRole5A6F0B58
+        - DeployPlojectzMWBoRole5F060DB5
         - Arn
       Source:
         BuildSpec: |-
@@ -527,8 +527,8 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-w8mgK/Resource
-  DeployPloject9J0w6RoleFE71DD80:
+      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-zMWBo/Resource
+  DeployPloject71gWqRole8972CCD0:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -539,8 +539,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-9J0w6/Role/Resource
-  DeployPloject9J0w6RoleDefaultPolicy26D3EE61:
+      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-71gWq/Role/Resource
+  DeployPloject71gWqRoleDefaultPolicy5BE8B717:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -560,7 +560,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPloject9J0w6A76D2B47
+                  - !Ref DeployPloject71gWq27ADB437
               - !Join 
                 - ''
                 - - 'arn:'
@@ -570,7 +570,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPloject9J0w6A76D2B47
+                  - !Ref DeployPloject71gWq27ADB437
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -588,7 +588,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPloject9J0w6A76D2B47
+                - !Ref DeployPloject71gWq27ADB437
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -622,13 +622,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPloject9J0w6RoleDefaultPolicy26D3EE61
+      PolicyName: DeployPloject71gWqRoleDefaultPolicy5BE8B717
       Roles:
-        - !Ref DeployPloject9J0w6RoleFE71DD80
+        - !Ref DeployPloject71gWqRole8972CCD0
     Metadata:
       'aws:cdk:path': >-
-        container-cicd/CIGithubProduct/DeployPloject-9J0w6/Role/DefaultPolicy/Resource
-  DeployPloject9J0w6A76D2B47:
+        container-cicd/CIGithubProduct/DeployPloject-71gWq/Role/DefaultPolicy/Resource
+  DeployPloject71gWq27ADB437:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -668,7 +668,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPloject9J0w6RoleFE71DD80
+        - DeployPloject71gWqRole8972CCD0
         - Arn
       Source:
         BuildSpec: |-
@@ -714,7 +714,7 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-9J0w6/Resource
+      'aws:cdk:path': container-cicd/CIGithubProduct/DeployPloject-71gWq/Resource
   GitHubPipelineRoleB9AFBEB2:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -839,7 +839,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPlojectw8mgKF6CF717D
+                ProjectName: !Ref DeployPlojectzMWBoDF0962C3
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -869,7 +869,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPloject9J0w6A76D2B47
+                ProjectName: !Ref DeployPloject71gWq27ADB437
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -981,7 +981,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPlojectw8mgKF6CF717D
+              - DeployPlojectzMWBoDF0962C3
               - Arn
         Version: 2012-10-17
       PolicyName: >-
@@ -1040,7 +1040,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPloject9J0w6A76D2B47
+              - DeployPloject71gWq27ADB437
               - Arn
         Version: 2012-10-17
       PolicyName: >-
