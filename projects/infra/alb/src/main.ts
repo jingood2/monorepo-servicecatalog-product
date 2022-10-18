@@ -1,7 +1,8 @@
+import path from 'path';
 import { App, DefaultStackSynthesizer, Stack, StackProps } from 'aws-cdk-lib';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs';
-import path from 'path';
+import { ProductAlbStack } from './lib/alb-wafv2';
 
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
@@ -21,6 +22,12 @@ export class MyStack extends Stack {
             path.join(__dirname, './lib/cfn-template/alb-v1.yaml'),
           ),
         },
+        {
+          productVersionName: 'v2',
+          description: 'ALB V2',
+          cloudFormationTemplate: servicecatalog.CloudFormationTemplate.fromProductStack(
+            new ProductAlbStack(this, 'ALBProduct', {})),
+        },
       ],
     });
   }
@@ -34,13 +41,13 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'alb-product', { 
-  env: devEnv, 
+new MyStack(app, 'alb-product', {
+  env: devEnv,
   stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
   synthesizer: new DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
- });
+});
 // new MyStack(app, 'alb-prod', { env: prodEnv });
 
 app.synth();
