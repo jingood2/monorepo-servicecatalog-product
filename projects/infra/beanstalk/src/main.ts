@@ -32,13 +32,13 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'beanstalk', { 
-  env: devEnv, 
+new MyStack(app, 'beanstalk', {
+  env: devEnv,
   stackName: `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
   synthesizer: new DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
- });
+});
 
 // new MyStack(app, 'beanstalk-prod', { env: prodEnv });
 
