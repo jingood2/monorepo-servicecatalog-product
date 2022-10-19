@@ -12,16 +12,16 @@ Object {
   "Resources": Object {
     "scbeanstalkproductFEECDEB1": Object {
       "Properties": Object {
-        "Description": "IAM User SC Product",
-        "Distributor": "jingood2@sk.com",
+        "Description": "SC Elastic Beanstalk Product",
+        "Distributor": "SK Cloud Transformation Group",
         "Name": "beanstalk-product",
-        "Owner": "SKCnC AWSTF",
+        "Owner": "jingood2@sk.com",
         "ProvisioningArtifactParameters": Array [
           Object {
             "DisableTemplateValidation": false,
             "Info": Object {
               "LoadTemplateFromURL": Object {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/ca49bc765e9c0cedc2d9149b9d826a401b4a5370323c9ba3774ce678f7b7a378.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/1865fd90a7106c581e7131df1c333a40931a1dcdb41beccc35637bc7138c7248.json",
               },
             },
             "Name": "v1",

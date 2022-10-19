@@ -110,7 +110,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     const platformType = new cdk.CfnParameter(this, 'EBPlatformType', {
       type: 'String',
       description: 'Elastic Beanstalk supports the following Tomcat platform versions',
-      default: '64bit Amazon Linux 2 v4.2.17 running Tomcat 8.5 Corretto 8',
+      default: '64bit Amazon Linux 2 v4.3.0 running Tomcat 8.5 Corretto 11',
       allowedValues:
         [
           '64bit Amazon Linux 2 v3.4.0 running Corretto 17',
@@ -201,14 +201,14 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
       description: 'Set to SingleInstance to launch one EC2 instance with no load balancer',
       type: 'String',
       default: 'LoadBalanced',
-      allowedValues: ['LoadBalanced', 'SingleInstance']
+      allowedValues: ['LoadBalanced', 'SingleInstance'],
     });
 
     const SharedLoadbalancer = new cdk.CfnParameter(this, 'SharedLoadBalancer', {
       description: 'Specifies whether the environments load balancer is dedicated or shared',
       type: 'String',
       default: 'true',
-      allowedValues: ['true', 'false']
+      allowedValues: ['true', 'false'],
     });
 
     const cnamePrefix = new cdk.CfnParameter(this, 'CNAMEPrefix', {
@@ -496,7 +496,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
       description: 'LoadBalancer URL',
       value: ebEnv.attrEndpointUrl,
     });
- */    new cdk.CfnOutput(this, 'ApplicationName', {
+ */ new cdk.CfnOutput(this, 'ApplicationName', {
       description: 'EB ApplicationName',
       value: ebApp.applicationName ?? 'sampleApp',
     });
