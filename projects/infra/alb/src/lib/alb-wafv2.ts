@@ -148,7 +148,6 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
     });
 
     //const dummyString = randomstring.generate(5);
-    const dummyString = (Math.random() + 1).toString(36).substring(5)
     const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTG', {
       healthCheckEnabled: true,
       healthCheckIntervalSeconds: 6,
@@ -157,7 +156,7 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       healthyThresholdCount: 2,
       port: 80,
       protocol: 'HTTP',
-      name: `dummy-${dummyString}-tg`,
+      name: `${projectName.valueAsString}-${scheme.valueAsString}-${environment.valueAsString}-default-tg`,
       unhealthyThresholdCount: 2,
       vpcId: vpcId.valueAsString,
     });
