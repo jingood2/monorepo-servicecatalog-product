@@ -4,7 +4,6 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
-import * as randomstring from 'randomstring';
 import { Construct } from 'constructs/lib/construct';
 
 export interface ProductEProps extends cdk.StackProps {
@@ -148,7 +147,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       sourceSecurityGroupId: albSg.ref,
     });
 
-    const dummyString = randomstring.generate(5);
+    //const dummyString = randomstring.generate(5);
+    const dummyString = (Math.random() + 1).toString(36).substring(5)
     const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTG', {
       healthCheckEnabled: true,
       healthCheckIntervalSeconds: 6,
