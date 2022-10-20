@@ -150,7 +150,7 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
 
     const myrandom = randomstring.generate(5);
 
-    const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTargetGroup', {
+    const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTG', {
       healthCheckEnabled: true,
       healthCheckIntervalSeconds: 6,
       healthCheckPath: '/',
