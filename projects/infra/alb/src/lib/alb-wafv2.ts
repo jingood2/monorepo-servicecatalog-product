@@ -148,6 +148,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       sourceSecurityGroupId: albSg.ref,
     });
 
+    const myrandom = randomstring.generate(5);
+
     const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTargetGroup', {
       healthCheckEnabled: true,
       healthCheckIntervalSeconds: 6,
@@ -156,7 +158,7 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       healthyThresholdCount: 2,
       port: 80,
       protocol: 'HTTP',
-      name: `dummpy-${randomstring.generate(5)}-tg`,
+      name: `dummy-${myrandom}-tg`,
       unhealthyThresholdCount: 2,
       vpcId: vpcId.valueAsString,
     });
