@@ -1,0 +1,2123 @@
+{
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Environment Information"
+          },
+          "Parameters": [
+            "ProjectName",
+            "ServiceName",
+            "DeployStage1",
+            "DeployStage2"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Git Repository Information"
+          },
+          "Parameters": [
+            "RepoName",
+            "RepoBranch"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Configuration for Codebuild"
+          },
+          "Parameters": [
+            "BuildType",
+            "S3BucketSourceArtifacts"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Deploy Information"
+          },
+          "Parameters": [
+            "DeployTargetType",
+            "ContainerPort"
+          ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "ProjectName": {
+      "Type": "String",
+      "Default": "acme",
+      "Description": "The name of the Project Name"
+    },
+    "DeployStage1": {
+      "Type": "String",
+      "Default": "dev",
+      "AllowedValues": [
+        "dmz",
+        "dev",
+        "shared",
+        "prod"
+      ],
+      "Description": "Deploy Stage1 Environment"
+    },
+    "DeployStage2": {
+      "Type": "String",
+      "Default": "prod",
+      "AllowedValues": [
+        "dmz",
+        "dev",
+        "shared",
+        "prod"
+      ],
+      "Description": "Deploy Stage1 Environment"
+    },
+    "RepoName": {
+      "Type": "String",
+      "Description": "Git Repository or S3 Bucket Name"
+    },
+    "RepoBranch": {
+      "Type": "String",
+      "Default": "main"
+    },
+    "ServiceName": {
+      "Type": "String",
+      "Default": "demoapp",
+      "Description": "Service Name"
+    },
+    "ContainerPort": {
+      "Type": "Number",
+      "Default": "80",
+      "Description": "Container Port"
+    },
+    "S3BucketSourceArtifacts": {
+      "Type": "String",
+      "Default": "awstf-servicecatalog-cicd-bucket",
+      "Description": "S3 Bucket Name for Source and Build Artifact"
+    },
+    "BuildType": {
+      "Type": "String",
+      "Default": "DOCKER",
+      "AllowedValues": [
+        "MAVEN",
+        "GRADLE",
+        "NPM",
+        "PYTHON",
+        "DOCKER"
+      ],
+      "Description": "Source Packaging Tool"
+    },
+    "DeployTargetType": {
+      "Type": "String",
+      "Default": "beanstalk",
+      "AllowedValues": [
+        "ecs",
+        "fargate",
+        "eks",
+        "beanstalk",
+        "lambda"
+      ],
+      "Description": "Source Packaging Tool"
+    }
+  },
+  "Resources": {
+    "GitRepositorycontainercicdCICodeCommitProductCodecommitPipeline9B5F6D7D0EventRule455D050B": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "EventPattern": {
+          "source": [
+            "aws.codecommit"
+          ],
+          "resources": [
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":codecommit:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "RepoName"
+                  }
+                ]
+              ]
+            }
+          ],
+          "detail-type": [
+            "CodeCommit Repository State Change"
+          ],
+          "detail": {
+            "event": [
+              "referenceCreated",
+              "referenceUpdated"
+            ],
+            "referenceName": [
+              {
+                "Ref": "RepoBranch"
+              }
+            ]
+          }
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":codepipeline:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "CodecommitPipeline6F1C2F07"
+                  }
+                ]
+              ]
+            },
+            "Id": "Target0",
+            "RoleArn": {
+              "Fn::GetAtt": [
+                "CodecommitPipelineEventsRole576112C2",
+                "Arn"
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/GitRepository/containercicdCICodeCommitProductCodecommitPipeline9B5F6D7D0EventRule/Resource"
+      }
+    },
+    "ECRRepoC36DC9E6": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}"
+        },
+        "RepositoryName": {
+          "Ref": "ServiceName"
+        }
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/ECRRepo/Resource"
+      }
+    },
+    "BuildProjectRoleAA92C755": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Role/Resource"
+      }
+    },
+    "BuildProjectRoleDefaultPolicy3E9F248C": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "BuildProject097C5DB7"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "BuildProject097C5DB7"
+                      },
+                      ":*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "BuildProject097C5DB7"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ECRRepoC36DC9E6",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "ecr:PutImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ECRRepoC36DC9E6",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "BuildProjectRoleDefaultPolicy3E9F248C",
+        "Roles": [
+          {
+            "Ref": "BuildProjectRoleAA92C755"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Role/DefaultPolicy/Resource"
+      }
+    },
+    "BuildProject097C5DB7": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "EnvironmentVariables": [
+            {
+              "Name": "REPOSITORY_URI",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::Select": [
+                        4,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Fn::GetAtt": [
+                                "ECRRepoC36DC9E6",
+                                "Arn"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    ".dkr.ecr.",
+                    {
+                      "Fn::Select": [
+                        3,
+                        {
+                          "Fn::Split": [
+                            ":",
+                            {
+                              "Fn::GetAtt": [
+                                "ECRRepoC36DC9E6",
+                                "Arn"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    ".",
+                    {
+                      "Ref": "AWS::URLSuffix"
+                    },
+                    "/",
+                    {
+                      "Ref": "ECRRepoC36DC9E6"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Name": "AWS_DEFAULT_REGION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Region"
+              }
+            },
+            {
+              "Name": "AWS_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId"
+              }
+            },
+            {
+              "Name": "CONTAINER_PORT",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ContainerPort"
+              }
+            },
+            {
+              "Name": "BUILD_TYPE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "BuildType"
+              }
+            },
+            {
+              "Name": "TARGET_TYPE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DeployTargetType"
+              }
+            },
+            {
+              "Name": "SERVICE_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ServiceName"
+              }
+            },
+            {
+              "Name": "ARTIFACT_BUCKET",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "S3BucketSourceArtifacts"
+              }
+            }
+          ],
+          "Image": "aws/codebuild/amazonlinux2-x86_64-standard:3.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": true,
+          "Type": "LINUX_CONTAINER"
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "BuildProjectRoleAA92C755",
+            "Arn"
+          ]
+        },
+        "Source": {
+          "BuildSpec": "{\n  \"version\": 0.2,\n  \"env\": {\n    \"exported-variables\": [\n      \"IMAGE_TAG\"\n    ]\n  },\n  \"phases\": {\n    \"pre_build\": {\n      \"commands\": [\n        \"echo Logging in to Amazon ECR...\",\n        \"echo $AWS_DEFAULT_REGION\",\n        \"echo $CODEBUILD_RESOLVED_SOURCE_VERSION\",\n        \"echo $CODEBUILD_SOURCE_VERSION\",\n        \"echo $AWS_ACCOUNT_ID\",\n        \"echo $SERVICE_NAME\",\n        \"echo $ARTIFACT_BUCKET\",\n        \"echo $BUILD_TYPE\",\n        \"echo $TARGET_TYPE\",\n        \"aws --version\",\n        \"COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)\",\n        \"IMAGE_TAG=${COMMIT_HASH:=latest}\",\n        \"export MAVEN_OPTS=\\\"-Xmx2048m -XX:MaxPermSize=128m\\\"\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"DOCKER\\\" ]; then\\n  aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com\\nfi\\n\"\n      ]\n    },\n    \"build\": {\n      \"commands\": [\n        \"echo Build started on `date`\",\n        \"echo $BUILD_TYPE\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"GRADLE\\\" ]; then \\n  java --version ;\\n  chmod +x gradlew ;\\n  ./gradlew clean build ;\\nfi\\n\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"MAVEN\\\" ]; then \\n  which mvn;\\n  chmod +x mvnw ;\\n  ./mvnw package;\\nfi\\n\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"NPM\\\" ]; then \\n  echo Installing source NPM dependencies...;\\n  npm install -y -g --unsafe-perm ;\\nfi\\n\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"DOCKER\\\" ]; then \\n  echo Building the Docker image...\\n  docker build -t $REPOSITORY_URI:latest .\\n\\n  echo Tagging Docker image...\\n  docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG\\n\\n  echo Pushing the Docker images...\\n  docker push $REPOSITORY_URI:latest\\n  docker push $REPOSITORY_URI:$IMAGE_TAG\\nfi\\n\"\n      ]\n    },\n    \"post_build\": {\n      \"commands\": [\n        \"echo Build completed on `date`\",\n        \"echo $BUILD_TYPE\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"GRADLE\\\" ]; then \\n  mv build/libs/*.jar app.jar\\n  mv .ebextentions .ebextentions\\n  echo Writing Procfile for Beanstlak...\\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\\nfi\\n\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"MAVEN\\\" ]; then \\n  mv target/*.jar app.jar\\n  mv .ebextentions .ebextentions\\n  echo Writing Procfile for Beanstlak...\\n  zip -r $IMAGE_TAG.zip app.jar .ebextentions\\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\\n  aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\\nfi\\n\",\n        \"if [ \\\"$BUILD_TYPE\\\" = \\\"DOCKER\\\" ]; then \\n  if [ \\\"$TARGET_TYPE\\\" = \\\"ecs\\\" ]; then \\n    echo Writing image definitions file for ECS...\\n    printf '[{\\\"name\\\": \\\"%s\\\", \\\"imageUri\\\":\\\"%s\\\"}]' $SERVICE_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json\\n    zip -r $IMAGE_TAG.zip imagedefinitions.json\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\\n  fi \\n\\n  if [ \\\"$TARGET_TYPE\\\" = \\\"beanstalk\\\" ]; then \\n    echo Writing Dockerrun.aws.json file for Beanstalk ...\\n    printf '{ \\\"AWSEBDockerrunVersion\\\":\\\"1\\\",\\\"Image\\\": {\\\"Name\\\": \\\"%s\\\"}, \\\"Ports\\\":[{\\\"ContainerPort\\\": \\\"%s\\\"}] }' $REPOSITORY_URI:$IMAGE_TAG $CONTAINER_PORT > Dockerrun.aws.json\\n    zip -r $IMAGE_TAG.zip Dockerrun.aws.json\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\\n  fi \\n\\n  if [ \\\"$TARGET_TYPE\\\" = \\\"eks\\\" ]; then \\n    echo Writing image definitions file for EKS...\\n    mv ./k8s/* ./k8s\\n    zip -r $IMAGE_TAG.zip ./k8s\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip\\n    aws s3 cp ./$IMAGE_TAG.zip s3://$ARTIFACT_BUCKET/$SERVICE_NAME/latest.zip\\n  fi \\n\\n  if [ \\\"$TARGET_TYPE\\\" = \\\"lambda\\\" ]; then \\n    echo Writing image definitions file for LAMBDA...\\n  fi \\nfi\\n\"\n      ]\n    }\n  },\n  \"Artifacts\": {\n    \"files\": [\n      \"**/*\"\n    ],\n    \"name\": \"$IMAGE_TAG\"\n  }\n}",
+          "Type": "CODEPIPELINE"
+        },
+        "Cache": {
+          "Modes": [
+            "LOCAL_DOCKER_LAYER_CACHE"
+          ],
+          "Type": "LOCAL"
+        },
+        "EncryptionKey": "alias/aws/s3"
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/BuildProject/Resource"
+      }
+    },
+    "DeployPlojectEP9FeRole3361CA76": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Role/Resource"
+      }
+    },
+    "DeployPlojectEP9FeRoleDefaultPolicyCAEB6A49": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DeployPlojectEP9FeF78E3CD2"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DeployPlojectEP9FeF78E3CD2"
+                      },
+                      ":*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "DeployPlojectEP9FeF78E3CD2"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
+                "elasticbeanstalk:*",
+                "autoscaling:*",
+                "elasticloadbalancing:*",
+                "ecs:*",
+                "s3:*",
+                "ec2:*",
+                "cloudwatch:*",
+                "logs:*",
+                "cloudformation:*"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "DeployPlojectEP9FeRoleDefaultPolicyCAEB6A49",
+        "Roles": [
+          {
+            "Ref": "DeployPlojectEP9FeRole3361CA76"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Role/DefaultPolicy/Resource"
+      }
+    },
+    "DeployPlojectEP9FeF78E3CD2": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "EnvironmentVariables": [
+            {
+              "Name": "SERVICE_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ServiceName"
+              }
+            },
+            {
+              "Name": "ENVIRONMENT",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DeployStage1"
+              }
+            },
+            {
+              "Name": "DEPLOY_ENV_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Ref": "ProjectName"
+                    },
+                    "-",
+                    {
+                      "Ref": "DeployTargetType"
+                    },
+                    "-",
+                    {
+                      "Ref": "DeployStage1"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Name": "AWS_DEFAULT_REGION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Region"
+              }
+            },
+            {
+              "Name": "AWS_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId"
+              }
+            },
+            {
+              "Name": "ARTIFACT_BUCKET",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "S3BucketSourceArtifacts"
+              }
+            },
+            {
+              "Name": "TARGET_TYPE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DeployTargetType"
+              }
+            }
+          ],
+          "Image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": true,
+          "Type": "LINUX_CONTAINER"
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "DeployPlojectEP9FeRole3361CA76",
+            "Arn"
+          ]
+        },
+        "Source": {
+          "BuildSpec": "{\n  \"version\": 0.2,\n  \"phases\": {\n    \"pre_build\": {\n      \"commands\": [\n        \"echo $AWS_DEFAULT_REGION\",\n        \"echo $CODEBUILD_RESOLVED_SOURCE_VERSION\",\n        \"echo $SERVICE_NAME\",\n        \"echo $ENVIRONMENT\",\n        \"echo $CODEBUILD_BUILD_NUMBER\",\n        \"echo $DEPLOY_ENV_NAME\",\n        \"echo $AWS_ACCOUNT_ID\",\n        \"echo $REPOSITORY_URI\",\n        \"echo $TARGET_TYPE\",\n        \"echo $ARTIFACT_BUCKET\",\n        \"echo $IMAGE_TAG\",\n        \"aws --version\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"eks\\\" ]; then\\n  curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl\\n  chmod +x ./kubectl\\n  mv ./kubectl /usr/local/bin/kubectl\\n  curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator\\n  chmod +x ./aws-iam-authenticator\\n  mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$PATH:$HOME/bin\\n  echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc\\n  aws-iam-authenticator help\\n  mkdir -p ~/.kube\\n  aws eks --region ap-northeast-2 update-kubeconfig --name awstf-eks-dev\\nfi\\n\"\n      ]\n    },\n    \"build\": {\n      \"commands\": [\n        \"echo Skip Build on `date`\"\n      ]\n    },\n    \"post_build\": {\n      \"commands\": [\n        \"echo Post Build started on `date`\",\n        \"echo $TARGET_TYPE\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"ecs\\\" ]; then \\n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \\\"$SERVICE_NAME-$ENVIRONMENT\\\" --force-new-deployment --region $AWS_DEFAULT_REGION\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"beanstalk\\\" ]; then \\n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\\\"$ARTIFACT_BUCKET\\\",S3Key=\\\"$SERVICE_NAME/$IMAGE_TAG.zip\\\" \\n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \\\"$DEPLOY_ENV_NAME-$SERVICE_NAME\\\" --version-label=v$CODEBUILD_BUILD_NUMBER\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"eks\\\" ]; then \\n  # from S3 Bucket\\n  aws s3 cp s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip .\\n  unzip $IMAGE_TAG.zip\\n  ls -al ./k8s\\n  sed -i \\\"s#SERVICE_NAME#$SERVICE_NAME#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#ENVIRONMENT#$ENVIRONMENT#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#IMAGE_TAG#$IMAGE_TAG#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#CONTAINER_PORT#$CONTAINER_PORT#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#SERVICE_NAME#$SERVICE_NAME#g\\\" ./k8s/service.yaml\\n  sed -i \\\"s#ENVIRONMENT#$ENVIRONMENT#g\\\" ./k8s/service.yaml\\n  cat ./k8s/deployment.yaml\\n  kubectl apply -f ./k8s\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"lambda\\\" ]; then \\n  echo Nothing to do on LAMBDA \\nfi \\n\"\n      ]\n    }\n  }\n}",
+          "Type": "CODEPIPELINE"
+        },
+        "Cache": {
+          "Type": "NO_CACHE"
+        },
+        "EncryptionKey": "alias/aws/s3"
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Resource"
+      }
+    },
+    "DeployPlojectNQRQaRole12E1AA03": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Role/Resource"
+      }
+    },
+    "DeployPlojectNQRQaRoleDefaultPolicy8A84F145": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DeployPlojectNQRQa345257DE"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DeployPlojectNQRQa345257DE"
+                      },
+                      ":*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "DeployPlojectNQRQa345257DE"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
+                "elasticbeanstalk:*",
+                "autoscaling:*",
+                "elasticloadbalancing:*",
+                "ecs:*",
+                "s3:*",
+                "ec2:*",
+                "cloudwatch:*",
+                "logs:*",
+                "cloudformation:*"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "DeployPlojectNQRQaRoleDefaultPolicy8A84F145",
+        "Roles": [
+          {
+            "Ref": "DeployPlojectNQRQaRole12E1AA03"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Role/DefaultPolicy/Resource"
+      }
+    },
+    "DeployPlojectNQRQa345257DE": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "EnvironmentVariables": [
+            {
+              "Name": "SERVICE_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ServiceName"
+              }
+            },
+            {
+              "Name": "ENVIRONMENT",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DeployStage2"
+              }
+            },
+            {
+              "Name": "DEPLOY_ENV_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Ref": "ProjectName"
+                    },
+                    "-",
+                    {
+                      "Ref": "DeployTargetType"
+                    },
+                    "-",
+                    {
+                      "Ref": "DeployStage2"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Name": "AWS_DEFAULT_REGION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Region"
+              }
+            },
+            {
+              "Name": "AWS_ACCOUNT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::AccountId"
+              }
+            },
+            {
+              "Name": "ARTIFACT_BUCKET",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "S3BucketSourceArtifacts"
+              }
+            },
+            {
+              "Name": "TARGET_TYPE",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DeployTargetType"
+              }
+            }
+          ],
+          "Image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": true,
+          "Type": "LINUX_CONTAINER"
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "DeployPlojectNQRQaRole12E1AA03",
+            "Arn"
+          ]
+        },
+        "Source": {
+          "BuildSpec": "{\n  \"version\": 0.2,\n  \"phases\": {\n    \"pre_build\": {\n      \"commands\": [\n        \"echo $AWS_DEFAULT_REGION\",\n        \"echo $CODEBUILD_RESOLVED_SOURCE_VERSION\",\n        \"echo $SERVICE_NAME\",\n        \"echo $ENVIRONMENT\",\n        \"echo $CODEBUILD_BUILD_NUMBER\",\n        \"echo $DEPLOY_ENV_NAME\",\n        \"echo $AWS_ACCOUNT_ID\",\n        \"echo $REPOSITORY_URI\",\n        \"echo $TARGET_TYPE\",\n        \"echo $ARTIFACT_BUCKET\",\n        \"echo $IMAGE_TAG\",\n        \"aws --version\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"eks\\\" ]; then\\n  curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl\\n  chmod +x ./kubectl\\n  mv ./kubectl /usr/local/bin/kubectl\\n  curl -o aws-iam-authenticator https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator\\n  chmod +x ./aws-iam-authenticator\\n  mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$PATH:$HOME/bin\\n  echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc\\n  aws-iam-authenticator help\\n  mkdir -p ~/.kube\\n  aws eks --region ap-northeast-2 update-kubeconfig --name awstf-eks-dev\\nfi\\n\"\n      ]\n    },\n    \"build\": {\n      \"commands\": [\n        \"echo Skip Build on `date`\"\n      ]\n    },\n    \"post_build\": {\n      \"commands\": [\n        \"echo Post Build started on `date`\",\n        \"echo $TARGET_TYPE\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"ecs\\\" ]; then \\n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \\\"$SERVICE_NAME-$ENVIRONMENT\\\" --force-new-deployment --region $AWS_DEFAULT_REGION\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"beanstalk\\\" ]; then \\n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\\\"$ARTIFACT_BUCKET\\\",S3Key=\\\"$SERVICE_NAME/$IMAGE_TAG.zip\\\" \\n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \\\"$DEPLOY_ENV_NAME-$SERVICE_NAME\\\" --version-label=v$CODEBUILD_BUILD_NUMBER\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"eks\\\" ]; then \\n  # from S3 Bucket\\n  aws s3 cp s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip .\\n  unzip $IMAGE_TAG.zip\\n  ls -al ./k8s\\n  sed -i \\\"s#SERVICE_NAME#$SERVICE_NAME#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#ENVIRONMENT#$ENVIRONMENT#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#IMAGE_TAG#$IMAGE_TAG#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#CONTAINER_PORT#$CONTAINER_PORT#g\\\" ./k8s/deployment.yaml\\n  sed -i \\\"s#SERVICE_NAME#$SERVICE_NAME#g\\\" ./k8s/service.yaml\\n  sed -i \\\"s#ENVIRONMENT#$ENVIRONMENT#g\\\" ./k8s/service.yaml\\n  cat ./k8s/deployment.yaml\\n  kubectl apply -f ./k8s\\nfi \\n\",\n        \"if [ \\\"$TARGET_TYPE\\\" = \\\"lambda\\\" ]; then \\n  echo Nothing to do on LAMBDA \\nfi \\n\"\n      ]\n    }\n  }\n}",
+          "Type": "CODEPIPELINE"
+        },
+        "Cache": {
+          "Type": "NO_CACHE"
+        },
+        "EncryptionKey": "alias/aws/s3"
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Resource"
+      }
+    },
+    "CodecommitPipelineRoleA090A145": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Role/Resource"
+      }
+    },
+    "CodecommitPipelineRoleDefaultPolicy2F7AA5A8": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodecommitPipelineSourceCodecommitCodePipelineActionRoleB2EC77E6",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodecommitPipelineImageBuildCodePipelineActionRole8EA23282",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodecommitPipelineDeployOnDevDeployCodePipelineActionRole25F99104",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodecommitPipelineApprovalCodePipelineActionRole5DCB0411",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "CodecommitPipelineDeployOnProdDeployCodePipelineActionRole1EDECCE5",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineRoleDefaultPolicy2F7AA5A8",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineRoleA090A145"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Role/DefaultPolicy/Resource"
+      }
+    },
+    "CodecommitPipeline6F1C2F07": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CodecommitPipelineRoleA090A145",
+            "Arn"
+          ]
+        },
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "RepositoryName": {
+                    "Ref": "RepoName"
+                  },
+                  "BranchName": {
+                    "Ref": "RepoBranch"
+                  },
+                  "PollForSourceChanges": false
+                },
+                "Name": "Codecommit",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Source"
+                  }
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodecommitPipelineSourceCodecommitCodePipelineActionRoleB2EC77E6",
+                    "Arn"
+                  ]
+                },
+                "RunOrder": 1
+              }
+            ],
+            "Name": "Source"
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "BuildProject097C5DB7"
+                  }
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Source"
+                  }
+                ],
+                "Name": "Build",
+                "Namespace": "ImageBuild_Build_NS",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Build"
+                  }
+                ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodecommitPipelineImageBuildCodePipelineActionRole8EA23282",
+                    "Arn"
+                  ]
+                },
+                "RunOrder": 1
+              }
+            ],
+            "Name": "ImageBuild"
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "DeployPlojectEP9FeF78E3CD2"
+                  },
+                  "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build"
+                  }
+                ],
+                "Name": "Deploy",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodecommitPipelineDeployOnDevDeployCodePipelineActionRole25F99104",
+                    "Arn"
+                  ]
+                },
+                "RunOrder": 1
+              }
+            ],
+            "Name": "DeployOnDev"
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Approval",
+                  "Owner": "AWS",
+                  "Provider": "Manual",
+                  "Version": "1"
+                },
+                "Name": "Approval",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodecommitPipelineApprovalCodePipelineActionRole5DCB0411",
+                    "Arn"
+                  ]
+                },
+                "RunOrder": 1
+              }
+            ],
+            "Name": "Approval"
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1"
+                },
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "DeployPlojectNQRQa345257DE"
+                  },
+                  "EnvironmentVariables": "[{\"name\":\"IMAGE_TAG\",\"type\":\"PLAINTEXT\",\"value\":\"#{ImageBuild_Build_NS.IMAGE_TAG}\"}]"
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Build"
+                  }
+                ],
+                "Name": "Deploy",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "CodecommitPipelineDeployOnProdDeployCodePipelineActionRole1EDECCE5",
+                    "Arn"
+                  ]
+                },
+                "RunOrder": 1
+              }
+            ],
+            "Name": "DeployOnProd"
+          }
+        ],
+        "ArtifactStore": {
+          "Location": {
+            "Ref": "S3BucketSourceArtifacts"
+          },
+          "Type": "S3"
+        },
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "ServiceName"
+              },
+              "-pipeline"
+            ]
+          ]
+        }
+      },
+      "DependsOn": [
+        "CodecommitPipelineRoleDefaultPolicy2F7AA5A8",
+        "CodecommitPipelineRoleA090A145"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Resource"
+      }
+    },
+    "CodecommitPipelineSourceCodecommitCodePipelineActionRoleB2EC77E6": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/Resource"
+      }
+    },
+    "CodecommitPipelineSourceCodecommitCodePipelineActionRoleDefaultPolicy49F6D9EF": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "S3BucketSourceArtifacts"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codecommit:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "RepoName"
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineSourceCodecommitCodePipelineActionRoleDefaultPolicy49F6D9EF",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineSourceCodecommitCodePipelineActionRoleB2EC77E6"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Source/Codecommit/CodePipelineActionRole/DefaultPolicy/Resource"
+      }
+    },
+    "CodecommitPipelineEventsRole576112C2": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "events.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/EventsRole/Resource"
+      }
+    },
+    "CodecommitPipelineEventsRoleDefaultPolicyDC8441E8": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codepipeline:StartPipelineExecution",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codepipeline:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "CodecommitPipeline6F1C2F07"
+                    }
+                  ]
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineEventsRoleDefaultPolicyDC8441E8",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineEventsRole576112C2"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/EventsRole/DefaultPolicy/Resource"
+      }
+    },
+    "CodecommitPipelineImageBuildCodePipelineActionRole8EA23282": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/Resource"
+      }
+    },
+    "CodecommitPipelineImageBuildCodePipelineActionRoleDefaultPolicy36EF983F": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "BuildProject097C5DB7",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineImageBuildCodePipelineActionRoleDefaultPolicy36EF983F",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineImageBuildCodePipelineActionRole8EA23282"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/ImageBuild/Build/CodePipelineActionRole/DefaultPolicy/Resource"
+      }
+    },
+    "CodecommitPipelineDeployOnDevDeployCodePipelineActionRole25F99104": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/Resource"
+      }
+    },
+    "CodecommitPipelineDeployOnDevDeployCodePipelineActionRoleDefaultPolicy5F9FE341": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "DeployPlojectEP9FeF78E3CD2",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineDeployOnDevDeployCodePipelineActionRoleDefaultPolicy5F9FE341",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineDeployOnDevDeployCodePipelineActionRole25F99104"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnDev/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+      }
+    },
+    "CodecommitPipelineApprovalCodePipelineActionRole5DCB0411": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/Approval/Approval/CodePipelineActionRole/Resource"
+      }
+    },
+    "CodecommitPipelineDeployOnProdDeployCodePipelineActionRole1EDECCE5": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":root"
+                    ]
+                  ]
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/Resource"
+      }
+    },
+    "CodecommitPipelineDeployOnProdDeployCodePipelineActionRoleDefaultPolicyBA210243": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "DeployPlojectNQRQa345257DE",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CodecommitPipelineDeployOnProdDeployCodePipelineActionRoleDefaultPolicyBA210243",
+        "Roles": [
+          {
+            "Ref": "CodecommitPipelineDeployOnProdDeployCodePipelineActionRole1EDECCE5"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CodecommitPipeline/DeployOnProd/Deploy/CodePipelineActionRole/DefaultPolicy/Resource"
+      }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/02QUU7EMAxEz8J/aiigPcDuBapyAJR1DXKbxlXiFKEqdydNK+BrZuzRs+RneL3A04P9ig0OU+P4DlsJ71uksDISWrVOPqELMiTUN7U4GVrJa4StT47M7cPvmg1hKCNaJLJK+K6L35QNykD3xG6AreOFHHsq0JFQ9+Zps2E7F4qc4F07cYwVd7hs4gtcE06kVxupgpeT+Meu/dPnXJMNdialYHqKkgIeJ/75m/iBlcVn4wsUxvi4thdo2/KhMTI3IXnlmaA/9AdSJ0BSPQEAAA=="
+      },
+      "Metadata": {
+        "aws:cdk:path": "container-cicd/CICodeCommitProduct/CDKMetadata/Default"
+      },
+      "Condition": "CDKMetadataAvailable"
+    }
+  },
+  "Conditions": {
+    "CDKMetadataAvailable": {
+      "Fn::Or": [
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "af-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ca-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-northwest-1"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-3"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "me-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "sa-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-2"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-2"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
