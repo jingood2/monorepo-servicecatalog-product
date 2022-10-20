@@ -63,6 +63,7 @@ export class ContainerGithubCICDProduct extends servicecatalog.ProductStack {
             },
             Parameters: [
               'DeployTargetType',
+              'ContainerPort'
             ],
           },
         ],

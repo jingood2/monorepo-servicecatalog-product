@@ -62,6 +62,7 @@ export class ContainerCodecommitCICDProduct extends servicecatalog.ProductStack 
             },
             Parameters: [
               'DeployTargetType',
+              'ContainerPort'
             ],
           },
         ],
