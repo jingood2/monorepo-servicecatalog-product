@@ -25,6 +25,7 @@ Metadata:
           default: Deploy Information
         Parameters:
           - DeployTargetType
+          - ContainerPort
 Parameters:
   ProjectName:
     Type: String
@@ -97,6 +98,10 @@ Parameters:
       - JENKINS
       - BITBUCKET
     Description: Source Provider Type
+  ContainerPort: 
+    Type: Number
+    Default: 80
+    Description: Container Port
 Conditions:
   IsGithubCondition:
     Fn::Equals:
@@ -123,6 +128,7 @@ Resources:
         BuildType: !Ref BuildType
         S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
         DeployTargetType: !Ref DeployTargetType
+        ContainerPort: !Ref ContainerPort
       TemplateURL: https://awstf-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/cicd-github.yaml
   CodeCommitPipeline:
     Condition: IsCodecommitCondition
@@ -138,4 +144,5 @@ Resources:
         BuildType: !Ref BuildType
         S3BucketSourceArtifacts: !Ref S3BucketSourceArtifacts
         DeployTargetType: !Ref DeployTargetType
+        ContainerPort: !Ref ContainerPort
       TemplateURL: https://awstf-servicecatalog-assets.s3.ap-northeast-2.amazonaws.com/cfn-template/cicd-codecommit.yaml
