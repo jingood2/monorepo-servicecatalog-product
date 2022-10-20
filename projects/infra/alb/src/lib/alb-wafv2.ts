@@ -5,6 +5,7 @@ import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs/lib/construct';
+import * as randomstring from 'randomstring';
 
 export interface ProductEProps extends cdk.StackProps {
 
@@ -147,6 +148,8 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       sourceSecurityGroupId: albSg.ref,
     });
 
+    const dummyString = randomstring.generate(5);
+
     const dummyTg = new elbv2.CfnTargetGroup(this, 'DummyTG', {
       healthCheckEnabled: true,
       healthCheckIntervalSeconds: 6,
@@ -155,7 +158,7 @@ export class ProductAlbStack extends servicecatalog.ProductStack {
       healthyThresholdCount: 2,
       port: 80,
       protocol: 'HTTP',
-      name: `${projectName.valueAsString}-${environment.valueAsString}-dummy-tg`,
+      name: `dummy-${dummyString}-tg`,
       unhealthyThresholdCount: 2,
       vpcId: vpcId.valueAsString,
     });
