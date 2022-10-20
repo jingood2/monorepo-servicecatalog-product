@@ -238,7 +238,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     // beanstalk project setup
     const ebApp = new eb.CfnApplication(this, 'EBApplication', {
-      //applicationName: `${serviceName.valueAsString}-${Environment.valueAsString}`,
+      applicationName: `${serviceName.valueAsString}-${Environment.valueAsString}`,
       description: `${Environment.valueAsString} ${serviceName.valueAsString} EB Application`,
     });
 
@@ -472,8 +472,8 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
     const ebEnv = new eb.CfnEnvironment(this, 'EBEnvironment', {
       // default environmentName is `develop`
       environmentName: `${projectName.valueAsString}-beanstalk-${Environment.valueAsString}-${serviceName.valueAsString}`,
-      //applicationName: `${serviceName.valueAsString}-${Environment.valueAsString}`,
-      applicationName: ebApp.applicationName || `${serviceName.valueAsString}`,
+      applicationName: `${serviceName.valueAsString}-${Environment.valueAsString}`,
+      //applicationName: ebApp.applicationName || `${serviceName.valueAsString}`,
       solutionStackName: platformType.valueAsString,
       optionSettings: option_settings,
       cnamePrefix: condResult.toString(),
