@@ -238,7 +238,7 @@ export class SCProductBeanstalkDockerStack extends servicecatalog.ProductStack {
 
     // beanstalk project setup
     const ebApp = new eb.CfnApplication(this, 'EBApplication', {
-      applicationName: `${serviceName.valueAsString}`,
+      applicationName: `${serviceName.valueAsString}-${Environment.valueAsString}`,
       description: `${Environment.valueAsString} ${serviceName.valueAsString} EB Application`,
     });
 
