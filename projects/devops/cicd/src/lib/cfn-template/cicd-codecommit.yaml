@@ -379,7 +379,7 @@ Resources:
       EncryptionKey: alias/aws/s3
     Metadata:
       'aws:cdk:path': container-cicd/CICodeCommitProduct/BuildProject/Resource
-  DeployPlojectEP9FeRole3361CA76:
+  DeployPlojectbFpjdRole8EF0BB7B:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -390,8 +390,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Role/Resource
-  DeployPlojectEP9FeRoleDefaultPolicyCAEB6A49:
+      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-bFpjd/Role/Resource
+  DeployPlojectbFpjdRoleDefaultPolicyD4C27A01:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -411,7 +411,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectEP9FeF78E3CD2
+                  - !Ref DeployPlojectbFpjdD1CF0AD8
               - !Join 
                 - ''
                 - - 'arn:'
@@ -421,7 +421,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectEP9FeF78E3CD2
+                  - !Ref DeployPlojectbFpjdD1CF0AD8
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -439,7 +439,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPlojectEP9FeF78E3CD2
+                - !Ref DeployPlojectbFpjdD1CF0AD8
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -473,13 +473,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPlojectEP9FeRoleDefaultPolicyCAEB6A49
+      PolicyName: DeployPlojectbFpjdRoleDefaultPolicyD4C27A01
       Roles:
-        - !Ref DeployPlojectEP9FeRole3361CA76
+        - !Ref DeployPlojectbFpjdRole8EF0BB7B
     Metadata:
       'aws:cdk:path': >-
-        container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Role/DefaultPolicy/Resource
-  DeployPlojectEP9FeF78E3CD2:
+        container-cicd/CICodeCommitProduct/DeployPloject-bFpjd/Role/DefaultPolicy/Resource
+  DeployPlojectbFpjdD1CF0AD8:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -519,7 +519,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPlojectEP9FeRole3361CA76
+        - DeployPlojectbFpjdRole8EF0BB7B
         - Arn
       Source:
         BuildSpec: |-
@@ -553,7 +553,7 @@ Resources:
                   "echo Post Build started on `date`",
                   "echo $TARGET_TYPE",
                   "if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \"$SERVICE_NAME-$ENVIRONMENT\" --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
-                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" \n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME-$ENVIRONMENT --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" \n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME-$ENVIRONMENT --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"eks\" ]; then \n  # from S3 Bucket\n  aws s3 cp s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip .\n  unzip $IMAGE_TAG.zip\n  ls -al ./k8s\n  sed -i \"s#SERVICE_NAME#$SERVICE_NAME#g\" ./k8s/deployment.yaml\n  sed -i \"s#ENVIRONMENT#$ENVIRONMENT#g\" ./k8s/deployment.yaml\n  sed -i \"s#IMAGE_TAG#$IMAGE_TAG#g\" ./k8s/deployment.yaml\n  sed -i \"s#CONTAINER_PORT#$CONTAINER_PORT#g\" ./k8s/deployment.yaml\n  sed -i \"s#SERVICE_NAME#$SERVICE_NAME#g\" ./k8s/service.yaml\n  sed -i \"s#ENVIRONMENT#$ENVIRONMENT#g\" ./k8s/service.yaml\n  cat ./k8s/deployment.yaml\n  kubectl apply -f ./k8s\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"lambda\" ]; then \n  echo Nothing to do on LAMBDA \nfi \n"
                 ]
@@ -565,8 +565,8 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-EP9Fe/Resource
-  DeployPlojectNQRQaRole12E1AA03:
+      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-bFpjd/Resource
+  DeployPlojectlsmWHRole5F028915:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -577,8 +577,8 @@ Resources:
               Service: codebuild.amazonaws.com
         Version: 2012-10-17
     Metadata:
-      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Role/Resource
-  DeployPlojectNQRQaRoleDefaultPolicy8A84F145:
+      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-lsmWH/Role/Resource
+  DeployPlojectlsmWHRoleDefaultPolicy2402F04A:
     Type: 'AWS::IAM::Policy'
     Properties:
       PolicyDocument:
@@ -598,7 +598,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectNQRQa345257DE
+                  - !Ref DeployPlojectlsmWH75331DC5
               - !Join 
                 - ''
                 - - 'arn:'
@@ -608,7 +608,7 @@ Resources:
                   - ':'
                   - !Ref 'AWS::AccountId'
                   - ':log-group:/aws/codebuild/'
-                  - !Ref DeployPlojectNQRQa345257DE
+                  - !Ref DeployPlojectlsmWH75331DC5
                   - ':*'
           - Action:
               - 'codebuild:CreateReportGroup'
@@ -626,7 +626,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':report-group/'
-                - !Ref DeployPlojectNQRQa345257DE
+                - !Ref DeployPlojectlsmWH75331DC5
                 - '-*'
           - Action:
               - 'elasticbeanstalk:*'
@@ -660,13 +660,13 @@ Resources:
                   - !Ref S3BucketSourceArtifacts
                   - /*
         Version: 2012-10-17
-      PolicyName: DeployPlojectNQRQaRoleDefaultPolicy8A84F145
+      PolicyName: DeployPlojectlsmWHRoleDefaultPolicy2402F04A
       Roles:
-        - !Ref DeployPlojectNQRQaRole12E1AA03
+        - !Ref DeployPlojectlsmWHRole5F028915
     Metadata:
       'aws:cdk:path': >-
-        container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Role/DefaultPolicy/Resource
-  DeployPlojectNQRQa345257DE:
+        container-cicd/CICodeCommitProduct/DeployPloject-lsmWH/Role/DefaultPolicy/Resource
+  DeployPlojectlsmWH75331DC5:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Artifacts:
@@ -706,7 +706,7 @@ Resources:
         PrivilegedMode: true
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt 
-        - DeployPlojectNQRQaRole12E1AA03
+        - DeployPlojectlsmWHRole5F028915
         - Arn
       Source:
         BuildSpec: |-
@@ -740,7 +740,7 @@ Resources:
                   "echo Post Build started on `date`",
                   "echo $TARGET_TYPE",
                   "if [ \"$TARGET_TYPE\" = \"ecs\" ]; then \n  aws ecs update-service --cluster $DEPLOY_ENV_NAME --service \"$SERVICE_NAME-$ENVIRONMENT\" --force-new-deployment --region $AWS_DEFAULT_REGION\nfi \n",
-                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" \n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
+                  "if [ \"$TARGET_TYPE\" = \"beanstalk\" ]; then \n  aws elasticbeanstalk create-application-version --application-name $SERVICE_NAME-$ENVIRONMENT --version-label v$CODEBUILD_BUILD_NUMBER --source-bundle S3Bucket=\"$ARTIFACT_BUCKET\",S3Key=\"$SERVICE_NAME/$IMAGE_TAG.zip\" \n  aws elasticbeanstalk update-environment --application-name $SERVICE_NAME-$ENVIRONMENT --environment-name \"$DEPLOY_ENV_NAME-$SERVICE_NAME\" --version-label=v$CODEBUILD_BUILD_NUMBER\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"eks\" ]; then \n  # from S3 Bucket\n  aws s3 cp s3://$ARTIFACT_BUCKET/$SERVICE_NAME/$IMAGE_TAG.zip .\n  unzip $IMAGE_TAG.zip\n  ls -al ./k8s\n  sed -i \"s#SERVICE_NAME#$SERVICE_NAME#g\" ./k8s/deployment.yaml\n  sed -i \"s#ENVIRONMENT#$ENVIRONMENT#g\" ./k8s/deployment.yaml\n  sed -i \"s#IMAGE_TAG#$IMAGE_TAG#g\" ./k8s/deployment.yaml\n  sed -i \"s#CONTAINER_PORT#$CONTAINER_PORT#g\" ./k8s/deployment.yaml\n  sed -i \"s#SERVICE_NAME#$SERVICE_NAME#g\" ./k8s/service.yaml\n  sed -i \"s#ENVIRONMENT#$ENVIRONMENT#g\" ./k8s/service.yaml\n  cat ./k8s/deployment.yaml\n  kubectl apply -f ./k8s\nfi \n",
                   "if [ \"$TARGET_TYPE\" = \"lambda\" ]; then \n  echo Nothing to do on LAMBDA \nfi \n"
                 ]
@@ -752,7 +752,7 @@ Resources:
         Type: NO_CACHE
       EncryptionKey: alias/aws/s3
     Metadata:
-      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-NQRQa/Resource
+      'aws:cdk:path': container-cicd/CICodeCommitProduct/DeployPloject-lsmWH/Resource
   CodecommitPipelineRoleA090A145:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -882,7 +882,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPlojectEP9FeF78E3CD2
+                ProjectName: !Ref DeployPlojectbFpjdD1CF0AD8
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -913,7 +913,7 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref DeployPlojectNQRQa345257DE
+                ProjectName: !Ref DeployPlojectlsmWH75331DC5
                 EnvironmentVariables: >-
                   [{"name":"IMAGE_TAG","type":"PLAINTEXT","value":"#{ImageBuild_Build_NS.IMAGE_TAG}"}]
               InputArtifacts:
@@ -1118,7 +1118,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPlojectEP9FeF78E3CD2
+              - DeployPlojectbFpjdD1CF0AD8
               - Arn
         Version: 2012-10-17
       PolicyName: >-
@@ -1177,7 +1177,7 @@ Resources:
               - 'codebuild:StopBuild'
             Effect: Allow
             Resource: !GetAtt 
-              - DeployPlojectNQRQa345257DE
+              - DeployPlojectlsmWH75331DC5
               - Arn
         Version: 2012-10-17
       PolicyName: >-

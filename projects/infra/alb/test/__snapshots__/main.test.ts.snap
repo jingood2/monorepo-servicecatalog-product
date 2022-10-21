@@ -32,7 +32,7 @@ exports[`Snapshot 1`] = `
             "DisableTemplateValidation": false,
             "Info": {
               "LoadTemplateFromURL": {
-                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/a0ae2e5abd09e96e5fc8412796ff2178821612b95a01874dd8ecb150a5ff7ae9.json",
+                "Fn::Sub": "https://s3.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}/f0db0fa4bd09bde2101fded5a212a58c168fe657185634a38891073fe59cccfe.json",
               },
             },
             "Name": "v2",
