@@ -185,7 +185,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
 
     const capacityProvider = new ecs.AsgCapacityProvider(this, 'AsgCapacityProvider', {
-      capacityProviderName: `${projectName.valueAsString}-${environment.valueAsString}-cp`,
+      capacityProviderName: `${environment.valueAsString}-ecs-${projectName.valueAsString}-cp`,
       autoScalingGroup: defaultAsg,
     });
     cluster.addAsgCapacityProvider(capacityProvider);

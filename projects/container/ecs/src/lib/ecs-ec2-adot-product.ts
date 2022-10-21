@@ -371,7 +371,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       },
       capacityProviderStrategies: [
         {
-          capacityProvider: `${projectName.valueAsString}-${environment.valueAsString}-cp`,
+          capacityProvider: `${environment.valueAsString}-ecs-${projectName.valueAsString}-cp`,
           weight: 1,
         },
       ],
