@@ -331,11 +331,11 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
 
     const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
-        { parameterName: 'namespaceName' }).stringValue,
+        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceName`}).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
-        { parameterName: 'namespaceId' }).stringValue,
+        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceId`}).stringValue,
       namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
-        { parameterName: 'namespaceName' }).stringValue,
+        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceArn`}).stringValue,
     });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {

@@ -5,7 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-//import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { Ec2Service } from 'aws-cdk-lib/aws-ecs';
 //import { AmiHardwareType } from 'aws-cdk-lib/aws-ecs';
@@ -52,11 +52,11 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       description: 'VPC Availability Zone List',
     });
 
-    /* const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
+    const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
         type: 'string',
-        default: 'dev.internal',
-        description: 'CloudMap Private DNS',
-    }); */
+        default: 'privateDomain',
+        description: 'CloudMap Private DNS ex) privateDomain.internal',
+    });
 
     const instanceType = new cdk.CfnParameter(this, 'InstacneType', {
       type: 'String',
@@ -103,9 +103,26 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
     const dnsNamespace = cluster.addDefaultCloudMapNamespace({
       vpc,
-      //name: cdk.Lazy.string( { produce: () => cloudmapNamespace.valueAsString }),
-      name: `${environment.valueAsString}.internal`,
+      name: `${cloudmapNamespace.valueAsString}.internal`,
       type: servicediscovery.NamespaceType.DNS_PRIVATE,
+    });
+
+    new ssm.StringParameter(this, 'NamespaceId', {
+      description: 'Namespace Id',
+      parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceId`,
+      stringValue: dnsNamespace.namespaceId,
+    });
+
+    new ssm.StringParameter(this, 'NamespaceName', {
+      description: 'Namespace Name',
+      parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceName`,
+      stringValue: dnsNamespace.namespaceName,
+    });
+
+    new ssm.StringParameter(this, 'NamespaceArn', {
+      description: 'Namespace Arn',
+      parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceArn`,
+      stringValue: dnsNamespace.namespaceArn,
     });
 
     // Create ContainerSecurityGroup and Role
