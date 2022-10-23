@@ -329,14 +329,15 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
+    /*
     const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
-        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceName`}).stringValue,
+        { parameterName: 'namespaceName' }).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
-        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceId`}).stringValue,
+        { parameterName: 'namespaceId' }).stringValue,
       namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
-        { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceArn`}).stringValue,
-    });
+        { parameterName: 'namespaceName' }).stringValue,
+    }); */
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
