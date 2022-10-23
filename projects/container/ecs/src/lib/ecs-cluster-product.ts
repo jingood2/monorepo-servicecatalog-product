@@ -114,18 +114,21 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     });
 
     new ssm.StringParameter(this, 'NamespaceId', {
+      simpleName: true,
       description: 'Namespace Id',
       parameterName: `${dnsNamespace.namespaceId}`,
       stringValue: dnsNamespace.namespaceId,
     });
 
     new ssm.StringParameter(this, 'NamespaceName', {
+      simpleName: true,
       description: 'Namespace Name',
       parameterName: `${dnsNamespace.namespaceName}`,
       stringValue: dnsNamespace.namespaceName,
     });
 
     new ssm.StringParameter(this, 'NamespaceArn', {
+      simpleName: true,
       description: 'Namespace Arn',
       parameterName: `${dnsNamespace.namespaceArn}`,
       stringValue: dnsNamespace.namespaceArn,
