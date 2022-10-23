@@ -6,7 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-//import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 
 export interface EcsFargateProductProps extends cdk.StackProps {
@@ -329,14 +329,14 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
-    /* const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceName`}).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
         { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceId`}).stringValue,
       namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
         { parameterName: `${projectName.valueAsString}/${environment.valueAsString}/cloudmap/namespaceArn`}).stringValue,
-    }); */
+    });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
