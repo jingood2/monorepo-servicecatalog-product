@@ -5,7 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-//import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { Ec2Service } from 'aws-cdk-lib/aws-ecs';
 //import { AmiHardwareType } from 'aws-cdk-lib/aws-ecs';
@@ -52,12 +52,6 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       description: 'VPC Availability Zone List',
     });
 
-    /* const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
-        type: 'string',
-        default: 'privateDomain',
-        description: 'CloudMap Private DNS ex) privateDomain.internal',
-    }); */
-
     const instanceType = new cdk.CfnParameter(this, 'InstacneType', {
       type: 'String',
       default: 't3.micro',
@@ -89,6 +83,18 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       description: 'Desired Capacity',
     });
 
+    const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
+      type: 'string',
+      default: 'svc.local',
+      description: 'CloudMap Private DNS ex) svc.internal',
+  });
+
+
+    // Condition
+   /*  const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
+      expression: cdk.Fn.conditionEquals(taskRoleArn.valueAsString, 'default'),
+    }); */
+
     const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: cdk.Lazy.string( { produce: () => vpcId.valueAsString }),
       availabilityZones: availableZones.valueAsList,
@@ -103,11 +109,11 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
     const dnsNamespace = cluster.addDefaultCloudMapNamespace({
       vpc,
-      name: `${projectName.valueAsString}.${environment.valueAsString}.local`,
+      name: `${cloudmapNamespace.valueAsString}.local`,
       type: servicediscovery.NamespaceType.DNS_PRIVATE,
     });
 
-   /*  new ssm.StringParameter(this, 'NamespaceId', {
+    new ssm.StringParameter(this, 'NamespaceId', {
       description: 'Namespace Id',
       parameterName: `${dnsNamespace.namespaceId}`,
       stringValue: dnsNamespace.namespaceId,
@@ -123,7 +129,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       description: 'Namespace Arn',
       parameterName: `${dnsNamespace.namespaceArn}`,
       stringValue: dnsNamespace.namespaceArn,
-    }); */
+    });
 
     // Create ContainerSecurityGroup and Role
     const ecsDefaultSecurityGroup = new ec2.SecurityGroup(this, 'ECSDefaultSG', {
