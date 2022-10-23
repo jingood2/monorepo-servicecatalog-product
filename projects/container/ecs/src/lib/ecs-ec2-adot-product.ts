@@ -329,7 +329,8 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
-    /* const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+    /*
+    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: 'namespaceName' }).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
