@@ -122,7 +122,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       description: 'Health Check Path for ECS Container',
       default: '/',
     });
-    
+
     // ECS on EC2 use health check dynamic port mapping
     /* const tgHealthCheckPort = new cdk.CfnParameter(this, 'TGHealthCheckPort', {
       type: 'Number',
@@ -286,10 +286,11 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
       memoryLimitMiB: containerSize.valueAsNumber,
       logging: ecs.LogDrivers.awsLogs({
-        logGroup: new LogGroup(this, 'LogGroup', { 
-          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`, 
-          retention: 7, 
-          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+        logGroup: new LogGroup(this, 'LogGroup', {
+          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`,
+          retention: 7,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        }),
         streamPrefix: 'ecs',
       }),
     });
@@ -313,10 +314,11 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       },
       command: commands.valueAsList,
       logging: ecs.LogDrivers.awsLogs({
-        logGroup: new LogGroup(this, 'LogGroupOtel', { 
-          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}-otel`, 
-          retention: 1, 
-          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+        logGroup: new LogGroup(this, 'LogGroupOtel', {
+          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}-otel`,
+          retention: 1,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        }),
         streamPrefix: 'ecs',
       }),
 
