@@ -84,14 +84,14 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     });
 
     const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
-      type: 'string',
+      type: 'String',
       default: 'svc.local',
       description: 'CloudMap Private DNS ex) svc.internal',
-  });
+    });
 
 
     // Condition
-   /*  const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
+    /*  const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
       expression: cdk.Fn.conditionEquals(taskRoleArn.valueAsString, 'default'),
     }); */
 

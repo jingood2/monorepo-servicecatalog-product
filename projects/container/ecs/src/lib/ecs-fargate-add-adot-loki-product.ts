@@ -401,7 +401,7 @@ export class EcsFargateAddADOTLokiProduct extends servicecatalog.ProductStack {
     const svc = new ecs.FargateService(this, 'FargateService', {
       serviceName: `${serviceName.valueAsString}-${environment.valueAsString}`,
       cluster: cluster,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS},
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       desiredCount: desireCount.valueAsNumber,
       taskDefinition,
       securityGroups: [defaultContainerSg, serviceSg],

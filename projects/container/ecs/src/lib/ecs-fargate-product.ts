@@ -277,10 +277,11 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
       //image: ecs.ContainerImage.fromEcrRepository(ecr.Repository.fromRepositoryName(this, 'ECRRepo', `${ECRRepoName.valueAsString}`), 'latest'),
       image: ecs.ContainerImage.fromRegistry(ECRRepoName.valueAsString),
       logging: ecs.LogDrivers.awsLogs({
-        logGroup: new LogGroup(this, 'LogGroup', { 
-          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`, 
-          retention: 7, 
-          removalPolicy: cdk.RemovalPolicy.DESTROY}),
+        logGroup: new LogGroup(this, 'LogGroup', {
+          logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}`,
+          retention: 7,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        }),
         streamPrefix: 'ecs',
       }),
     });
@@ -324,7 +325,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     const svc = new ecs.FargateService(this, 'FargateService', {
       serviceName: `${serviceName.valueAsString}-${environment.valueAsString}`,
       cluster: cluster,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS},
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       desiredCount: desireCount.valueAsNumber,
       taskDefinition,
       securityGroups: [defaultContainerSg, serviceSg],
