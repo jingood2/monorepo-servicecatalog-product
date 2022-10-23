@@ -6,7 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-//import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 
 export interface EcsFargateProductProps extends cdk.StackProps {
