@@ -109,7 +109,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
     const dnsNamespace = cluster.addDefaultCloudMapNamespace({
       vpc,
-      name: `${cloudmapNamespace.valueAsString}.local`,
+      name: `${cloudmapNamespace.valueAsString}`,
       type: servicediscovery.NamespaceType.DNS_PRIVATE,
     });
 
