@@ -344,7 +344,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       }),
     });
 
-    container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
+    //container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
     otelCollector.addLink(container);
 
     //const containerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
