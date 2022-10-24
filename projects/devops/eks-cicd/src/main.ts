@@ -47,7 +47,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'eks-cicd', {
+new MyStack(app, 'eks-cicd-product', {
   env: devEnv,
   stackName:
   `SC-${process.env.PROJECT_NAME}-${process.env.STAGE}`,
