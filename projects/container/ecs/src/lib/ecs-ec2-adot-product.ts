@@ -344,6 +344,8 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       }),
     });
 
+    container.addLink(otelCollector);
+
     container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
     otelCollector.addLink(container);
 
