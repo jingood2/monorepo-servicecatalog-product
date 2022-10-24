@@ -202,7 +202,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     const commands = new cdk.CfnParameter(this, 'Command', {
       type: 'List<String>',
       description: 'Using the right command to choose the config file you want to config your ADOT Collector',
-      default: '--config=/etc/ecs/otel-instance-metrics-config.yaml',
+      default: '--config=/etc/ecs/ecs-default-config.yaml',
     });
 
 
@@ -347,6 +347,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     container.addLink(otelCollector);
 
     container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
+    otelCollector.addLink(container);
 
     //const containerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
