@@ -85,7 +85,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
     const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
       type: 'String',
-      default: 'svc.local',
+      default: 'default.local',
       description: 'CloudMap Private DNS ex) svc.internal',
     });
 
@@ -107,7 +107,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       //defaultCloudMapNamespace: { name: 'svc.local', type: NamespaceType.DNS_PRIVATE, vpc: vpc },
     });
 
-    const dnsNamespace = cluster.addDefaultCloudMapNamespace({
+   const dnsNamespace = cluster.addDefaultCloudMapNamespace({
       vpc,
       name: `${cloudmapNamespace.valueAsString}`,
       type: servicediscovery.NamespaceType.DNS_PRIVATE,
