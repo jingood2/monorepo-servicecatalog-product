@@ -349,10 +349,10 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       //defaultCloudMapNamespace: namespace,
     });
 
-    const ns = new servicediscovery.PrivateDnsNamespace(this, "PrivateDnsNamespace", {
+    /* new servicediscovery.PrivateDnsNamespace(this, "PrivateDnsNamespace", {
       vpc: vpc,
       name: 'svc.local'
-    });
+    }); */
 
     //const cloudMapService = ns.createService('myApp', {})
 
