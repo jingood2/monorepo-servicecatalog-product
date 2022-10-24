@@ -202,7 +202,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     const commands = new cdk.CfnParameter(this, 'Command', {
       type: 'List<String>',
       description: 'Using the right command to choose the config file you want to config your ADOT Collector',
-      default: '--config=/etc/ecs/container-insights/otel-task-metrics-config.yaml',
+      default: '--config=/etc/ecs/otel-instance-metrics-config.yaml',
     });
 
 
@@ -293,6 +293,10 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         }),
         streamPrefix: 'ecs',
       }),
+      environment: {
+        AWS_REGION: 'ap-northeast-2',
+        AWS_XRAY_DAEMON_ADDRESS: 'aws-otel-collector:2000',
+      },
     });
 
     container.addPortMappings({
@@ -313,6 +317,23 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         AWS_REGION: 'ap-northeast-2',
       },
       command: commands.valueAsList,
+      portMappings: [
+        {
+          hostPort: 2000,
+          protocol: ecs.Protocol.UDP,
+          containerPort: 2000
+        },
+        {
+          hostPort: 4317,
+          protocol: ecs.Protocol.TCP,
+          containerPort: 4317
+        },
+        {
+          hostPort: 8125,
+          protocol: ecs.Protocol.UDP,
+          containerPort: 8125
+        }
+      ],
       logging: ecs.LogDrivers.awsLogs({
         logGroup: new LogGroup(this, 'LogGroupOtel', {
           logGroupName: `${environment.valueAsString}/${serviceName.valueAsString}-otel`,
