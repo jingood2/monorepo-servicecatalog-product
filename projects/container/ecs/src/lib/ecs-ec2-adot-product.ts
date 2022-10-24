@@ -323,7 +323,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       }),
     });
 
-    otelCollector.addLink(container, 'localhost');
+    container.addLink(otelCollector);
 
     container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
 
