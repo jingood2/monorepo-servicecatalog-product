@@ -321,8 +321,9 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         }),
         streamPrefix: 'ecs',
       }),
-
     });
+
+    container.addLink(otelCollector);
 
     container.addContainerDependencies({ container: otelCollector, condition: ecs.ContainerDependencyCondition.START });
 
@@ -332,7 +333,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
    //const defaultNamespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
-   servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+   const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: 'namespaceName' }).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
@@ -371,16 +372,16 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       //vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       //securityGroups: [defaultContainerSg, serviceSg],
       //enableExecuteCommand: true,
-      /* cloudMapOptions: {
+      cloudMapOptions: {
         // Create A records - useful for AWSVPC network mode.
         // Create SRV records - useful for bridge networking
         dnsRecordType: servicediscovery.DnsRecordType.SRV,
         // Targets port TCP port 7600 `specificContainer`
         container: container,
         containerPort: containerPort.valueAsNumber,
-        cloudMapNamespace: ns,
+        cloudMapNamespace: namespace,
         name: `${serviceName.valueAsString}-${environment.valueAsString}`, 
-      }, */
+      },
       capacityProviderStrategies: [
         {
           capacityProvider: `${environment.valueAsString}-ecs-${projectName.valueAsString}-cp`,
