@@ -331,7 +331,8 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
-    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+   //const defaultNamespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+   servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: 'namespaceName' }).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
@@ -347,6 +348,13 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       securityGroups: [defaultContainerSg],
       //defaultCloudMapNamespace: namespace,
     });
+
+    const ns = new servicediscovery.PrivateDnsNamespace(this, "PrivateDnsNamespace", {
+      vpc: vpc,
+      name: 'svc.local'
+    });
+
+    //const cloudMapService = ns.createService('myApp', {})
 
     /* const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
       securityGroupName: `${projectName.valueAsString}-sg-${environment.valueAsString}-${serviceName.valueAsString}`,
@@ -370,7 +378,8 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         // Targets port TCP port 7600 `specificContainer`
         container: container,
         containerPort: containerPort.valueAsNumber,
-        cloudMapNamespace: namespace,
+        cloudMapNamespace: ns,
+        name: `${serviceName.valueAsString}-${environment.valueAsString}`, 
       },
       capacityProviderStrategies: [
         {
