@@ -21,7 +21,7 @@ export class EksCiProduct extends servicecatalog.ProductStack {
             Parameters: [
               'ProjectName',
               'Environment',
-              'ServiceName'
+              'ServiceName',
             ],
           },
           {

@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
-import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import { Construct } from 'constructs/lib/construct';
 import { ArgoCDConstruct } from './argocd-construct';
 //import { DnsRecordType } from 'aws-cdk-lib/aws-servicediscovery';
@@ -140,10 +140,12 @@ export class EksGitopsProduct extends servicecatalog.ProductStack {
       enableAutoSync: 'true',
     });
 
-    githubPipeline.addStage({ stageName:'Approval', actions: [new codepipeline_actions.ManualApprovalAction({
-      actionName: 'ApproveChanges',
-      }),
-    ]});
+    githubPipeline.addStage({
+      stageName: 'Approval',
+      actions: [new codepipeline_actions.ManualApprovalAction({
+        actionName: 'ApproveChanges',
+      })],
+    });
 
 
     new ArgoCDConstruct(this, 'PROD', {

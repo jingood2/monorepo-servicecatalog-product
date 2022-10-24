@@ -58,7 +58,7 @@ export class ArgoCDConstruct extends Construct {
       stageName: `CD-${randomstring.generate(5)}`,
       //stageName: cdk.Lazy.string({ produce:() => `ArgoCD-${props.environment})`}),
       actions: [this.createAndSyncApplication(
-        props.projectName, props.environment, props.serviceName, 
+        props.projectName, props.environment, props.serviceName,
         props.repoName, props.repoOwner, props.sourceArtifact, props.enableAutoSync )],
     });
     /* githubPipeline.addStage({
@@ -77,7 +77,7 @@ export class ArgoCDConstruct extends Construct {
     repoOwner: string,
     sourceOutput: codepipeline.Artifact,
     enableAutoSync: string,
-    ) : codepipeline_actions.CodeBuildAction {
+  ) : codepipeline_actions.CodeBuildAction {
 
     const randomString = randomstring.generate(5);
 
@@ -100,7 +100,7 @@ export class ArgoCDConstruct extends Construct {
         BUILD_TYPE: { value: 'DOCKER' },
         TARGET_TYPE: { value: 'eks' },
         SERVICE_NAME: { value: serviceName },
-        ENABLE_AUTOSYNC: { value: enableAutoSync }
+        ENABLE_AUTOSYNC: { value: enableAutoSync },
       },
       role: iam.Role.fromRoleArn(this, 'CodeBuildServiceRole', 'arn:aws:iam::484752921218:role/CodeBuildServiceRole'),
     });
