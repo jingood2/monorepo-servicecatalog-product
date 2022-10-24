@@ -295,7 +295,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       }),
       environment: {
         AWS_REGION: 'ap-northeast-2',
-        AWS_XRAY_DAEMON_ADDRESS: 'aws-otel-collector:2000',
+        AWS_XRAY_DAEMON_ADDRESS: 'magicapp-otel-dev.default.local:2000',
       },
     });
 
