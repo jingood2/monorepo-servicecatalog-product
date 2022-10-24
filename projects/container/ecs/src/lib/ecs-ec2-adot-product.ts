@@ -371,7 +371,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
       //vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_NAT },
       //securityGroups: [defaultContainerSg, serviceSg],
       //enableExecuteCommand: true,
-      cloudMapOptions: {
+      /* cloudMapOptions: {
         // Create A records - useful for AWSVPC network mode.
         // Create SRV records - useful for bridge networking
         dnsRecordType: servicediscovery.DnsRecordType.SRV,
@@ -380,7 +380,7 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         containerPort: containerPort.valueAsNumber,
         cloudMapNamespace: ns,
         name: `${serviceName.valueAsString}-${environment.valueAsString}`, 
-      },
+      }, */
       capacityProviderStrategies: [
         {
           capacityProvider: `${environment.valueAsString}-ecs-${projectName.valueAsString}-cp`,
