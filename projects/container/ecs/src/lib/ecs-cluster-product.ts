@@ -5,7 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+//import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { Ec2Service } from 'aws-cdk-lib/aws-ecs';
 //import { AmiHardwareType } from 'aws-cdk-lib/aws-ecs';
@@ -85,35 +85,37 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
 
     const cloudmapNamespace = new cdk.CfnParameter(this, 'LocalDomain', {
       type: 'String',
-      default: 'default.local',
-      description: 'CloudMap Private DNS ex) svc.internal',
+      default: 'svc.local',
+      description: 'CloudMap Private DNS ex) svc.local',
     });
 
+    const cloudmapCondition = new cdk.CfnCondition(this, 'CreateDefaultCloudMapCondition', {
+      expression: cdk.Fn.conditionNot(cdk.Fn.conditionEquals(cloudmapNamespace.valueAsString, '')),
+    });
+
+    const noCloudMapCondition = new cdk.CfnCondition(this, 'NOCloudMapCondition', {
+      expression: cdk.Fn.conditionNot(cdk.Fn.conditionEquals(cloudmapNamespace.valueAsString, '')),
+    });
 
     // Condition
-    /*  const defaultTaskRoleCondition = new cdk.CfnCondition(this, 'DefaultTaskRoleCondition', {
-      expression: cdk.Fn.conditionEquals(taskRoleArn.valueAsString, 'default'),
-    }); */
-
     const vpc = ec2.Vpc.fromVpcAttributes(this, 'Vpc', {
       vpcId: cdk.Lazy.string( { produce: () => vpcId.valueAsString }),
       availabilityZones: availableZones.valueAsList,
     });
 
-    const cluster = new ecs.Cluster(this, 'ECSCluster', {
-      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
-      vpc: vpc,
-      enableFargateCapacityProviders: true,
-      //defaultCloudMapNamespace: { name: 'svc.local', type: NamespaceType.DNS_PRIVATE, vpc: vpc },
-    });
+    
+    
 
-   const dnsNamespace = cluster.addDefaultCloudMapNamespace({
+    
+    /*
+    const dnsNamespace = cluster.addDefaultCloudMapNamespace({
       vpc,
       name: `${cloudmapNamespace.valueAsString}`,
       type: servicediscovery.NamespaceType.DNS_PRIVATE,
     });
+    */
 
-    new ssm.StringParameter(this, 'NamespaceId', {
+    /* new ssm.StringParameter(this, 'NamespaceId', {
       simpleName: true,
       description: 'Namespace Id',
       parameterName: 'namespaceId',
@@ -132,7 +134,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       description: 'Namespace Arn',
       parameterName: 'namespaceArn',
       stringValue: dnsNamespace.namespaceArn,
-    });
+    }); */
 
     // Create ContainerSecurityGroup and Role
     const ecsDefaultSecurityGroup = new ec2.SecurityGroup(this, 'ECSDefaultSG', {
@@ -214,14 +216,45 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       capacityProviderName: `${environment.valueAsString}-ecs-${projectName.valueAsString}-cp`,
       autoScalingGroup: defaultAsg,
     });
-    cluster.addAsgCapacityProvider(capacityProvider);
+    
+
+
+    const clusterWithCloudmap = new ecs.Cluster(this, 'ECSClusterWithDefaultCloudMap', {
+      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
+      vpc: vpc,
+      enableFargateCapacityProviders: true,
+      defaultCloudMapNamespace: { name: cloudmapNamespace.valueAsString , type: servicediscovery.NamespaceType.DNS_PRIVATE, vpc: vpc },
+    });
+
+    clusterWithCloudmap.addAsgCapacityProvider(capacityProvider);
+    ( clusterWithCloudmap.node.defaultChild as ecs.CfnCluster ).cfnOptions.condition = cloudmapCondition;
+
+
+    const noCloudmapCluster = new ecs.Cluster(this, 'ECSCluster', {
+      clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
+      vpc: vpc,
+      enableFargateCapacityProviders: true,
+    });
+
+    noCloudmapCluster.addAsgCapacityProvider(capacityProvider);
+    ( noCloudmapCluster.node.defaultChild as ecs.CfnCluster ).cfnOptions.condition = noCloudMapCondition;
 
     // CDK Output
-    new cdk.CfnOutput(this, 'ClusterName', {
+    const CfnOutputClusterArn = new cdk.CfnOutput(this, 'ClusterArn', {
       description: 'The name of the ECS cluster',
-      value: cluster.clusterArn,
+      value: clusterWithCloudmap.clusterArn,
       exportName: `${id}:${environment.valueAsString}:ClusterName`,
     });
+    CfnOutputClusterArn.condition =  cloudmapCondition;
+
+    const CfnOutputnoCloudmapClusterArn = new cdk.CfnOutput(this, 'ClusterArnNoCloudMap', {
+      description: 'The name of the ECS cluster',
+      value: noCloudmapCluster.clusterArn,
+      exportName: `${id}:${environment.valueAsString}:ClusterName`,
+    });
+    CfnOutputnoCloudmapClusterArn.condition =  noCloudMapCondition;
+
+
 
     new cdk.CfnOutput(this, 'ContainerSecurityGroupId', {
       value: ecsDefaultSecurityGroup.securityGroupId,
@@ -229,7 +262,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       exportName: `${id}:${environment.valueAsString}:ContainerSecurityGroup`,
     });
 
-    new cdk.CfnOutput(this, 'NamespaceIDOutput', {
+    /* new cdk.CfnOutput(this, 'NamespaceIDOutput', {
       description: 'Namespace Id',
       value: dnsNamespace.namespaceId,
     });
@@ -242,6 +275,6 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     new cdk.CfnOutput(this, 'NamespaceNameOutput', {
       description: 'Namespace name',
       value: dnsNamespace.namespaceName,
-    });
+    }); */
   }
 }
