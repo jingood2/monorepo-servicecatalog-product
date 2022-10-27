@@ -6,7 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import * as servicecatalog from 'aws-cdk-lib/aws-servicecatalog';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+//import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs/lib/construct';
 //import { DnsRecordType } from 'aws-cdk-lib/aws-servicediscovery';
 
@@ -298,14 +298,14 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default` , vpc);
 
     // Note: Unable to determine ARN separator for SSM parameter since the parameter name is an unresolved token. Use "fromAttributes" and specify "simpleName" explicitly
-    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+    /* const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
       namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
         { parameterName: 'namespaceName' }).stringValue,
       namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
         { parameterName: 'namespaceId' }).stringValue,
       namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
         { parameterName: 'namespaceName' }).stringValue,
-    });
+    }); */
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
@@ -333,7 +333,7 @@ export class EcsFargateProduct extends servicecatalog.ProductStack {
         // Create A records - useful for AWSVPC network mode.
         name: `${serviceName.valueAsString}`,
         dnsRecordType: servicediscovery.DnsRecordType.A,
-        cloudMapNamespace: namespace,
+        //cloudMapNamespace: namespace,
       },
       capacityProviderStrategies: [
         {
