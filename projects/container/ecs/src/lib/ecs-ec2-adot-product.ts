@@ -352,22 +352,18 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
     //const defaultContainerSg = ec2.SecurityGroup.fromLookupByName(this, 'DefaultContainerSG', `${projectName.valueAsString}-sg-${environment.valueAsString}-default`, vpc);
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
-   //const defaultNamespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
-   /* const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
-      namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
-        { parameterName: 'namespaceName' }).stringValue,
-      namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
-        { parameterName: 'namespaceId' }).stringValue,
-      namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
-        { parameterName: 'namespaceName' }).stringValue,
-    }); */
+    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+      namespaceName: cdk.Fn.importValue(`${environment.valueAsString}-namespacename`).toString(),
+      namespaceId: cdk.Fn.importValue(`${environment.valueAsString}-namespaceid`).toString(), 
+      namespaceArn: cdk.Fn.importValue(`${environment.valueAsString}-namespacearn`).toString()
+    });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
       clusterArn: `arn:aws:ecs:${process.env.CDK_DEFAULT_REGION}:${process.env.CDK_DEFAULT_ACCOUNT}:cluster/${projectName.valueAsString}-ecs-${environment.valueAsString}-cluster`,
       vpc: vpc,
       securityGroups: [defaultContainerSg],
-      //defaultCloudMapNamespace: namespace,
+      defaultCloudMapNamespace: namespace,
     });
 
     /* new servicediscovery.PrivateDnsNamespace(this, "PrivateDnsNamespace", {
@@ -399,8 +395,8 @@ export class EcsEc2ADOTProduct extends servicecatalog.ProductStack {
         // Targets port TCP port 7600 `specificContainer`
         container: container,
         containerPort: containerPort.valueAsNumber,
-        // cloudMapNamespace: namespace,
-        name: `${serviceName.valueAsString}-${environment.valueAsString}`, 
+        cloudMapNamespace: namespace,
+        name: `${serviceName.valueAsString}`, 
       },
       capacityProviderStrategies: [
         {

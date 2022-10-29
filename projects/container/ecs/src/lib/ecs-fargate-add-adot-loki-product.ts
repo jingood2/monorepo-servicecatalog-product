@@ -374,21 +374,18 @@ export class EcsFargateAddADOTLokiProduct extends servicecatalog.ProductStack {
     const defaultContainerSg = ec2.SecurityGroup.fromSecurityGroupId(this, 'ContainerSG', cdk.Lazy.string( { produce: () => containerSGId.valueAsString }));
 
     // Note: Unable to determine ARN separator for SSM parameter since the parameter name is an unresolved token. Use "fromAttributes" and specify "simpleName" explicitly
-    /* const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
-      namespaceName: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceName',
-        { parameterName: 'namespaceName' }).stringValue,
-      namespaceId: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceId',
-        { parameterName: 'namespaceId' }).stringValue,
-      namespaceArn: ssm.StringParameter.fromStringParameterAttributes(this, 'NamespaceArn',
-        { parameterName: 'namespaceName' }).stringValue,
-    }); */
+    const namespace = servicediscovery.PublicDnsNamespace.fromPublicDnsNamespaceAttributes(this, 'NameSpace', {
+      namespaceName: cdk.Fn.importValue(`${environment.valueAsString}-namespacename`).toString(),
+      namespaceId: cdk.Fn.importValue(`${environment.valueAsString}-namespaceid`).toString(), 
+      namespaceArn: cdk.Fn.importValue(`${environment.valueAsString}-namespacearn`).toString()
+    });
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'ECsCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
       clusterArn: `arn:aws:ecs:${process.env.CDK_DEFAULT_REGION}:${process.env.CDK_DEFAULT_ACCOUNT}:cluster/${projectName.valueAsString}-ecs-${environment.valueAsString}-cluster`,
       vpc: vpc,
       securityGroups: [defaultContainerSg],
-      //defaultCloudMapNamespace: namespace,
+      defaultCloudMapNamespace: namespace,
     });
 
     const serviceSg = new ec2.SecurityGroup(this, 'ECSServiceSg', {
@@ -409,7 +406,7 @@ export class EcsFargateAddADOTLokiProduct extends servicecatalog.ProductStack {
         // Create A records - useful for AWSVPC network mode.
         name: `${serviceName.valueAsString}`,
         dnsRecordType: servicediscovery.DnsRecordType.A,
-        //cloudMapNamespace: namespace,
+        cloudMapNamespace: namespace,
       },
       capacityProviderStrategies: [
         {
