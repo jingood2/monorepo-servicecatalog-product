@@ -406,7 +406,7 @@ export class EcsFargateAddADOTLokiProduct extends servicecatalog.ProductStack {
         // Create A records - useful for AWSVPC network mode.
         name: `${serviceName.valueAsString}`,
         dnsRecordType: servicediscovery.DnsRecordType.A,
-        cloudMapNamespace: namespace,
+        //cloudMapNamespace: namespace,
       },
       capacityProviderStrategies: [
         {

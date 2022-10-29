@@ -218,7 +218,6 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
     });
     
 
-
     const cluster = new ecs.Cluster(this, 'ECSCluster', {
       clusterName: `${projectName.valueAsString}-ecs-${environment.valueAsString}`,
       vpc: vpc,
@@ -297,7 +296,7 @@ export class ECSClusterProduct extends servicecatalog.ProductStack {
       exportName: `${environment.valueAsString}-namespacename`
     });
 
-    new cdk.CfnOutput(this, 'NamespaceNameOutput', {
+    new cdk.CfnOutput(this, 'NamespaceArnOutput', {
       description: 'CloudMap Namespace Arn',
       value: dnsNamespace.namespaceArn,
       exportName: `${environment.valueAsString}-namespacearn`
