@@ -89,10 +89,10 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
       allowedValues: ['ECS', 'Lambda', 'Server'],
     });
 
-    const tags = new cdk.CfnParameter(this, 'NameTags', {
+    /* const tags = new cdk.CfnParameter(this, 'NameTags', {
         type: 'CommaDelimitedList',
         description: 'Name Tag value for Deployment Group' 
-    })
+    }) */
 
     const ECSTypeCondition = new cdk.CfnCondition(this, 'ECSTypeCondition', {
       expression: cdk.Fn.conditionEquals(deployType.valueAsString, 'ECS'),
@@ -176,7 +176,7 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
             // any instance with tags satisfying
             // key1=v1 or key1=v2 or key2 (any value) or value v3 (any key)
             // will match this group
-            'Name': tags.valueAsList,
+            //'Name': tags.valueAsList,
             'ServiceName': [serviceName.valueAsString],
           },
         ),
