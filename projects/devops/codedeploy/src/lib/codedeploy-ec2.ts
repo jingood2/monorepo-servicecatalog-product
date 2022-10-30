@@ -127,7 +127,7 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
     });
     (ecsDeploymentConfig.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
 
-    const ecsDeployGroup = codedeploy.EcsDeploymentGroup.fromEcsDeploymentGroupAttributes(
+    codedeploy.EcsDeploymentGroup.fromEcsDeploymentGroupAttributes(
       this, 'EcsDeployGroup', {
         application: ecsApp,
         deploymentGroupName: `${serviceName.valueAsString}-${stage.valueAsString}-deploygroup`,
@@ -139,7 +139,7 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
         deploymentGroupName: `${serviceName.valueAsString}-${stage.valueAsString}-deploygroup`,
         deploymentConfig: ecsDeploymentConfig,
     }); */
-    (ecsDeployGroup.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
+    //(ecsDeployGroup.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
 
 
     // Lambda Deployment Group
