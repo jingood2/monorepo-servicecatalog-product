@@ -127,8 +127,6 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
     });
     (ecsDeploymentConfig.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
 
-
-    
     const ecsDeployGroup = codedeploy.EcsDeploymentGroup.fromEcsDeploymentGroupAttributes(
       this, 'EcsDeployGroup', {
         application: ecsApp,
