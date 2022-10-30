@@ -186,7 +186,7 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
         autoRollback: {
             failedDeployment: true, // default: true
             stoppedDeployment: true, // default: false
-            deploymentInAlarm: true, // default: true if you provided any alarms, false otherwise
+            deploymentInAlarm: false, // default: true if you provided any alarms, false otherwise
         },
         loadBalancer: codedeploy.LoadBalancer.application(targetGroup),
         deploymentConfig: serverDeploymentConfig,
