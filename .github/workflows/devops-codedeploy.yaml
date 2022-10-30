@@ -1,0 +1,223 @@
+name: Deploy codedeploy Service Catalog Product 
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "projects/devops/codedeploy/**"
+      - "./github/workflows/devops/codedeploy.yaml"
+env:
+  CI: "true"
+  CDK_DEFAULT_ACCOUNT: '484752921218'
+  CDK_DEFAULT_REGION: ap-northeast-2
+  PROJECT_NAME: 'devops-codedeploy'
+  #EXECUTE_ROLE: github-deploy-role
+  EXECUTE_ROLE: githubActionRole
+
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+     # These permissions are needed to interact with GitHub's OIDC Token endpoint
+    permissions:
+      #write-all
+      id-token: write
+      contents: read
+    env:
+      STAGE: dev
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      
+
+      - name: Install dependencies
+        #if: steps.cache.outputs.cache-hit != 'true'
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: projects/devops/codedeploy
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: projects/devops/codedeploy/node_modules
+          key: npm-packages-${{ hashFiles('**/package-lock.json')}}
+
+      - name: assume role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
+          role-session-name: github-session
+          aws-region: ap-northeast-2
+
+      - name: cdk build 
+        run: npm run synth
+        working-directory: projects/devops/codedeploy
+      
+      # Publish artifact
+      #- name: Publish artifact
+      #  uses: actions/upload-artifact@v2
+      #  with:
+      #    name: published-app
+      #    path: |
+      #      projects/devops/codedeploy
+      #      !projects/devops/codedeploy/node_modules
+      
+      - name: Deploy to AWS cdk dev App
+        run: yarn cdk deploy --all --require-approval never 
+        working-directory: projects/devops/codedeploy
+      
+      #- uses: trstringer/manual-approval@v1
+      #  with:
+      #    secret: ${{ github.TOKEN}}
+      #    approvers: jingood2 
+      
+      #- name: Destroy to AWS cdk dev App
+      #  run: yarn cdk destroy --all --require-approval never 
+      #  working-directory: projects/${{env.PROJECT_NAME}}
+  approval:
+    runs-on: ubuntu-latest
+    environment: 'prod'
+    needs: [deploy-dev]
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      STAGE: dev
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      # Download published artifact
+      #- name: Download artifact
+      #  uses: actions/download-artifact@v2
+      #  with:
+      #    name: published-app
+      #    path: projects/devops/codedeploy
+      
+      - name: Cache node modules
+        uses: actions/cache@v2
+        id: cache
+        with:
+          #working-directory: projects/${{inputs.app_name}}
+          path: projects/devops/codedeploy/node_modules
+          key: npm-packages-${{ hashFiles('**/package-lock.json')}}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: projects/devops/codedeploy
+
+      - name: assume role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
+          role-session-name: github-session
+          aws-region: ap-northeast-2
+      
+      - name: cdk build 
+        run: npm run synth
+        working-directory: projects/devops/codedeploy
+      
+      - name: Destroy dev branch cdk app
+        run: yarn cdk destroy --all --force
+        working-directory: projects/devops/codedeploy
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+     # These permissions are needed to interact with GitHub's OIDC Token endpoint
+    #environment: 'prod'
+    needs: [approval]
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      STAGE: prod 
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      
+      #- name: Cache node modules
+      #  uses: actions/cache@v2
+      #  id: cache
+      #  with:
+          #working-directory: projects/${{inputs.app_name}}
+      #    path: projects/devops/{{PROJECT_NAME}}/node_modules
+      #    key: npm-packages-${{ hashFiles('**/package-lock.json')}}
+
+      - name: Install dependencies
+        #if: steps.cache.outputs.cache-hit != 'true'
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: projects/devops/codedeploy
+
+      - name: assume role
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
+          role-session-name: github-session
+          aws-region: ap-northeast-2
+
+      - name: cdk build 
+        run: npm run synth
+        working-directory: projects/devops/codedeploy
+      
+      # Deploy to web app
+      - name: Deploy to AWS CDK App
+        run: yarn cdk deploy --all --require-approval never 
+        working-directory: projects/devops/codedeploy
+  
+  #destroy-dev:
+  #  runs-on: 'ubuntu-latest'
+  #  environment: 'dev'
+  #  needs: deploy-prod
+  #  steps:
+  #  # Download published artifact
+  #    - name: Download artifact
+  #      uses: actions/download-artifact@v2
+  #      with:
+  #        name: published-app
+  #        path: projects/${{env.PROJECT_NAME}}
+  #    
+  #    - name: Cache node modules
+  #      uses: actions/cache@v2
+  #      id: cache
+  #      with:
+  #        #working-directory: projects/${{inputs.app_name}}
+  #        path: projects/${{env.PROJECT_NAME}}/node_modules
+  #        key: npm-packages-${{ hashFiles('**/package-lock.json')}}
+#
+#      - name: Install dependencies
+#        if: steps.cache.outputs.cache-hit != 'true'
+#        uses: bahmutov/npm-install@v1
+#        with:
+#          working-directory: projects/${{env.PROJECT_NAME}}
+
+#      - name: assume role
+#        uses: aws-actions/configure-aws-credentials@master
+#        with:
+#          role-to-assume:  arn:aws:iam::${{env.CDK_DEFAULT_ACCOUNT}}:role/${{env.EXECUTE_ROLE}}
+#          role-session-name: github-session
+#          aws-region: ap-northeast-2
+#      
+#      - name: Destroy to AWS Dev cdk App
+#        run: yarn cdk destroy --all --require-approval never 
+#        working-directory: projects/${{env.PROJECT_NAME}}
+#
