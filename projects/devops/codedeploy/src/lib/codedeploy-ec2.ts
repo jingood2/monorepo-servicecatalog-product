@@ -127,11 +127,18 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
     });
     (ecsDeploymentConfig.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
 
-    const ecsDeployGroup = new codedeploy.ServerDeploymentGroup(this, 'ServerDeploymentGroup', {
+    const ecsDeployGroup = codedeploy.EcsDeploymentGroup.fromEcsDeploymentGroupAttributes(
+      this, 'EcsDeployGroup', {
         application: ecsApp,
         deploymentGroupName: `${serviceName.valueAsString}-${stage.valueAsString}-deploygroup`,
         deploymentConfig: ecsDeploymentConfig,
-    });
+      }
+    );
+    /* const ecsDeployGroup = new codedeploy.EcsDeploymentGroup(this, 'ECSDeploymentGroup', {
+        application: ecsApp,
+        deploymentGroupName: `${serviceName.valueAsString}-${stage.valueAsString}-deploygroup`,
+        deploymentConfig: ecsDeploymentConfig,
+    }); */
     (ecsDeployGroup.node.defaultChild as codedeploy.CfnDeploymentConfig).cfnOptions.condition = ECSTypeCondition;
 
 
