@@ -169,7 +169,7 @@ export class CodedeployEc2Product extends servicecatalog.ProductStack {
         autoScalingGroups: [asg],
         // adds User Data that installs the CodeDeploy agent on your auto-scaling groups hosts
         // default: true
-        installAgent: true,
+        installAgent: false,
         // adds EC2 instances matching tags
         ec2InstanceTags: new codedeploy.InstanceTagSet(
           {
